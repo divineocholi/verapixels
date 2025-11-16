@@ -34,6 +34,7 @@ import CaseStudies from './Pages/CaseStudies'
 // Contact Page
 import Contact from './Pages/Contact'
 import Footer from './Components/Footer'
+import Index from './Components/Index'
 
 const App = () => {
   return (
@@ -41,7 +42,7 @@ const App = () => {
       <ScrollToTop />
       <Navbar />+
       <Routes>
-        <Route path="/" element={<Landingpage />} />
+        <Route path="/" element={<Index />} />
         
         {/* About Routes */}
         <Route path="/aboutverapixels" element={<AboutPage />} />
