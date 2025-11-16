@@ -49,7 +49,7 @@ const slides = [
 
 const AUTOPLAY_DELAY = 6000;
 
-const Landingpage: React.FC = () => {
+const Index: React.FC = () => {
   const swiperRef = useRef<any>(null);
   const [active, setActive] = useState(0);
 
@@ -120,4 +120,4 @@ const Landingpage: React.FC = () => {
   );
 };
 
-export default Landingpage;
+export default Index;

@@ -2,7 +2,7 @@ import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './Components/Navbar'
 import ScrollToTop from './Components/ScrollToTop'
-import Landingpage from './Components/Landingpage'
+import Landingpage from './Components/Index'
 
 // About Pages
 import AboutPage from './Pages/AboutPage'
