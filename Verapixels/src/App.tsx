@@ -74,7 +74,7 @@ const App = () => {
         {/* Contact Route */}
         <Route path="/contact" element={<Contact />} />
       </Routes>
-      <Footer />
+      <Footer />                                
     </div>
   )
 }

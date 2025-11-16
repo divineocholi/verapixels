@@ -2,7 +2,7 @@
   "name": "verapixels",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://divineocholi.github.io/Verapixels",
+  "homepage": "https://github.com/divineocholi/Verapixels",
   "type": "module",
   "scripts": {
     "dev": "vite",
