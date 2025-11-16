@@ -5,7 +5,7 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   root: 'Verapixels',
-  base: '/',
+  base: '/verapixels/',
   build: {
     outDir: '../dist',
     emptyOutDir: true,
