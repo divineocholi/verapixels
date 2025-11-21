@@ -1,7 +1,6 @@
-
 {
   "name": "verapixels",
-  "homepage": "https://github.com/divineocholi/Verapixels",
+  "homepage": "https://divineocholi.github.io/verapixels",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,21 +10,19 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-"deploy": "gh-pages -d dist"
-
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.16",
     "framer-motion": "^12.23.24",
+    "gh-pages": "^6.3.0",
     "lucide-react": "^0.548.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.9.5",
     "swiper": "^12.0.3",
-    "tailwind": "^4.0.0",
-      "gh-pages": "^6.3.0",
-        "gh-pages": "^6.3.0"
+    "tailwind": "^4.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
