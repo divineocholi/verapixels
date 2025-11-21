@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FiChevronDown, FiPhone, FiMenu, FiX } from "react-icons/fi";
+import logo from "../assets/verapixels_logo_icon.jpg";
 
 const Navbar: React.FC = () => {
   const [aboutDropdown, setAboutDropdown] = useState(false);
@@ -32,7 +33,7 @@ const Navbar: React.FC = () => {
       <div className="vp-nav-inner">
         <div className="vp-brand">
           <div className="vp-brand-left">
-            <img src="/src/assets/verapixels_logo_icon.jpg" alt="Verapixel" />
+            <img src={logo} alt="Verapixel" />
             <span className="vp-name">Verapixels</span>
           </div>
 
