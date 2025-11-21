@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import logo from "../assets/verapixels_logo_icon.jpg";
 import {
   FiMail,
   FiPhone,
@@ -153,7 +154,7 @@ const Footer = () => {
             {/* Company Info */}
             <div className="footer-col footer-brand">
               <div className="brand-logo">
-                <img src="/src/assets/verapixels_logo_icon.jpg" alt="Verapixels" />
+                <img src={logo} alt="Verapixels" />
                 <span>Verapixels</span>
               </div>
               <p className="brand-description">

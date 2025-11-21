@@ -692,7 +692,7 @@ const VeeAIChatbot: React.FC = () => {
                     </div>
 
                     {m.link && (
-                      <a href={m.link.url} style={{
+                      <a href={`#${m.link.url}`} style={{
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 8,
