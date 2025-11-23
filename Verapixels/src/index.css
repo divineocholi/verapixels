@@ -53,8 +53,12 @@ body {
   object-fit: cover;
 }
 .vp-name {
-  font-weight: 700;
-  font-size: 2.05rem;
+  font-size: 1.5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #007aff, #ff6b9d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 a {
