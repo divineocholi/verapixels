@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { 
-  FiGithub, 
-  FiLinkedin, 
-  FiTwitter, 
+import {
+  FiGithub,
+  FiLinkedin,
+  FiTwitter,
   FiMail,
   FiAward,
   FiCode,
@@ -11,7 +11,7 @@ import {
   FiUsers,
   FiStar,
   FiHeart,
-  FiZap
+  FiZap,
 } from "react-icons/fi";
 import VeeAIChatbot from "../Components/VeeAIChatbot";
 
@@ -31,116 +31,148 @@ const OurCoreTeam = () => {
     {
       name: "Ocholi Divine",
       role: "Founder & CEO",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop",
       bio: "Visionary leader driving innovation and excellence at Verapixels",
       specialties: ["Strategy", "Innovation", "Leadership"],
       social: {
         github: "#",
         linkedin: "#",
         twitter: "#",
-        email: "divine@verapixels.com"
+        email: "divine@verapixels.com",
       },
-      color: "#0063f4"
+      color: "#0063f4",
     },
     {
       name: "Sarah Chen",
       role: "Lead Developer",
-      image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=600&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=600&fit=crop",
       bio: "Full-stack wizard crafting elegant solutions to complex problems",
       specialties: ["React", "Node.js", "Cloud"],
       social: {
         github: "#",
         linkedin: "#",
         twitter: "#",
-        email: "sarah@verapixels.com"
+        email: "sarah@verapixels.com",
       },
-      color: "#00bfff"
+      color: "#00bfff",
     },
     {
       name: "Marcus Johnson",
       role: "Creative Director",
-      image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=600&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=600&fit=crop",
       bio: "Design genius transforming ideas into stunning visual experiences",
       specialties: ["UI/UX", "Branding", "Animation"],
       social: {
         github: "#",
         linkedin: "#",
         twitter: "#",
-        email: "marcus@verapixels.com"
+        email: "marcus@verapixels.com",
       },
-      color: "#00ff88"
+      color: "#00ff88",
     },
     {
       name: "Amara Williams",
       role: "Tech Lead",
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=600&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=600&fit=crop",
       bio: "Architecture expert building scalable systems that power the future",
       specialties: ["DevOps", "Security", "Microservices"],
       social: {
         github: "#",
         linkedin: "#",
         twitter: "#",
-        email: "amara@verapixels.com"
+        email: "amara@verapixels.com",
       },
-      color: "#ffd700"
+      color: "#ffd700",
     },
     {
       name: "David Park",
       role: "Product Manager",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=600&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=600&fit=crop",
       bio: "Strategic thinker aligning technology with business goals",
       specialties: ["Product Strategy", "Agile", "Analytics"],
       social: {
         github: "#",
         linkedin: "#",
         twitter: "#",
-        email: "david@verapixels.com"
+        email: "david@verapixels.com",
       },
-      color: "#ff6b9d"
+      color: "#ff6b9d",
     },
     {
       name: "Elena Rodriguez",
       role: "Marketing Director",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=600&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=600&fit=crop",
       bio: "Brand storyteller connecting technology with human experiences",
       specialties: ["Digital Marketing", "Content", "Growth"],
       social: {
         github: "#",
         linkedin: "#",
         twitter: "#",
-        email: "elena@verapixels.com"
+        email: "elena@verapixels.com",
       },
-      color: "#9d4edd"
-    }
+      color: "#9d4edd",
+    },
   ];
 
   const stats = [
-    { icon: <FiUsers />, value: "15+", label: "Team Members", color: "#0063f4" },
-    { icon: <FiAward />, value: "50+", label: "Projects Delivered", color: "#00ff88" },
-    { icon: <FiStar />, value: "98%", label: "Client Satisfaction", color: "#ffd700" },
-    { icon: <FiZap />, value: "24/7", label: "Support Available", color: "#ff6b9d" }
+    {
+      icon: <FiUsers />,
+      value: "15+",
+      label: "Team Members",
+      color: "#0063f4",
+    },
+    {
+      icon: <FiAward />,
+      value: "50+",
+      label: "Projects Delivered",
+      color: "#00ff88",
+    },
+    {
+      icon: <FiStar />,
+      value: "98%",
+      label: "Client Satisfaction",
+      color: "#ffd700",
+    },
+    {
+      icon: <FiZap />,
+      value: "24/7",
+      label: "Support Available",
+      color: "#ff6b9d",
+    },
   ];
 
   return (
     <div className="team-page">
       {/* Animated Background */}
       <div className="team-bg">
-        <div 
+        <div
           className="bg-orb orb-1"
           style={{
-            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+            transform: `translate(${mousePosition.x * 0.02}px, ${
+              mousePosition.y * 0.02
+            }px)`,
           }}
         />
-        <div 
+        <div
           className="bg-orb orb-2"
           style={{
-            transform: `translate(${mousePosition.x * -0.03}px, ${mousePosition.y * -0.03}px)`
+            transform: `translate(${mousePosition.x * -0.03}px, ${
+              mousePosition.y * -0.03
+            }px)`,
           }}
         />
-        <div 
+        <div
           className="bg-orb orb-3"
           style={{
-            transform: `translate(${mousePosition.x * 0.04}px, ${mousePosition.y * -0.02}px)`
+            transform: `translate(${mousePosition.x * 0.04}px, ${
+              mousePosition.y * -0.02
+            }px)`,
           }}
         />
       </div>
@@ -155,16 +187,24 @@ const OurCoreTeam = () => {
             Our <span className="gradient-text">Core Team</span>
           </h1>
           <p className="hero-subtitle">
-            A collective of passionate innovators, creators, and problem solvers dedicated 
-            to building the future of digital experiences
+            A collective of passionate innovators, creators, and problem solvers
+            dedicated to building the future of digital experiences
           </p>
-          
+
           {/* Floating Icons Animation */}
           <div className="floating-icons">
-            <div className="float-icon" style={{ animationDelay: "0s" }}><FiCode /></div>
-            <div className="float-icon" style={{ animationDelay: "0.5s" }}><FiLayout /></div>
-            <div className="float-icon" style={{ animationDelay: "1s" }}><FiTrendingUp /></div>
-            <div className="float-icon" style={{ animationDelay: "1.5s" }}><FiZap /></div>
+            <div className="float-icon" style={{ animationDelay: "0s" }}>
+              <FiCode />
+            </div>
+            <div className="float-icon" style={{ animationDelay: "0.5s" }}>
+              <FiLayout />
+            </div>
+            <div className="float-icon" style={{ animationDelay: "1s" }}>
+              <FiTrendingUp />
+            </div>
+            <div className="float-icon" style={{ animationDelay: "1.5s" }}>
+              <FiZap />
+            </div>
           </div>
         </div>
       </section>
@@ -174,13 +214,22 @@ const OurCoreTeam = () => {
         <div className="team-container">
           <div className="stats-grid">
             {stats.map((stat, i) => (
-              <div key={i} className="stat-card" style={{ animationDelay: `${i * 0.1}s` }}>
+              <div
+                key={i}
+                className="stat-card"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
                 <div className="stat-icon" style={{ color: stat.color }}>
                   {stat.icon}
                 </div>
-                <div className="stat-value" style={{ color: stat.color }}>{stat.value}</div>
+                <div className="stat-value" style={{ color: stat.color }}>
+                  {stat.value}
+                </div>
                 <div className="stat-label">{stat.label}</div>
-                <div className="stat-glow" style={{ background: stat.color }}></div>
+                <div
+                  className="stat-glow"
+                  style={{ background: stat.color }}
+                ></div>
               </div>
             ))}
           </div>
@@ -194,25 +243,48 @@ const OurCoreTeam = () => {
             {teamMembers.map((member, i) => (
               <div
                 key={i}
-                className={`member-card ${activeCard === i ? 'active' : ''}`}
+                className={`member-card ${activeCard === i ? "active" : ""}`}
                 onMouseEnter={() => setActiveCard(i)}
                 onMouseLeave={() => setActiveCard(null)}
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 {/* Card Glow Effect */}
-                <div className="card-glow" style={{ background: member.color }}></div>
-                
+                <div
+                  className="card-glow"
+                  style={{ background: member.color }}
+                ></div>
+
                 {/* Member Image */}
                 <div className="member-image-wrapper">
-                  <img src={member.image} alt={member.name} className="member-image" />
-                  <div className="image-overlay" style={{ background: `linear-gradient(135deg, ${member.color}33, transparent)` }}></div>
-                  
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="member-image"
+                  />
+                  <div
+                    className="image-overlay"
+                    style={{
+                      background: `linear-gradient(135deg, ${member.color}33, transparent)`,
+                    }}
+                  ></div>
+
                   {/* Hover Social Links */}
                   <div className="social-overlay">
-                    <a href={member.social.github} className="social-icon"><FiGithub /></a>
-                    <a href={member.social.linkedin} className="social-icon"><FiLinkedin /></a>
-                    <a href={member.social.twitter} className="social-icon"><FiTwitter /></a>
-                    <a href={`mailto:${member.social.email}`} className="social-icon"><FiMail /></a>
+                    <a href={member.social.github} className="social-icon">
+                      <FiGithub />
+                    </a>
+                    <a href={member.social.linkedin} className="social-icon">
+                      <FiLinkedin />
+                    </a>
+                    <a href={member.social.twitter} className="social-icon">
+                      <FiTwitter />
+                    </a>
+                    <a
+                      href={`mailto:${member.social.email}`}
+                      className="social-icon"
+                    >
+                      <FiMail />
+                    </a>
                   </div>
                 </div>
 
@@ -223,14 +295,17 @@ const OurCoreTeam = () => {
                     {member.role}
                   </div>
                   <p className="member-bio">{member.bio}</p>
-                  
+
                   {/* Specialties Tags */}
                   <div className="specialties">
                     {member.specialties.map((specialty, idx) => (
-                      <span 
-                        key={idx} 
+                      <span
+                        key={idx}
                         className="specialty-tag"
-                        style={{ borderColor: member.color, color: member.color }}
+                        style={{
+                          borderColor: member.color,
+                          color: member.color,
+                        }}
                       >
                         {specialty}
                       </span>
@@ -239,7 +314,10 @@ const OurCoreTeam = () => {
                 </div>
 
                 {/* Decorative Corner */}
-                <div className="card-corner" style={{ borderColor: member.color }}></div>
+                <div
+                  className="card-corner"
+                  style={{ borderColor: member.color }}
+                ></div>
               </div>
             ))}
           </div>
@@ -255,8 +333,9 @@ const OurCoreTeam = () => {
             </div>
             <h2 className="join-title">Want to Join Our Team?</h2>
             <p className="join-text">
-              We're always looking for talented individuals who share our passion for innovation 
-              and excellence. Join us in building the future of digital experiences.
+              We're always looking for talented individuals who share our
+              passion for innovation and excellence. Join us in building the
+              future of digital experiences.
             </p>
             <button className="join-button">
               View Open Positions <FiZap />
@@ -428,22 +507,29 @@ const OurCoreTeam = () => {
         }
 
         .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 30px;
-        }
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  justify-items: center;
+}
 
-        .stat-card {
-          position: relative;
-          padding: 40px 30px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 24px;
-          text-align: center;
-          transition: all 0.4s ease;
-          overflow: hidden;
-          animation: fadeInUp 0.8s ease both;
-        }
+ .stat-card {
+  position: relative;
+  padding: 40px 30px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  text-align: center;
+  transition: all 0.4s ease;
+  overflow: hidden;
+  animation: fadeInUp 0.8s ease both;
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+ }
 
         .stat-card:hover {
           transform: translateY(-10px);
