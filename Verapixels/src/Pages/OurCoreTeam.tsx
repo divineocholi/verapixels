@@ -507,13 +507,14 @@ const OurCoreTeam = () => {
         }
 
         .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 30px;
-  justify-items: center;
+  justify-content: center;
+  align-items: center;
 }
 
- .stat-card {
+.stat-card {
   position: relative;
   padding: 40px 30px;
   background: rgba(255, 255, 255, 0.02);
@@ -523,13 +524,13 @@ const OurCoreTeam = () => {
   transition: all 0.4s ease;
   overflow: hidden;
   animation: fadeInUp 0.8s ease both;
-  width: 100%;
-  max-width: 300px;
+  width: 280px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
- }
+}
+
 
         .stat-card:hover {
           transform: translateY(-10px);
