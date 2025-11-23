@@ -3694,13 +3694,17 @@ Please change the parent <Route path="${z}"> to <Route path="${z==="/"?"*":`${z}
           background: linear-gradient(135deg, rgba(0, 99, 244, 0.1), transparent);
           opacity: 0.5;
         }
-
+          
         .join-icon {
-          font-size: 72px;
-          color: #00bfff;
-          margin-bottom: 30px;
-          animation: bounce 2s ease infinite;
-        }
+  font-size: 72px;
+  color: #00bfff;
+  margin: 0 auto 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  animation: bounce 2s ease infinite;
+}
 
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
