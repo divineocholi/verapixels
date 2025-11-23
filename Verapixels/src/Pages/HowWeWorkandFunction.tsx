@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { 
-  FiCheckCircle, 
+import {
+  FiCheckCircle,
   FiTarget,
   FiCode,
   FiLayers,
@@ -17,8 +17,23 @@ import {
   FiShield,
   FiHeart,
   FiStar,
-  FiGitBranch
+  FiGitBranch,
+  FiFigma, // Add these
+  FiPackage,
+  FiServer,
+  FiCloud,
+  FiBox,
 } from "react-icons/fi";
+import {
+  SiFigma,
+  SiReact,
+  SiNodedotjs,
+  SiAmazon,
+  SiDocker,
+  SiGit,
+  SiJira,
+  SiSlack,
+} from "react-icons/si";
 import VeeAIChatbot from "../Components/VeeAIChatbot";
 import FAQ from "../Components/FAQ";
 
@@ -39,151 +54,164 @@ const HowWeWorkandFunction = () => {
       number: "01",
       title: "Discovery & Research",
       icon: <FiTarget />,
-      description: "We dive deep into understanding your business, goals, target audience, and market landscape. Every great project starts with knowing exactly what success looks like.",
+      description:
+        "We dive deep into understanding your business, goals, target audience, and market landscape. Every great project starts with knowing exactly what success looks like.",
       details: [
         "Stakeholder interviews & workshops",
         "Competitor analysis & market research",
         "User persona development",
-        "Requirements gathering & documentation"
+        "Requirements gathering & documentation",
       ],
       color: "#0063f4",
-      duration: "1-2 weeks"
+      duration: "1-2 weeks",
     },
     {
       number: "02",
       title: "Strategy & Planning",
       icon: <FiLayers />,
-      description: "Armed with insights, we craft a comprehensive roadmap. This blueprint ensures everyone is aligned and every pixel serves a purpose.",
+      description:
+        "Armed with insights, we craft a comprehensive roadmap. This blueprint ensures everyone is aligned and every pixel serves a purpose.",
       details: [
         "Project scope & timeline definition",
         "Technology stack selection",
         "Architecture & design planning",
-        "Resource allocation & team assembly"
+        "Resource allocation & team assembly",
       ],
       color: "#00bfff",
-      duration: "1 week"
+      duration: "1 week",
     },
     {
       number: "03",
       title: "Design & Prototyping",
       icon: <FiMonitor />,
-      description: "Our creative team brings concepts to life. From wireframes to high-fidelity designs, we create experiences that captivate and convert.",
+      description:
+        "Our creative team brings concepts to life. From wireframes to high-fidelity designs, we create experiences that captivate and convert.",
       details: [
         "Wireframing & user flow mapping",
         "Visual design & brand integration",
         "Interactive prototypes",
-        "Design system development"
+        "Design system development",
       ],
       color: "#00ff88",
-      duration: "2-3 weeks"
+      duration: "2-3 weeks",
     },
     {
       number: "04",
       title: "Development & Iteration",
       icon: <FiCode />,
-      description: "Where ideas become reality. Our developers build robust, scalable solutions using cutting-edge technologies and best practices.",
+      description:
+        "Where ideas become reality. Our developers build robust, scalable solutions using cutting-edge technologies and best practices.",
       details: [
         "Agile sprint-based development",
         "Continuous integration & deployment",
         "Regular code reviews & testing",
-        "Weekly progress demonstrations"
+        "Weekly progress demonstrations",
       ],
       color: "#ffd700",
-      duration: "4-12 weeks"
+      duration: "4-12 weeks",
     },
     {
       number: "05",
       title: "Testing & Quality Assurance",
       icon: <FiShield />,
-      description: "Perfection is in the details. We rigorously test every feature, interaction, and edge case to ensure flawless performance.",
+      description:
+        "Perfection is in the details. We rigorously test every feature, interaction, and edge case to ensure flawless performance.",
       details: [
         "Automated & manual testing",
         "Cross-browser & device compatibility",
         "Performance optimization",
-        "Security audits & penetration testing"
+        "Security audits & penetration testing",
       ],
       color: "#ff6b9d",
-      duration: "1-2 weeks"
+      duration: "1-2 weeks",
     },
     {
       number: "06",
       title: "Launch & Deployment",
       icon: <FiZap />,
-      description: "It's showtime! We handle the entire deployment process, ensuring a smooth transition from development to production.",
+      description:
+        "It's showtime! We handle the entire deployment process, ensuring a smooth transition from development to production.",
       details: [
         "Deployment strategy & rollout plan",
         "Server configuration & optimization",
         "Final quality checks",
-        "Go-live monitoring & support"
+        "Go-live monitoring & support",
       ],
       color: "#9d4edd",
-      duration: "3-5 days"
+      duration: "3-5 days",
     },
     {
       number: "07",
       title: "Support & Evolution",
       icon: <FiRefreshCw />,
-      description: "Our partnership doesn't end at launch. We provide ongoing support, monitoring, and continuous improvements to keep you ahead.",
+      description:
+        "Our partnership doesn't end at launch. We provide ongoing support, monitoring, and continuous improvements to keep you ahead.",
       details: [
         "24/7 technical support",
         "Performance monitoring & analytics",
         "Regular updates & maintenance",
-        "Feature enhancements & scaling"
+        "Feature enhancements & scaling",
       ],
       color: "#00d1ff",
-      duration: "Ongoing"
-    }
+      duration: "Ongoing",
+    },
   ];
 
   const principles = [
     {
       icon: <FiUsers />,
       title: "Client-First Mindset",
-      description: "Your success is our north star. We treat every project as if it were our own business."
+      description:
+        "Your success is our north star. We treat every project as if it were our own business.",
     },
     {
       icon: <FiMessageSquare />,
       title: "Transparent Communication",
-      description: "No jargon, no surprises. We keep you in the loop with clear, honest updates at every stage."
+      description:
+        "No jargon, no surprises. We keep you in the loop with clear, honest updates at every stage.",
     },
     {
       icon: <FiSettings />,
       title: "Agile & Adaptive",
-      description: "Markets change, requirements evolve. We stay flexible and responsive to keep you competitive."
+      description:
+        "Markets change, requirements evolve. We stay flexible and responsive to keep you competitive.",
     },
     {
       icon: <FiAward />,
       title: "Quality Over Speed",
-      description: "We move fast, but never at the expense of excellence. Every deliverable meets our high standards."
+      description:
+        "We move fast, but never at the expense of excellence. Every deliverable meets our high standards.",
     },
     {
       icon: <FiGitBranch />,
       title: "Collaborative Approach",
-      description: "Your team + our team = dream team. We work as an extension of your organization."
+      description:
+        "Your team + our team = dream team. We work as an extension of your organization.",
     },
     {
       icon: <FiHeart />,
       title: "Passion-Driven",
-      description: "We love what we do, and it shows. Every project gets our full dedication and creativity."
-    }
+      description:
+        "We love what we do, and it shows. Every project gets our full dedication and creativity.",
+    },
   ];
 
   const tools = [
-    { name: "Figma", category: "Design", icon: "🎨" },
-    { name: "React", category: "Frontend", icon: "⚛️" },
-    { name: "Node.js", category: "Backend", icon: "🟢" },
-    { name: "AWS", category: "Cloud", icon: "☁️" },
-    { name: "Docker", category: "DevOps", icon: "🐳" },
-    { name: "Git", category: "Version Control", icon: "🔀" },
-    { name: "Jira", category: "Project Management", icon: "📊" },
-    { name: "Slack", category: "Communication", icon: "💬" }
+    { name: "Figma", category: "Design", icon: <SiFigma /> },
+    { name: "React", category: "Frontend", icon: <SiReact /> },
+    { name: "Node.js", category: "Backend", icon: <SiNodedotjs /> },
+    { name: "AWS", category: "Cloud", icon: <SiAmazon /> },
+    { name: "Docker", category: "DevOps", icon: <SiDocker /> },
+    { name: "Git", category: "Version Control", icon: <SiGit /> },
+    { name: "Jira", category: "Project Management", icon: <SiJira /> },
+    { name: "Slack", category: "Communication", icon: <SiSlack /> },
   ];
 
   const metrics = [
     { icon: <FiClock />, value: "48hrs", label: "Average Response Time" },
     { icon: <FiTrendingUp />, value: "98%", label: "On-Time Delivery" },
     { icon: <FiStar />, value: "5.0", label: "Client Satisfaction" },
-    { icon: <FiCheckCircle />, value: "100%", label: "Quality Assurance" }
+    { icon: <FiCheckCircle />, value: "100%", label: "Quality Assurance" },
   ];
 
   return (
@@ -206,15 +234,15 @@ const HowWeWorkandFunction = () => {
             How We <span className="gradient-text">Work & Function</span>
           </h1>
           <p className="hero-subtitle">
-            A proven process that transforms ideas into exceptional digital experiences. 
-            Transparent, collaborative, and designed for success.
+            A proven process that transforms ideas into exceptional digital
+            experiences. Transparent, collaborative, and designed for success.
           </p>
 
           {/* Metrics Grid */}
           <div className="metrics-grid">
             {metrics.map((metric, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="metric-card"
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
@@ -231,9 +259,12 @@ const HowWeWorkandFunction = () => {
       <section className="process-section">
         <div className="work-container">
           <div className="section-header">
-            <h2 className="section-title">Our <span className="gradient-text">7-Step Process</span></h2>
+            <h2 className="section-title">
+              Our <span className="gradient-text">7-Step Process</span>
+            </h2>
             <p className="section-subtitle">
-              From concept to launch and beyond—every step carefully orchestrated for maximum impact
+              From concept to launch and beyond—every step carefully
+              orchestrated for maximum impact
             </p>
           </div>
 
@@ -241,14 +272,16 @@ const HowWeWorkandFunction = () => {
             {workingProcess.map((step, i) => (
               <div
                 key={i}
-                className={`process-step ${activeProcess === i ? 'active' : ''}`}
+                className={`process-step ${
+                  activeProcess === i ? "active" : ""
+                }`}
                 onMouseEnter={() => setActiveProcess(i)}
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
                 <div className="step-number" style={{ color: step.color }}>
                   {step.number}
                 </div>
-                
+
                 <div className="step-icon" style={{ background: step.color }}>
                   {step.icon}
                 </div>
@@ -256,13 +289,16 @@ const HowWeWorkandFunction = () => {
                 <div className="step-content">
                   <div className="step-header">
                     <h3 className="step-title">{step.title}</h3>
-                    <span className="step-duration" style={{ color: step.color }}>
+                    <span
+                      className="step-duration"
+                      style={{ color: step.color }}
+                    >
                       <FiClock /> {step.duration}
                     </span>
                   </div>
-                  
+
                   <p className="step-description">{step.description}</p>
-                  
+
                   <ul className="step-details">
                     {step.details.map((detail, idx) => (
                       <li key={idx} className="detail-item">
@@ -274,7 +310,10 @@ const HowWeWorkandFunction = () => {
                 </div>
 
                 <div className="step-connector"></div>
-                <div className="step-glow" style={{ background: step.color }}></div>
+                <div
+                  className="step-glow"
+                  style={{ background: step.color }}
+                ></div>
               </div>
             ))}
           </div>
@@ -285,16 +324,19 @@ const HowWeWorkandFunction = () => {
       <section className="principles-section">
         <div className="work-container">
           <div className="section-header">
-            <h2 className="section-title">Our Core <span className="gradient-text">Principles</span></h2>
+            <h2 className="section-title">
+              Our Core <span className="gradient-text">Principles</span>
+            </h2>
             <p className="section-subtitle">
-              The values that guide every decision, every line of code, and every pixel we craft
+              The values that guide every decision, every line of code, and
+              every pixel we craft
             </p>
           </div>
 
           <div className="principles-grid">
             {principles.map((principle, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="principle-card"
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
@@ -312,7 +354,9 @@ const HowWeWorkandFunction = () => {
       <section className="tools-section">
         <div className="work-container">
           <div className="section-header">
-            <h2 className="section-title">Our <span className="gradient-text">Tech Stack</span></h2>
+            <h2 className="section-title">
+              Our <span className="gradient-text">Tech Stack</span>
+            </h2>
             <p className="section-subtitle">
               Industry-leading tools and technologies that power our solutions
             </p>
@@ -320,8 +364,8 @@ const HowWeWorkandFunction = () => {
 
           <div className="tools-grid">
             {tools.map((tool, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="tool-card"
                 style={{ animationDelay: `${i * 0.05}s` }}
               >
@@ -343,8 +387,8 @@ const HowWeWorkandFunction = () => {
             </div>
             <h2 className="cta-title">Ready to Start Your Project?</h2>
             <p className="cta-text">
-              Let's discuss how our proven process can bring your vision to life. 
-              Schedule a free consultation today.
+              Let's discuss how our proven process can bring your vision to
+              life. Schedule a free consultation today.
             </p>
             <button className="cta-button">
               Get Started <FiArrowRight />
@@ -499,21 +543,29 @@ const HowWeWorkandFunction = () => {
 
         /* Metrics Grid */
         .metrics-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 30px;
-          margin-top: 60px;
-        }
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  justify-content: center;
+  margin-top: 60px;
+}
 
-        .metric-card {
-          padding: 35px 25px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 20px;
-          text-align: center;
-          transition: all 0.4s ease;
-          animation: fadeInUp 0.8s ease both;
-        }
+
+.metric-card {
+  padding: 35px 25px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  text-align: center;
+  transition: all 0.4s ease;
+  animation: fadeInUp 0.8s ease both;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 
         .metric-card:hover {
           transform: translateY(-10px);
@@ -838,15 +890,19 @@ const HowWeWorkandFunction = () => {
           background: linear-gradient(135deg, rgba(0, 99, 244, 0.1), transparent);
           opacity: 0.5;
         }
-
+         
         .cta-icon {
-          font-size: 80px;
-          color: #00bfff;
-          margin-bottom: 30px;
-          animation: pulse 2s ease-in-out infinite;
-          position: relative;
-          z-index: 1;
-        }
+  font-size: 80px;
+  color: #00bfff;
+  margin: 0 auto 30px;
+  animation: pulse 2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+}
 
         @keyframes pulse {
           0%, 100% { transform: scale(1); }
@@ -871,28 +927,30 @@ const HowWeWorkandFunction = () => {
         }
 
         .cta-button {
-          padding: 20px 50px;
-          font-size: 1.2rem;
-          font-weight: 700;
-          background: linear-gradient(135deg, #0063f4, #00bfff);
-          color: #fff;
-          border: none;
-          border-radius: 50px;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 12px;
-          transition: all 0.3s ease;
-          position: relative;
-          z-index: 1;
-          box-shadow: 0 10px 40px rgba(0, 99, 244, 0.4);
-        }
+  padding: 20px 50px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0063f4, #00bfff);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 10px 40px rgba(0, 99, 244, 0.4);
+}
+  
 
-        .cta-button:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 20px 60px rgba(0, 99, 244, 0.6);
-        }
-
+.cta-button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(0, 99, 244, 0.6);
+  background: linear-gradient(135deg, #0077ff, #00d4ff);
+}
+  
         /* Responsive */
         @media (max-width: 1024px) {
           .process-step {
