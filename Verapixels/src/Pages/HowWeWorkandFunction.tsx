@@ -18,11 +18,6 @@ import {
   FiHeart,
   FiStar,
   FiGitBranch,
-  FiFigma, // Add these
-  FiPackage,
-  FiServer,
-  FiCloud,
-  FiBox,
 } from "react-icons/fi";
 import {
   SiFigma,
@@ -34,8 +29,6 @@ import {
   SiJira,
   SiSlack,
 } from "react-icons/si";
-import VeeAIChatbot from "../Components/VeeAIChatbot";
-import FAQ from "../Components/FAQ";
 
 const HowWeWorkandFunction = () => {
   const [activeProcess, setActiveProcess] = useState(0);
@@ -378,21 +371,42 @@ const HowWeWorkandFunction = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
+      {/* CTA Section - New Modern Style */}
+      <section className="action-section">
         <div className="work-container">
-          <div className="cta-content">
-            <div className="cta-icon">
-              <FiZap />
+          <div className="action-wrapper">
+            <div className="action-left">
+              <div className="action-badge">
+                <FiZap /> Let's Work Together
+              </div>
+              <h2 className="action-title">Ready to Start Your Project?</h2>
+              <p className="action-text">
+                Let's discuss how our proven process can bring your vision to
+                life. Schedule a free consultation today and let's build
+                something amazing together.
+              </p>
+              <div className="action-features">
+                <div className="feature-item">
+                  <FiCheckCircle />
+                  <span>Free consultation & project assessment</span>
+                </div>
+                <div className="feature-item">
+                  <FiCheckCircle />
+                  <span>Transparent pricing & timeline</span>
+                </div>
+                <div className="feature-item">
+                  <FiCheckCircle />
+                  <span>No obligation, just honest advice</span>
+                </div>
+              </div>
             </div>
-            <h2 className="cta-title">Ready to Start Your Project?</h2>
-            <p className="cta-text">
-              Let's discuss how our proven process can bring your vision to
-              life. Schedule a free consultation today.
-            </p>
-            <button className="cta-button">
-              Get Started <FiArrowRight />
-            </button>
+            <div className="action-right">
+              <button className="start-button">
+                <span>Get Started</span>
+                <FiArrowRight className="arrow-icon" />
+              </button>
+              <p className="action-subtext">Join 200+ satisfied clients</p>
+            </div>
           </div>
         </div>
       </section>
@@ -543,29 +557,27 @@ const HowWeWorkandFunction = () => {
 
         /* Metrics Grid */
         .metrics-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  justify-content: center;
-  margin-top: 60px;
-}
+          display: flex;
+          flex-wrap: wrap;
+          gap: 30px;
+          justify-content: center;
+          margin-top: 60px;
+        }
 
-
-.metric-card {
-  padding: 35px 25px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  text-align: center;
-  transition: all 0.4s ease;
-  animation: fadeInUp 0.8s ease both;
-  width: 240px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
+        .metric-card {
+          padding: 35px 25px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          text-align: center;
+          transition: all 0.4s ease;
+          animation: fadeInUp 0.8s ease both;
+          width: 240px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
 
         .metric-card:hover {
           transform: translateY(-10px);
@@ -768,9 +780,10 @@ const HowWeWorkandFunction = () => {
         }
 
         .principles-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          display: flex;
+          flex-wrap: wrap;
           gap: 40px;
+          justify-content: center;
         }
 
         .principle-card {
@@ -781,6 +794,11 @@ const HowWeWorkandFunction = () => {
           border-radius: 24px;
           transition: all 0.4s ease;
           animation: fadeInUp 0.8s ease both;
+          width: 380px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
         }
 
         .principle-card:hover {
@@ -827,9 +845,10 @@ const HowWeWorkandFunction = () => {
         }
 
         .tools-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          display: flex;
+          flex-wrap: wrap;
           gap: 25px;
+          justify-content: center;
         }
 
         .tool-card {
@@ -840,6 +859,11 @@ const HowWeWorkandFunction = () => {
           text-align: center;
           transition: all 0.4s ease;
           animation: fadeInUp 0.6s ease both;
+          width: 200px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
         }
 
         .tool-card:hover {
@@ -854,6 +878,20 @@ const HowWeWorkandFunction = () => {
           margin-bottom: 16px;
         }
 
+        .tool-icon svg {
+          color: inherit;
+        }
+
+        /* Original Brand Colors for Tech Stack Icons */
+        .tool-card:nth-child(1) .tool-icon { color: #F24E1E; } /* Figma */
+        .tool-card:nth-child(2) .tool-icon { color: #61DAFB; } /* React */
+        .tool-card:nth-child(3) .tool-icon { color: #339933; } /* Node.js */
+        .tool-card:nth-child(4) .tool-icon { color: #FF9900; } /* AWS */
+        .tool-card:nth-child(5) .tool-icon { color: #2496ED; } /* Docker */
+        .tool-card:nth-child(6) .tool-icon { color: #F05032; } /* Git */
+        .tool-card:nth-child(7) .tool-icon { color: #0052CC; } /* Jira */
+        .tool-card:nth-child(8) .tool-icon { color: #4A154B; } /* Slack */
+
         .tool-name {
           font-size: 1.2rem;
           font-weight: 700;
@@ -866,16 +904,17 @@ const HowWeWorkandFunction = () => {
           font-weight: 600;
         }
 
-        /* CTA Section */
-        .cta-section {
+        /* New Action Section */
+        .action-section {
           padding: 120px 0;
         }
 
-        .cta-content {
-          text-align: center;
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 80px 50px;
+        .action-wrapper {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 60px;
+          align-items: center;
+          padding: 70px;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 30px;
@@ -883,74 +922,141 @@ const HowWeWorkandFunction = () => {
           overflow: hidden;
         }
 
-        .cta-content::before {
+        .action-wrapper::before {
           content: '';
           position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(0, 99, 244, 0.1), transparent);
-          opacity: 0.5;
-        }
-         
-        .cta-icon {
-  font-size: 80px;
-  color: #00bfff;
-  margin: 0 auto 30px;
-  animation: pulse 2s ease-in-out infinite;
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-}
-
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, rgba(0, 99, 244, 0.08) 0%, transparent 50%);
+          pointer-events: none;
         }
 
-        .cta-title {
-          font-size: 3rem;
+        .action-left {
+          position: relative;
+          z-index: 1;
+        }
+
+        .action-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 20px;
+          background: rgba(0, 99, 244, 0.15);
+          border: 1px solid rgba(0, 99, 244, 0.4);
+          border-radius: 25px;
+          color: #00bfff;
+          font-weight: 700;
+          font-size: 0.95rem;
+          margin-bottom: 25px;
+          width: fit-content;
+        }
+
+        .action-title {
+          font-size: 3.5rem;
           font-weight: 900;
+          line-height: 1.2;
           margin-bottom: 20px;
-          position: relative;
-          z-index: 1;
         }
 
-        .cta-text {
-          font-size: 1.2rem;
+        .action-text {
+          font-size: 1.15rem;
           line-height: 1.8;
-          color: rgba(255, 255, 255, 0.8);
-          margin-bottom: 40px;
+          color: rgba(255, 255, 255, 0.75);
+          margin-bottom: 35px;
+          max-width: 600px;
+        }
+
+        .action-features {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .feature-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 1.05rem;
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        .feature-item svg {
+          color: #00ff88;
+          font-size: 20px;
+          flex-shrink: 0;
+        }
+
+        .action-right {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
           position: relative;
           z-index: 1;
         }
 
-        .cta-button {
-  padding: 20px 50px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #0063f4, #00bfff);
-  color: #fff;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 10px 40px rgba(0, 99, 244, 0.4);
-}
-  
+        .start-button {
+          position: relative;
+          padding: 24px 60px;
+          font-size: 1.3rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          color: #fff;
+          border: none;
+          border-radius: 50px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          transition: all 0.3s ease;
+          box-shadow: 0 15px 40px rgba(0, 99, 244, 0.4);
+          overflow: hidden;
+        }
 
-.cta-button:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 60px rgba(0, 99, 244, 0.6);
-  background: linear-gradient(135deg, #0077ff, #00d4ff);
-}
-  
+        .start-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+          transition: left 0.5s ease;
+        }
+
+        .start-button:hover::before {
+          left: 100%;
+        }
+
+        .start-button:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 25px 60px rgba(0, 99, 244, 0.6);
+          background: linear-gradient(135deg, #0077ff, #00d4ff);
+        }
+
+        .start-button span {
+          position: relative;
+          z-index: 1;
+        }
+
+        .arrow-icon {
+          position: relative;
+          z-index: 1;
+          transition: transform 0.3s ease;
+        }
+
+        .start-button:hover .arrow-icon {
+          transform: translateX(5px);
+        }
+
+        .action-subtext {
+          font-size: 0.95rem;
+          color: rgba(255, 255, 255, 0.5);
+          text-align: center;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
           .process-step {
@@ -973,6 +1079,16 @@ const HowWeWorkandFunction = () => {
           .step-connector {
             left: 60px;
           }
+
+          .action-wrapper {
+            grid-template-columns: 1fr;
+            gap: 50px;
+            padding: 60px 50px;
+          }
+
+          .action-right {
+            justify-content: center;
+          }
         }
 
         @media (max-width: 768px) {
@@ -989,8 +1105,12 @@ const HowWeWorkandFunction = () => {
           }
 
           .metrics-grid {
-            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
+          }
+
+          .metric-card {
+            width: calc(50% - 10px);
+            min-width: 0;
           }
 
           .metric-value {
@@ -1033,35 +1153,54 @@ const HowWeWorkandFunction = () => {
           }
 
           .principles-grid {
-            grid-template-columns: 1fr;
             gap: 30px;
           }
 
+          .principle-card {
+            width: 100%;
+          }
+
           .tools-grid {
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 20px;
+          }
+
+          .tool-card {
+            width: calc(50% - 10px);
+            min-width: 0;
+            padding: 30px 20px;
           }
 
           .tool-icon {
             font-size: 2.8rem;
           }
 
-          .cta-content {
-            padding: 60px 30px;
+          .action-wrapper {
+            padding: 50px 30px;
           }
 
-          .cta-title {
-            font-size: 2rem;
+          .action-title {
+            font-size: 2.5rem;
           }
 
-          .cta-text {
+          .action-text {
             font-size: 1.05rem;
+          }
+
+          .start-button {
+            padding: 20px 50px;
+            font-size: 1.15rem;
+            width: 100%;
+            justify-content: center;
           }
         }
 
         @media (max-width: 480px) {
           .metrics-grid {
-            grid-template-columns: 1fr;
+            flex-direction: column;
+          }
+
+          .metric-card {
+            width: 100%;
           }
 
           .hero-badge {
@@ -1074,19 +1213,19 @@ const HowWeWorkandFunction = () => {
             align-items: flex-start;
           }
 
-          .tools-grid {
-            grid-template-columns: repeat(2, 1fr);
+          .tool-card {
+            width: 100%;
           }
 
-          .cta-button {
-            width: 100%;
-            justify-content: center;
+          .action-title {
+            font-size: 2rem;
+          }
+
+          .start-button {
             padding: 18px 40px;
           }
         }
       `}</style>
-      <VeeAIChatbot />
-      <FAQ />
     </div>
   );
 };
