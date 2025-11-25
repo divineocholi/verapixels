@@ -13,18 +13,17 @@ import {
   FiStar,
   FiHeart,
   FiAward,
-  FiBook
+  FiBook,
+  FiMenu,
+  FiX
 } from "react-icons/fi";
-import Navbar from "../Components/Navbar";
-import VeeAIChatbot from "../Components/VeeAIChatbot";
-import FAQ from "../Components/FAQ";
 
-const AboutPage: React.FC = () => {
+const AboutPage = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement> | MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
 
@@ -32,11 +31,11 @@ const AboutPage: React.FC = () => {
       setScrollY(window.scrollY);
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove as any);
     window.addEventListener("scroll", handleScroll);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousemove", handleMouseMove as any);
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
@@ -76,8 +75,6 @@ const AboutPage: React.FC = () => {
 
   return (
     <div className="about-page">
-      <Navbar />
-      
       {/* Animated Background */}
       <div className="about-bg-particles">
         <div 
@@ -103,38 +100,48 @@ const AboutPage: React.FC = () => {
       {/* Hero Section */}
       <section className="about-hero">
         <div className="about-container">
-          <div className="hero-content">
-            <div 
-              className="hero-badge"
-              style={{
-                transform: `translateY(${scrollY * 0.1}px)`
-              }}
-            >
-              <FiStar /> Founded in 2025
+          <div className="hero-grid">
+            <div className="hero-content">
+              <div 
+                className="hero-badge"
+                style={{
+                  transform: `translateY(${Math.min(scrollY * 0.1, 20)}px)`
+                }}
+              >
+                <FiStar /> Founded in 2025
+              </div>
+              <h1 className="hero-title">
+                The Story Behind
+                <br />
+                <span className="gradient-text">Verapixels</span>
+              </h1>
+              <p className="hero-subtitle">
+                Where innovation meets precision, and every pixel tells a story of excellence.
+              </p>
+              <div className="hero-cta">
+                <button className="btn-primary">
+                  Our Story <FiArrowRight />
+                </button>
+                <button className="btn-secondary">
+                  View Work
+                </button>
+              </div>
             </div>
-            <h1 className="hero-title">
-              The Story Behind
-              <br />
-              <span className="gradient-text">Verapixels</span>
-            </h1>
-            <p className="hero-subtitle">
-              Where innovation meets precision, and every pixel tells a story of excellence.
-            </p>
-          </div>
-          
-          <div 
-            className="hero-visual"
-            style={{
-              transform: `perspective(1000px) rotateY(${mousePosition.x * 0.01}deg) rotateX(${mousePosition.y * -0.01}deg)`
-            }}
-          >
-            <div className="floating-cube">
-              <div className="cube-face front"></div>
-              <div className="cube-face back"></div>
-              <div className="cube-face left"></div>
-              <div className="cube-face right"></div>
-              <div className="cube-face top"></div>
-              <div className="cube-face bottom"></div>
+            
+            <div className="hero-visual">
+              <div 
+                className="floating-cube"
+                style={{
+                  transform: `perspective(1000px) rotateY(${mousePosition.x * 0.01}deg) rotateX(${mousePosition.y * -0.01}deg)`
+                }}
+              >
+                <div className="cube-face front"></div>
+                <div className="cube-face back"></div>
+                <div className="cube-face left"></div>
+                <div className="cube-face right"></div>
+                <div className="cube-face top"></div>
+                <div className="cube-face bottom"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -237,8 +244,7 @@ const AboutPage: React.FC = () => {
               <p className="story-text">
                 I combined "Vera" with "Pixels" because that's what we do—we create truth through pixels. 
                 When you give a design element the right padding, the right spacing, the perfect 20px—and 
-                it looks absolutely flawless—that's the Verapixels standard. We make things look not just 
-                good, but perfect.
+                it looks absolutely flawless—that's the Verapixels standard.
               </p>
             </div>
           </div>
@@ -251,7 +257,7 @@ const AboutPage: React.FC = () => {
           <div className="meaning-content">
             <div className="meaning-visual">
               <div className="pixel-grid">
-                {[...Array(25)].map((_, i) => (
+                {[...Array(20)].map((_, i) => (
                   <div 
                     key={i} 
                     className="pixel-dot"
@@ -419,11 +425,18 @@ const AboutPage: React.FC = () => {
       </section>
 
       <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
         .about-page {
           background: #000;
           color: #fff;
           overflow-x: hidden;
           position: relative;
+          min-height: 100vh;
         }
 
         /* Animated Background */
@@ -477,7 +490,7 @@ const AboutPage: React.FC = () => {
         .about-container {
           max-width: 1200px;
           margin: 0 auto;
-          padding: 0 20px;
+          padding: 0 1.25rem;
           position: relative;
           z-index: 1;
         }
@@ -487,11 +500,17 @@ const AboutPage: React.FC = () => {
           min-height: 100vh;
           display: flex;
           align-items: center;
-          padding: 120px 0 80px;
+          padding: 140px 0 80px;
+        }
+
+        .hero-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 3rem;
+          align-items: center;
         }
 
         .hero-content {
-          flex: 1;
           animation: slideInLeft 1s ease;
         }
 
@@ -503,22 +522,22 @@ const AboutPage: React.FC = () => {
         .hero-badge {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 10px 20px;
+          gap: 0.5rem;
+          padding: 0.625rem 1.25rem;
           background: rgba(0, 99, 244, 0.15);
           border: 1px solid rgba(0, 99, 244, 0.4);
           border-radius: 25px;
           color: #00bfff;
           font-weight: 700;
           font-size: 0.95rem;
-          margin-bottom: 24px;
+          margin-bottom: 1.5rem;
         }
 
         .hero-title {
-          font-size: clamp(40px, 7vw, 72px);
+          font-size: clamp(2.5rem, 7vw, 4.5rem);
           font-weight: 900;
           line-height: 1.1;
-          margin: 0 0 24px;
+          margin: 0 0 1.5rem;
           letter-spacing: -0.03em;
         }
 
@@ -530,15 +549,56 @@ const AboutPage: React.FC = () => {
         }
 
         .hero-subtitle {
-          font-size: 1.25rem;
+          font-size: clamp(1rem, 2.5vw, 1.25rem);
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.8);
-          max-width: 600px;
+          margin-bottom: 2rem;
+        }
+
+        .hero-cta {
+          display: flex;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+
+        .btn-primary, .btn-secondary {
+          padding: 0.875rem 1.75rem;
+          font-size: 1rem;
+          font-weight: 700;
+          border-radius: 50px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .btn-primary {
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          color: #fff;
+          box-shadow: 0 10px 40px rgba(0, 99, 244, 0.4);
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 15px 50px rgba(0, 99, 244, 0.6);
+        }
+
+        .btn-secondary {
+          background: transparent;
+          color: #fff;
+          border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.4);
+          transform: translateY(-3px);
         }
 
         /* 3D Floating Cube */
         .hero-visual {
-          flex: 1;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -546,8 +606,8 @@ const AboutPage: React.FC = () => {
         }
 
         .floating-cube {
-          width: 220px;
-          height: 220px;
+          width: 200px;
+          height: 200px;
           position: relative;
           transform-style: preserve-3d;
           animation: rotateCube 25s infinite linear;
@@ -560,31 +620,31 @@ const AboutPage: React.FC = () => {
 
         .cube-face {
           position: absolute;
-          width: 220px;
-          height: 220px;
+          width: 200px;
+          height: 200px;
           border: 2px solid rgba(0, 99, 244, 0.6);
           background: linear-gradient(135deg, rgba(0, 99, 244, 0.15), rgba(0, 191, 255, 0.08));
           backdrop-filter: blur(15px);
           box-shadow: 0 0 40px rgba(0, 99, 244, 0.3);
         }
 
-        .cube-face.front  { transform: translateZ(110px); }
-        .cube-face.back   { transform: rotateY(180deg) translateZ(110px); }
-        .cube-face.left   { transform: rotateY(-90deg) translateZ(110px); }
-        .cube-face.right  { transform: rotateY(90deg) translateZ(110px); }
-        .cube-face.top    { transform: rotateX(90deg) translateZ(110px); }
-        .cube-face.bottom { transform: rotateX(-90deg) translateZ(110px); }
+        .cube-face.front  { transform: translateZ(100px); }
+        .cube-face.back   { transform: rotateY(180deg) translateZ(100px); }
+        .cube-face.left   { transform: rotateY(-90deg) translateZ(100px); }
+        .cube-face.right  { transform: rotateY(90deg) translateZ(100px); }
+        .cube-face.top    { transform: rotateX(90deg) translateZ(100px); }
+        .cube-face.bottom { transform: rotateX(-90deg) translateZ(100px); }
 
         /* Founder Section */
         .founder-section {
-          padding: 120px 0;
+          padding: 7.5rem 0;
           background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.03), transparent);
         }
 
         .founder-grid {
           display: grid;
           grid-template-columns: 1fr 1.2fr;
-          gap: 80px;
+          gap: 5rem;
           align-items: center;
         }
 
@@ -626,22 +686,23 @@ const AboutPage: React.FC = () => {
         .founder-label {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
+          gap: 0.5rem;
+          padding: 0.5rem 1rem;
           background: rgba(0, 99, 244, 0.1);
           border: 1px solid rgba(0, 99, 244, 0.3);
           border-radius: 20px;
           color: #00bfff;
           font-weight: 600;
           font-size: 0.9rem;
-          margin-bottom: 20px;
+          margin-bottom: 1.25rem;
         }
 
         .section-title {
-          font-size: clamp(36px, 5vw, 52px);
+          font-size: clamp(2.25rem, 5vw, 3.25rem);
           font-weight: 900;
+          text-align: center;
           line-height: 1.2;
-          margin: 0 0 28px;
+          margin: 0 0 1.75rem;
         }
 
         .text-center {
@@ -649,35 +710,37 @@ const AboutPage: React.FC = () => {
         }
 
         .section-subtitle {
-          font-size: 1.15rem;
+          font-size: clamp(1rem, 2vw, 1.15rem);
           color: rgba(255, 255, 255, 0.7);
           text-align: center;
-          margin: -16px 0 60px;
+          margin: -1rem 0 3.75rem;
         }
 
         .founder-text {
-          font-size: 1.1rem;
+          font-size: clamp(1rem, 2vw, 1.1rem);
           line-height: 1.9;
           color: rgba(255, 255, 255, 0.85);
-          margin-bottom: 24px;
+          margin-bottom: 1.5rem;
         }
 
         .founder-stats {
-          display: flex;
-          gap: 20px;
-          margin-top: 40px;
-          flex-wrap: wrap;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 1.25rem;
+          margin-top: 2.5rem;
         }
 
         .stat-box {
-          flex: 1;
-          min-width: 140px;
-          padding: 20px;
+          padding: 1.25rem;
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 16px;
           text-align: center;
           transition: all 0.3s ease;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
         }
 
         .stat-box:hover {
@@ -687,34 +750,44 @@ const AboutPage: React.FC = () => {
         }
 
         .stat-icon {
-          font-size: 32px;
+          font-size: 2rem;
           color: #00bfff;
-          margin-bottom: 12px;
+          margin-bottom: 0.75rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+        }
+
+        .stat-icon svg {
+          display: block;
+          margin: 0 auto;
         }
 
         .stat-label {
           font-weight: 600;
           color: rgba(255, 255, 255, 0.9);
+          font-size: 0.95rem;
         }
 
         /* Origin Story Section */
         .origin-section {
-          padding: 120px 0;
+          padding: 7.5rem 0;
         }
 
         .origin-header {
-          margin-bottom: 80px;
+          margin-bottom: 5rem;
         }
 
         .origin-story {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 40px;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 2.5rem;
         }
 
         .story-card {
           position: relative;
-          padding: 50px 35px;
+          padding: 3.125rem 2.2rem;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.06);
           border-radius: 24px;
@@ -734,7 +807,7 @@ const AboutPage: React.FC = () => {
           position: absolute;
           top: 20px;
           right: 30px;
-          font-size: 64px;
+          font-size: 4rem;
           font-weight: 900;
           color: rgba(0, 99, 244, 0.1);
           line-height: 1;
@@ -749,19 +822,24 @@ const AboutPage: React.FC = () => {
           background: linear-gradient(135deg, #0063f4, #00bfff);
           border-radius: 18px;
           color: #fff;
-          font-size: 32px;
-          margin-bottom: 24px;
+          font-size: 2rem;
+          margin: 0 0 1.5rem 0;
           box-shadow: 0 10px 30px rgba(0, 99, 244, 0.3);
         }
 
+        .story-icon svg {
+          display: block;
+          margin: 0;
+        }
+
         .story-title {
-          font-size: 1.6rem;
+          font-size: clamp(1.375rem, 3vw, 1.6rem);
           font-weight: 700;
-          margin: 0 0 16px;
+          margin: 0 0 1rem;
         }
 
         .story-text {
-          font-size: 1.05rem;
+          font-size: clamp(0.95rem, 2vw, 1.05rem);
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.8);
           margin: 0;
@@ -769,20 +847,20 @@ const AboutPage: React.FC = () => {
 
         /* Name Meaning Section */
         .meaning-section {
-          padding: 120px 0;
+          padding: 7.5rem 0;
           background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.05), transparent);
         }
 
         .meaning-content {
           display: grid;
           grid-template-columns: 1fr 1.5fr;
-          gap: 80px;
+          gap: 5rem;
           align-items: center;
         }
 
         .meaning-visual {
           position: relative;
-          height: 500px;
+          min-height: 400px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -791,7 +869,9 @@ const AboutPage: React.FC = () => {
         .pixel-grid {
           display: grid;
           grid-template-columns: repeat(5, 1fr);
-          gap: 20px;
+          gap: 1.25rem;
+          max-width: 400px;
+          margin: 0 auto;
         }
 
         .pixel-dot {
@@ -811,8 +891,8 @@ const AboutPage: React.FC = () => {
         .meaning-breakdown {
           display: flex;
           align-items: center;
-          gap: 30px;
-          margin: 40px 0;
+          gap: 1.875rem;
+          margin: 2.5rem 0;
           flex-wrap: wrap;
         }
 
@@ -822,16 +902,16 @@ const AboutPage: React.FC = () => {
         }
 
         .word-title {
-          font-size: 2rem;
+          font-size: clamp(1.75rem, 3vw, 2rem);
           font-weight: 900;
           background: linear-gradient(135deg, #0063f4, #00bfff);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          margin: 0 0 12px;
+          margin: 0 0 0.75rem;
         }
 
         .word-description {
-          font-size: 1.05rem;
+          font-size: clamp(0.95rem, 2vw, 1.05rem);
           line-height: 1.7;
           color: rgba(255, 255, 255, 0.8);
           margin: 0;
@@ -844,22 +924,22 @@ const AboutPage: React.FC = () => {
         }
 
         .meaning-result {
-          padding: 35px;
+          padding: 2.2rem;
           background: rgba(0, 99, 244, 0.08);
           border: 2px solid rgba(0, 99, 244, 0.3);
           border-radius: 20px;
-          margin-top: 40px;
+          margin-top: 2.5rem;
         }
 
         .result-title {
-          font-size: 1.8rem;
+          font-size: clamp(1.5rem, 3vw, 1.8rem);
           font-weight: 800;
           color: #00bfff;
-          margin: 0 0 16px;
+          margin: 0 0 1rem;
         }
 
         .result-text {
-          font-size: 1.1rem;
+          font-size: clamp(1rem, 2vw, 1.1rem);
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.9);
           margin: 0;
@@ -867,23 +947,27 @@ const AboutPage: React.FC = () => {
 
         /* Mission Section */
         .mission-section {
-          padding: 120px 0;
+          padding: 7.5rem 0;
         }
 
-      .mission-grid {
+        .mission-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-          gap: 40px;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 2.5rem;
         }
 
         .mission-card {
-          padding: 50px 40px;
+          padding: 3.5rem 2.8rem;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 24px;
           transition: all 0.4s ease;
           position: relative;
           overflow: hidden;
+          min-height: 360px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .mission-card::before {
@@ -914,52 +998,65 @@ const AboutPage: React.FC = () => {
           background: linear-gradient(135deg, #0063f4, #00bfff);
           border-radius: 20px;
           color: #fff;
-          font-size: 36px;
-          margin-bottom: 28px;
+          font-size: 2.25rem;
+          margin: 0 auto 1.75rem;
           box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
           position: relative;
           z-index: 1;
         }
 
+        .mission-icon svg {
+          display: block;
+          margin: 0 auto;
+        }
+
         .mission-title {
-          font-size: 2rem;
+          font-size: clamp(1.75rem, 3vw, 2rem);
           font-weight: 800;
-          margin: 0 0 20px;
+          margin: 0 0 1.25rem;
           position: relative;
           z-index: 1;
+          text-align: center;
+          width: 100%;
         }
 
         .mission-text {
-          font-size: 1.1rem;
+          font-size: clamp(1rem, 2vw, 1.1rem);
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.85);
           margin: 0;
           position: relative;
           z-index: 1;
+          text-align: center;
+          width: 100%;
         }
 
         /* Values Section */
         .values-section {
-          padding: 120px 0;
+          padding: 7.5rem 0;
           background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.03), transparent);
         }
 
         .values-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 35px;
-          margin-top: 60px;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 2.5rem;
+          margin-top: 3.75rem;
         }
 
         .value-card {
           position: relative;
-          padding: 45px 35px;
+          padding: 3.5rem 3rem;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
           transition: all 0.4s ease;
           overflow: hidden;
           animation: fadeInUp 0.8s ease both;
+          min-height: 340px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .value-card:hover {
@@ -985,37 +1082,50 @@ const AboutPage: React.FC = () => {
         }
 
         .value-icon {
-          font-size: 48px;
-          margin-bottom: 24px;
+          font-size: 3.5rem;
+          margin: 0 0 2rem 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          height: 80px;
+        }
+
+        .value-icon svg {
           display: block;
+          margin: 0 auto;
         }
 
         .value-title {
-          font-size: 1.5rem;
+          font-size: clamp(1.375rem, 2.5vw, 1.5rem);
           font-weight: 700;
-          margin: 0 0 16px;
+          margin: 0 0 1.25rem;
           position: relative;
           z-index: 1;
+          text-align: center;
+          width: 100%;
         }
 
         .value-description {
-          font-size: 1.05rem;
-          line-height: 1.7;
+          font-size: clamp(1rem, 2vw, 1.05rem);
+          line-height: 1.8;
           color: rgba(255, 255, 255, 0.8);
           margin: 0;
           position: relative;
           z-index: 1;
+          text-align: center;
+          width: 100%;
         }
 
         /* Timeline Section */
         .timeline-section {
-          padding: 120px 0;
+          padding: 7.5rem 0;
         }
 
         .timeline {
           position: relative;
           max-width: 800px;
-          margin: 80px auto 0;
+          margin: 5rem auto 0;
         }
 
         .timeline::before {
@@ -1031,7 +1141,7 @@ const AboutPage: React.FC = () => {
         .timeline-item {
           position: relative;
           padding-left: 90px;
-          margin-bottom: 80px;
+          margin-bottom: 5rem;
           animation: fadeInUp 0.8s ease both;
         }
 
@@ -1054,7 +1164,7 @@ const AboutPage: React.FC = () => {
         }
 
         .timeline-content {
-          padding: 35px;
+          padding: 2.2rem;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
@@ -1069,23 +1179,23 @@ const AboutPage: React.FC = () => {
 
         .timeline-year {
           display: inline-block;
-          padding: 8px 18px;
+          padding: 0.5rem 1.125rem;
           background: linear-gradient(135deg, #0063f4, #00bfff);
           border-radius: 12px;
           font-weight: 800;
           font-size: 0.95rem;
-          margin-bottom: 16px;
+          margin-bottom: 1rem;
           color: #fff;
         }
 
         .timeline-title {
-          font-size: 1.8rem;
+          font-size: clamp(1.5rem, 3vw, 1.8rem);
           font-weight: 700;
-          margin: 0 0 12px;
+          margin: 0 0 0.75rem;
         }
 
         .timeline-text {
-          font-size: 1.05rem;
+          font-size: clamp(0.95rem, 2vw, 1.05rem);
           line-height: 1.7;
           color: rgba(255, 255, 255, 0.8);
           margin: 0;
@@ -1093,7 +1203,7 @@ const AboutPage: React.FC = () => {
 
         /* CTA Section */
         .cta-section {
-          padding: 120px 0 80px;
+          padding: 7.5rem 0 5rem;
           text-align: center;
         }
 
@@ -1103,28 +1213,28 @@ const AboutPage: React.FC = () => {
         }
 
         .cta-title {
-          font-size: clamp(36px, 5vw, 56px);
+          font-size: clamp(2.25rem, 5vw, 3.5rem);
           font-weight: 900;
           line-height: 1.2;
-          margin: 0 0 24px;
+          margin: 0 0 1.5rem;
         }
 
         .cta-description {
-          font-size: 1.25rem;
+          font-size: clamp(1.1rem, 2.5vw, 1.25rem);
           color: rgba(255, 255, 255, 0.8);
-          margin-bottom: 50px;
+          margin-bottom: 3.125rem;
         }
 
         .cta-buttons {
           display: flex;
-          gap: 20px;
+          gap: 1.25rem;
           justify-content: center;
           flex-wrap: wrap;
-          margin-bottom: 60px;
+          margin-bottom: 3.75rem;
         }
 
         .btn-primary-large, .btn-secondary-large {
-          padding: 18px 40px;
+          padding: 1.125rem 2.5rem;
           font-size: 1.1rem;
           font-weight: 700;
           border-radius: 50px;
@@ -1133,7 +1243,7 @@ const AboutPage: React.FC = () => {
           transition: all 0.3s ease;
           display: inline-flex;
           align-items: center;
-          gap: 12px;
+          gap: 0.75rem;
         }
 
         .btn-primary-large {
@@ -1163,19 +1273,19 @@ const AboutPage: React.FC = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 30px;
+          gap: 1.875rem;
           flex-wrap: wrap;
         }
 
         .social-label {
-          font-size: 1.05rem;
+          font-size: clamp(0.95rem, 2vw, 1.05rem);
           color: rgba(255, 255, 255, 0.7);
           font-weight: 600;
         }
 
         .social-links {
           display: flex;
-          gap: 16px;
+          gap: 1rem;
         }
 
         .social-link-large {
@@ -1188,7 +1298,7 @@ const AboutPage: React.FC = () => {
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 50%;
           color: #fff;
-          font-size: 22px;
+          font-size: 1.375rem;
           transition: all 0.3s ease;
           text-decoration: none;
         }
@@ -1202,69 +1312,137 @@ const AboutPage: React.FC = () => {
 
         /* Responsive Design */
         @media (max-width: 968px) {
-          .about-hero .about-container {
-            flex-direction: column;
+          .about-container {
+            padding: 0 1.5rem;
+          }
+
+          .hero-grid {
+            grid-template-columns: 1fr;
             text-align: center;
+            gap: 2rem;
+          }
+
+          .hero-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
           }
 
           .hero-subtitle {
-            max-width: 100%;
+            margin: 0 auto 2rem;
           }
 
-          .floating-cube {
-            margin-top: 60px;
+          .hero-visual {
+            margin-top: 2rem;
+          }
+
+          .hero-cta {
+            justify-content: center;
           }
 
           .founder-grid,
           .meaning-content {
             grid-template-columns: 1fr;
-            gap: 50px;
+            gap: 3rem;
           }
 
           .founder-image {
-            height: 500px;
+            height: 450px;
           }
 
-          .mission-grid,
-          .values-grid {
+          .mission-grid {
             grid-template-columns: 1fr;
+            gap: 2rem;
           }
 
           .origin-story {
             grid-template-columns: 1fr;
+            gap: 2rem;
+          }
+
+          .values-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
           }
 
           .meaning-breakdown {
             flex-direction: column;
-            align-items: flex-start;
+            align-items: center;
+            text-align: center;
+            gap: 1.5rem;
+          }
+
+          .word-part {
+            min-width: 100%;
+            text-align: center;
+          }
+
+          .word-description {
+            text-align: center;
           }
 
           .plus-sign {
             align-self: center;
+            margin: 1rem 0;
+          }
+
+          .meaning-visual {
+            min-height: 300px;
+            margin-bottom: 2rem;
+          }
+
+          .pixel-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            max-width: 280px;
+          }
+
+          .pixel-dot {
+            width: 50px;
+            height: 50px;
+          }
+
+          .meaning-result {
+            text-align: left;
           }
         }
 
-        @media (max-width: 640px) {
-          .hero-title {
-            font-size: 36px;
+        @media (max-width: 768px) {
+          .about-hero {
+            min-height: auto;
+            padding: 100px 0 60px;
           }
 
-          .section-title {
-            font-size: 32px;
+          .founder-section,
+          .origin-section,
+          .meaning-section,
+          .mission-section,
+          .values-section,
+          .timeline-section {
+            padding: 80px 0;
           }
 
-          .cta-title {
-            font-size: 32px;
+          .founder-image {
+            height: 400px;
           }
 
-          .cta-buttons {
-            flex-direction: column;
+          .founder-stats {
+            grid-template-columns: 1fr;
+            gap: 1rem;
           }
 
-          .btn-primary-large,
-          .btn-secondary-large {
-            width: 100%;
-            justify-content: center;
+          .stat-box {
+            min-width: 100%;
+          }
+
+          .story-card {
+            padding: 40px 25px;
+          }
+
+          .story-number {
+            font-size: 3.5rem;
+            top: 15px;
+            right: 20px;
           }
 
           .timeline::before {
@@ -1277,19 +1455,308 @@ const AboutPage: React.FC = () => {
 
           .timeline-item {
             padding-left: 60px;
+            margin-bottom: 60px;
           }
 
-          .founder-stats {
-            flex-direction: column;
+          .timeline-content {
+            padding: 25px;
           }
 
-          .stat-box {
-            min-width: 100%;
+          .meaning-visual {
+            min-height: 250px;
+          }
+
+          .pixel-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.875rem;
+            max-width: 240px;
+          }
+
+          .pixel-dot {
+            width: 45px;
+            height: 45px;
+          }
+
+          .floating-cube {
+            width: 160px;
+            height: 160px;
+          }
+
+          .cube-face {
+            width: 160px;
+            height: 160px;
+          }
+
+          .cube-face.front  { transform: translateZ(80px); }
+          .cube-face.back   { transform: rotateY(180deg) translateZ(80px); }
+          .cube-face.left   { transform: rotateY(-90deg) translateZ(80px); }
+          .cube-face.right  { transform: rotateY(90deg) translateZ(80px); }
+          .cube-face.top    { transform: rotateX(90deg) translateZ(80px); }
+          .cube-face.bottom { transform: rotateX(-90deg) translateZ(80px); }
+
+          .value-card {
+            padding: 2.5rem 2rem;
+            min-height: 300px;
+          }
+
+          .value-icon {
+            font-size: 3rem;
+            height: 70px;
+          }
+          
+          .value-title {
+            font-size: 1.375rem;
+          }
+          
+          .value-description {
+            font-size: 1rem;
+          }
+
+          .origin-header {
+            margin-bottom: 50px;
           }
         }
+
+        @media (max-width: 640px) {
+          .about-container {
+            padding: 0 1.25rem;
+          }
+
+          .hero-badge {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+          }
+
+          .cta-buttons {
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+          }
+
+          .btn-primary,
+          .btn-secondary {
+            width: 100%;
+            justify-content: center;
+          }
+
+          .btn-primary-large,
+          .btn-secondary-large {
+            width: 100%;
+            justify-content: center;
+            padding: 16px 32px;
+            font-size: 1rem;
+          }
+
+          .social-section {
+            flex-direction: column;
+            gap: 1.25rem;
+          }
+
+          .social-links {
+            gap: 12px;
+          }
+
+          .social-link-large {
+            width: 45px;
+            height: 45px;
+            font-size: 1.25rem;
+          }
+
+          .story-number {
+            font-size: 3rem;
+            top: 12px;
+            right: 15px;
+          }
+
+          .story-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.75rem;
+          }
+
+          .meaning-result {
+            padding: 25px 20px;
+          }
+
+          .mission-icon {
+            width: 70px;
+            height: 70px;
+            font-size: 2rem;
+          }
+
+          .value-icon {
+            font-size: 2.5rem;
+          }
+
+          .meaning-visual {
+            min-height: 220px;
+          }
+
+          .pixel-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.625rem;
+            max-width: 200px;
+          }
+
+          .pixel-dot {
+            width: 35px;
+            height: 35px;
+          }
+
+          .timeline-item {
+            padding-left: 50px;
+          }
+
+          .timeline-content {
+            padding: 20px;
+          }
+
+          .values-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .about-hero {
+            padding: 90px 0 50px;
+          }
+
+          .founder-section,
+          .origin-section,
+          .meaning-section,
+          .mission-section,
+          .values-section,
+          .timeline-section,
+          .cta-section {
+            padding: 60px 0;
+          }
+
+          .hero-badge {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+          }
+
+          .section-subtitle {
+            font-size: 1rem;
+            margin: -12px 0 40px;
+          }
+
+          .floating-cube {
+            width: 130px;
+            height: 130px;
+          }
+
+          .cube-face {
+            width: 130px;
+            height: 130px;
+          }
+
+          .cube-face.front  { transform: translateZ(65px); }
+          .cube-face.back   { transform: rotateY(180deg) translateZ(65px); }
+          .cube-face.left   { transform: rotateY(-90deg) translateZ(65px); }
+          .cube-face.right  { transform: rotateY(90deg) translateZ(65px); }
+          .cube-face.top    { transform: rotateX(90deg) translateZ(65px); }
+          .cube-face.bottom { transform: rotateX(-90deg) translateZ(65px); }
+
+          .pixel-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+          }
+
+          .pixel-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+          }
+
+          .founder-image {
+            height: 350px;
+          }
+
+          .story-card {
+            padding: 30px 20px;
+          }
+
+          .value-card {
+            padding: 2.25rem 1.75rem;
+            min-height: 280px;
+          }
+
+          .value-icon {
+            font-size: 2.75rem;
+            height: 65px;
+            margin-bottom: 1.5rem;
+          }
+          
+          .value-title {
+            font-size: 1.25rem;
+          }
+          
+          .value-description {
+            font-size: 0.95rem;
+          }
+
+          .mission-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .meaning-visual {
+            height: 240px;
+          }
+
+          .origin-header {
+            margin-bottom: 40px;
+          }
+
+          .timeline {
+            margin: 50px auto 0;
+          }
+
+          .cta-section {
+            padding: 60px 0 40px;
+          }
+
+          .cta-description {
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+          }
+
+          .cta-buttons {
+            margin-bottom: 50px;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .about-container {
+            padding: 0 1rem;
+          }
+
+          .story-number {
+            font-size: 2.5rem;
+          }
+
+          .pixel-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .floating-cube {
+            width: 110px;
+            height: 110px;
+          }
+
+          .cube-face {
+            width: 110px;
+            height: 110px;
+          }
+
+          .cube-face.front  { transform: translateZ(55px); }
+          .cube-face.back   { transform: rotateY(180deg) translateZ(55px); }
+          .cube-face.left   { transform: rotateY(-90deg) translateZ(55px); }
+          .cube-face.right  { transform: rotateY(90deg) translateZ(55px); }
+          .cube-face.top    { transform: rotateX(90deg) translateZ(55px); }
+          .cube-face.bottom { transform: rotateX(-90deg) translateZ(55px); }
+        }
       `}</style>
-      <VeeAIChatbot />
-      <FAQ />
     </div>
   );
 };

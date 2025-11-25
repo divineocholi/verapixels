@@ -5,7 +5,7 @@ import "swiper/css";
 import "swiper/css/effect-fade";
 import { FiChevronRight } from "react-icons/fi";
 import "../index.css";
-import veraintro from "../assets/veraintro.mp4";
+import veraintro from "../assets/finalverapixels.mp4";
 import Navbar from "./Navbar";
 import ServicesSection from "./ServicesSection";
 import TechSolutionBanner from "./TechSolutionBanner";
