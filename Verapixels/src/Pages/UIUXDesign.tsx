@@ -1126,14 +1126,17 @@ const UIUXDesignPage = () => {
           to { transform: rotate(360deg); }
         }
 
-        .cta-icon {
+          .cta-icon {
           font-size: 64px;
-          color: #007AFF;
-          margin-bottom: 32px;
+          color: #5865f2;
+          margin: 0 auto 32px;
+          animation: iconBounce 2s ease-in-out infinite;
           position: relative;
           z-index: 1;
-          animation: iconBounce 2s ease-in-out infinite;
+          display: block;
+          width: fit-content;
         }
+
 
         @keyframes iconBounce {
           0%, 100% { transform: translateY(0); }

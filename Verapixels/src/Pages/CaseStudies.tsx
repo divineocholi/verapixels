@@ -365,19 +365,19 @@ const CaseStudies = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="cta-section">
+      {/* Project Inquiry Section */}
+      <section className="project-inquiry-section">
         <div className="case-container">
-          <div className="cta-content">
-            <div className="cta-icon">
+          <div className="inquiry-content">
+            <div className="inquiry-icon">
               <FiZap />
             </div>
-            <h2 className="cta-title">Ready to Write Your Success Story?</h2>
-            <p className="cta-text">
+            <h2 className="inquiry-title">Ready to Write Your Success Story?</h2>
+            <p className="inquiry-text">
               Let's collaborate to create exceptional digital experiences that drive real results for your business.
             </p>
-            <button className="cta-button">
-              Start Your Project
+            <button className="inquiry-button">
+              <span>Start Your Project</span>
               <FiArrowRight />
             </button>
           </div>
@@ -870,88 +870,131 @@ const CaseStudies = () => {
           box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
         }
 
-        /* CTA Section */
-        .cta-section {
-          padding: 120px 0;
-          background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.05), transparent);
-        }
+        /* Project Inquiry Section */
+.project-inquiry-section {
+  padding: 120px 0;
+  background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.05), transparent);
+}
 
-        .cta-content {
-          text-align: center;
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 80px 60px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 40px;
-          position: relative;
-          overflow: hidden;
-        }
+.inquiry-content {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 80px 60px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 40px;
+  position: relative;
+  overflow: hidden;
+}
 
-        .cta-content::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(0, 99, 244, 0.1), transparent);
-          opacity: 0.5;
-        }
+.inquiry-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(0, 99, 244, 0.1), transparent);
+  opacity: 0.5;
+}
 
-        .cta-icon {
-          font-size: 80px;
-          background: linear-gradient(135deg, #0063f4, #00ff88);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          margin-bottom: 30px;
-          animation: pulse 2s ease-in-out infinite;
-          position: relative;
-          z-index: 1;
-        }
+.inquiry-icon {
+  font-size: 64px;
+  color: #0063f4;
+  margin: 0 auto 32px;
+  animation: iconBounce 2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: fit-content;
+}
 
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-        }
+.inquiry-title {
+  font-size: 2.8rem;
+  font-weight: 900;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 1;
+}
 
-        .cta-title {
-          font-size: 2.8rem;
-          font-weight: 900;
-          margin-bottom: 24px;
-          position: relative;
-          z-index: 1;
-        }
+.inquiry-text {
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
+}
 
-        .cta-text {
-          font-size: 1.25rem;
-          line-height: 1.8;
-          color: rgba(255, 255, 255, 0.8);
-          margin-bottom: 40px;
-          position: relative;
-          z-index: 1;
-        }
+.inquiry-button {
+  padding: 18px 48px;
+  background: linear-gradient(135deg, #0063f4, #00bfff);
+  border: none;
+  border-radius: 50px;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 15px 50px rgba(0, 99, 244, 0.4);
+}
 
-        .cta-button {
-          padding: 18px 48px;
-          background: linear-gradient(135deg, #0063f4, #00bfff);
-          border: none;
-          border-radius: 50px;
-          color: #fff;
-          font-size: 1.15rem;
-          font-weight: 700;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 12px;
-          transition: all 0.3s ease;
-          position: relative;
-          z-index: 1;
-          box-shadow: 0 15px 50px rgba(0, 99, 244, 0.4);
-        }
+.inquiry-button span {
+  position: relative;
+  z-index: 3;
+}
 
-        .cta-button:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 20px 60px rgba(0, 99, 244, 0.6);
-        }
+.inquiry-button svg {
+  position: relative;
+  z-index: 3;
+}
+
+.inquiry-button:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(0, 99, 244, 0.6);
+}
+
+/* Responsive styles for tablet */
+@media (max-width: 768px) {
+  .inquiry-content {
+    padding: 60px 40px;
+  }
+
+  .inquiry-icon {
+    font-size: 60px;
+  }
+
+  .inquiry-title {
+    font-size: 2rem;
+  }
+
+  .inquiry-text {
+    font-size: 1.1rem;
+  }
+}
+
+/* Responsive styles for mobile */
+@media (max-width: 480px) {
+  .inquiry-content {
+    padding: 50px 30px;
+  }
+
+  .inquiry-icon {
+    font-size: 50px;
+  }
+
+  .inquiry-title {
+    font-size: 1.8rem;
+  }
+
+  .inquiry-button {
+    padding: 16px 40px;
+    font-size: 1rem;
+  }
+}
 
         /* Responsive Design */
         @media (max-width: 1200px) {

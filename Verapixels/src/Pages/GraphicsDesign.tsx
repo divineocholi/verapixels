@@ -1,44 +1,42 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { 
-  FiSmartphone, 
-  FiZap,
-  FiShield,
-  FiTrendingUp,
-  FiCheckCircle,
-  FiArrowRight,
   FiLayers,
-  FiBox,
-  FiActivity,
-  FiLock,
+  FiImage,
+  FiPenTool,
+  FiLayout,
+  FiPackage,
+  FiArrowRight,
+  FiCheckCircle,
+  FiZap,
+  FiTrendingUp,
+  FiAward,
   FiUsers,
-  FiBarChart2,
+  FiStar,
   FiRefreshCw,
-  FiGlobe,
-  FiMessageSquare,
   FiPhone,
   FiMail,
-  FiDownload,
-  FiMonitor,
-  FiCpu,
-  FiWifi
+  FiGlobe,
+  FiMessageSquare,
+  FiTarget,
+  FiFeather,
+  FiType,
+  FiGrid
 } from "react-icons/fi";
-import VeeAIChatbot from "../Components/VeeAIChatbot";
 
-type ServiceCategory = "ios" | "android" | "cross-platform" | "enterprise";
+type DesignCategory = "logo" | "branding" | "print" | "digital";
 
 interface Service {
   icon: React.ReactNode;
   title: string;
   description: string;
   features: string[];
-  category: ServiceCategory;
+  category: DesignCategory;
 }
 
-const MobileAppDevelopment = () => {
-  const navigate = useNavigate();
+const GraphicsDesign = () => {
   const [scrollY, setScrollY] = useState(0);
   const [activeService, setActiveService] = useState(0);
+  const [activeCategory, setActiveCategory] = useState<"all" | DesignCategory>("all");
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -48,107 +46,129 @@ const MobileAppDevelopment = () => {
 
   const services: Service[] = [
     {
-      icon: <FiSmartphone />,
-      title: "Native iOS Development",
-      description: "Build powerful, high-performance iOS applications using Swift and the latest Apple frameworks.",
+      icon: <FiTarget />,
+      title: "Logo Design",
+      description: "Create memorable and impactful logos that perfectly represent your brand identity.",
       features: [
-        "Swift & SwiftUI development",
-        "Apple ecosystem integration",
-        "App Store optimization",
-        "iOS-specific features"
+        "Custom logo concepts",
+        "Multiple design revisions",
+        "Vector file formats",
+        "Brand style guide"
       ],
-      category: "ios"
-    },
-    {
-      icon: <FiSmartphone />,
-      title: "Native Android Development",
-      description: "Create robust Android applications with Kotlin and modern Android development tools.",
-      features: [
-        "Kotlin & Jetpack Compose",
-        "Material Design implementation",
-        "Google Play optimization",
-        "Android-specific features"
-      ],
-      category: "android"
+      category: "logo"
     },
     {
       icon: <FiLayers />,
-      title: "Cross-Platform Apps",
-      description: "Develop once, deploy everywhere with React Native and Flutter for maximum reach.",
+      title: "Brand Identity",
+      description: "Complete branding packages including logos, color schemes, and brand guidelines.",
       features: [
-        "Single codebase deployment",
-        "Native performance",
-        "Cost-effective solution",
-        "Faster time to market"
+        "Visual identity system",
+        "Brand guidelines",
+        "Marketing materials",
+        "Brand strategy"
       ],
-      category: "cross-platform"
+      category: "branding"
     },
     {
-      icon: <FiBox />,
-      title: "Enterprise Mobile Solutions",
-      description: "Secure, scalable mobile applications for large organizations and businesses.",
+      icon: <FiPackage />,
+      title: "Print Design",
+      description: "Professional print materials from business cards to large format banners.",
       features: [
-        "Enterprise security protocols",
-        "Backend integration",
-        "Custom workflows",
-        "Advanced analytics"
+        "Business cards & stationery",
+        "Brochures & flyers",
+        "Packaging design",
+        "Print-ready files"
       ],
-      category: "enterprise"
+      category: "print"
+    },
+    {
+      icon: <FiLayout />,
+      title: "Digital Graphics",
+      description: "Eye-catching digital assets for websites, social media, and online marketing.",
+      features: [
+        "Social media graphics",
+        "Web banners & ads",
+        "Email templates",
+        "Digital illustrations"
+      ],
+      category: "digital"
     }
   ];
 
-  const technologies = {
-    crossPlatform: [
-      { name: "React Native", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" },
-      { name: "Flutter", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flutter/flutter-original.svg" },
-      { name: "Ionic", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ionic/ionic-original.svg" }
-    ],
-    native: [
-      { name: "Swift", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/swift/swift-original.svg" },
-      { name: "Kotlin", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kotlin/kotlin-original.svg" },
-      { name: "Java", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" },
-      { name: "Objective-C", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/objectivec/objectivec-plain.svg" }
-    ],
-    backend: [
-      { name: "Node.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" },
-      { name: "Python", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" },
-      { name: "Firebase", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/firebase/firebase-plain.svg" },
-      { name: "GraphQL", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/graphql/graphql-plain.svg" }
-    ],
-    tools: [
-      { name: "Xcode", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/xcode/xcode-original.svg" },
-      { name: "Android Studio", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/androidstudio/androidstudio-original.svg" },
-      { name: "VS Code", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg" },
-      { name: "Git", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" }
-    ]
-  };
+  const portfolioItems = [
+    {
+      image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&h=600&fit=crop&q=80",
+      title: "Minimalist Logo Design",
+      category: "logo",
+      description: "Modern geometric logo for tech startup"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a3?w=600&h=600&fit=crop&q=80",
+      title: "Brand Identity Package",
+      category: "branding",
+      description: "Complete branding for luxury fashion brand"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1634942537034-2531766767d1?w=600&h=600&fit=crop&q=80",
+      title: "Creative Logo Concept",
+      category: "logo",
+      description: "Unique logo design for creative agency"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=600&fit=crop&q=80",
+      title: "Product Packaging",
+      category: "print",
+      description: "Elegant packaging for organic products"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=600&fit=crop&q=80",
+      title: "Social Media Templates",
+      category: "digital",
+      description: "Engaging social media graphics suite"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1600132806608-231446b2e7af?w=600&h=600&fit=crop&q=80",
+      title: "Business Card Design",
+      category: "print",
+      description: "Premium business card collection"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=600&h=600&fit=crop&q=80",
+      title: "Logo Collection",
+      category: "logo",
+      description: "Diverse logo designs showcase"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1626785774625-ddcddc3445e9?w=600&h=600&fit=crop&q=80",
+      title: "Brand Guidelines",
+      category: "branding",
+      description: "Comprehensive brand style guide"
+    },
+    {
+      image: "https://images.unsplash.com/photo-1558655146-d09347e92766?w=600&h=600&fit=crop&q=80",
+      title: "Digital Illustrations",
+      category: "digital",
+      description: "Custom illustrations for web"
+    }
+  ];
+
+  const filteredPortfolio = activeCategory === "all" 
+    ? portfolioItems 
+    : portfolioItems.filter(item => item.category === activeCategory);
 
   const features = [
-    { icon: <FiZap />, title: "High Performance", desc: "Optimized for speed and smooth user experience" },
-    { icon: <FiShield />, title: "Secure & Safe", desc: "Bank-level encryption and security standards" },
-    { icon: <FiTrendingUp />, title: "Scalable", desc: "Grows seamlessly with your user base" },
-    { icon: <FiUsers />, title: "User-Centric", desc: "Intuitive interfaces that users love" },
-    { icon: <FiLock />, title: "Data Privacy", desc: "GDPR compliant and privacy-focused" },
-    { icon: <FiWifi />, title: "Offline Support", desc: "Works seamlessly without internet" }
+    { icon: <FiZap />, title: "Fast Delivery", desc: "Quick turnaround without compromising quality" },
+    { icon: <FiAward />, title: "Award Winning", desc: "Recognized designs by industry leaders" },
+    { icon: <FiUsers />, title: "Expert Team", desc: "Experienced designers and creative directors" },
+    { icon: <FiStar />, title: "100% Original", desc: "Unique designs tailored to your brand" },
+    { icon: <FiRefreshCw />, title: "Unlimited Revisions", desc: "Work until you're completely satisfied" },
+    { icon: <FiTrendingUp />, title: "Results Driven", desc: "Designs that convert and engage" }
   ];
-
-  const process = [
-    { num: "01", title: "Discovery", desc: "Understanding your vision and requirements" },
-    { num: "02", title: "Design", desc: "Creating beautiful and intuitive UI/UX" },
-    { num: "03", title: "Development", desc: "Building with cutting-edge technologies" },
-    { num: "04", title: "Testing", desc: "Rigorous QA across all devices" },
-    { num: "05", title: "Launch", desc: "App store deployment and support" }
-  ];
-
-  const handleLearnMore = (category: ServiceCategory) => {
-    // Navigate to the learn more page with the selected category
-    navigate(`/mobile-app-learn-more?category=${category}`);
-  };
 
   return (
-    <div className="mobile-app-page">
+    <div className="graphics-design-page">
       {/* Animated Background */}
-      <div className="mobile-bg">
+      <div className="design-bg">
         <div className="grid-pattern"></div>
         <div className="floating-elements">
           <div className="float-shape shape-1" style={{ transform: `translateY(${scrollY * 0.1}px)` }}></div>
@@ -158,24 +178,25 @@ const MobileAppDevelopment = () => {
       </div>
 
       {/* Hero Section */}
-      <section className="mobile-hero">
+      <section className="design-hero">
         <div className="container">
           <div className="hero-grid">
             <div className="hero-content">
               <div className="hero-badge">
-                <FiSmartphone className="badge-icon" />
-                <span>Mobile App Development</span>
+                <FiPenTool className="badge-icon" />
+                <span>Professional Graphics Design</span>
               </div>
               
               <h1 className="hero-title">
-                Build Amazing Mobile Apps
+                Creative Design That
                 <br />
-                <span className="title-gradient">For iOS & Android</span>
+                <span className="title-gradient">Tells Your Story</span>
               </h1>
               
               <p className="hero-description">
-                Transform your ideas into powerful mobile applications that engage users 
-                and drive business growth. Native and cross-platform solutions tailored to your needs.
+                Transform your brand with stunning graphics that capture attention and 
+                communicate your message. From logos to complete brand identities, we bring 
+                your vision to life.
               </p>
 
               <div className="hero-cta">
@@ -185,50 +206,50 @@ const MobileAppDevelopment = () => {
                 </button>
                 <button className="cta-secondary">
                   <FiMessageSquare />
-                  Get Free Consultation
+                  View Portfolio
                 </button>
               </div>
 
               <div className="hero-stats">
                 <div className="stat-box">
+                  <div className="stat-value">500+</div>
+                  <div className="stat-label">Designs Created</div>
+                </div>
+                <div className="stat-box">
                   <div className="stat-value">200+</div>
-                  <div className="stat-label">Apps Launched</div>
+                  <div className="stat-label">Happy Clients</div>
                 </div>
                 <div className="stat-box">
-                  <div className="stat-value">5M+</div>
-                  <div className="stat-label">Downloads</div>
-                </div>
-                <div className="stat-box">
-                  <div className="stat-value">4.8★</div>
-                  <div className="stat-label">Average Rating</div>
+                  <div className="stat-value">98%</div>
+                  <div className="stat-label">Satisfaction Rate</div>
                 </div>
               </div>
             </div>
 
             <div className="hero-visual">
               <div className="floating-icons">
-                <div className="float-icon icon-1"><FiDownload /></div>
-                <div className="float-icon icon-2"><FiCpu /></div>
-                <div className="float-icon icon-3"><FiActivity /></div>
-                <div className="float-icon icon-4"><FiMonitor /></div>
+                <div className="float-icon icon-1"><FiPenTool /></div>
+                <div className="float-icon icon-2"><FiImage /></div>
+                <div className="float-icon icon-3"><FiLayers /></div>
+                <div className="float-icon icon-4"><FiType /></div>
               </div>
 
-              {/* Real Phone Images */}
-              <div className="phone-images-stack">
+              {/* Design Showcase Images */}
+              <div className="design-showcase">
                 <img 
-                  src="https://images.unsplash.com/photo-1592286927505-b7e6ab36524c?w=400&h=800&fit=crop&q=80" 
-                  alt="Mobile App 1" 
-                  className="phone-img phone-img-1"
+                  src="https://images.unsplash.com/photo-1626785774573-4b799315345d?w=500&h=500&fit=crop&q=80" 
+                  alt="Logo Design" 
+                  className="showcase-img img-1"
                 />
                 <img 
-                  src="https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400&h=800&fit=crop&q=80" 
-                  alt="Mobile App 2" 
-                  className="phone-img phone-img-2"
+                  src="https://images.unsplash.com/photo-1611224885990-ab7363d1f2a3?w=500&h=500&fit=crop&q=80" 
+                  alt="Brand Identity" 
+                  className="showcase-img img-2"
                 />
                 <img 
-                  src="https://images.unsplash.com/photo-1556656793-08538906a9f8?w=400&h=800&fit=crop&q=80" 
-                  alt="Mobile App 3" 
-                  className="phone-img phone-img-3"
+                  src="https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=500&h=500&fit=crop&q=80" 
+                  alt="Creative Design" 
+                  className="showcase-img img-3"
                 />
               </div>
             </div>
@@ -241,10 +262,10 @@ const MobileAppDevelopment = () => {
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">
-              Mobile Development <span className="highlight">Services</span>
+              Our Design <span className="highlight">Services</span>
             </h2>
             <p className="section-desc">
-              Comprehensive mobile solutions for every platform
+              Comprehensive graphic design solutions for every need
             </p>
           </div>
 
@@ -278,77 +299,74 @@ const MobileAppDevelopment = () => {
                 ))}
               </div>
 
-              <button 
-                className="service-learn-more"
-                onClick={() => handleLearnMore(services[activeService].category)}
-              >
-                Learn More <FiArrowRight />
+              <button className="service-learn-more">
+                Get Started <FiArrowRight />
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Technologies Section */}
-      <section className="tech-section">
+      {/* Portfolio Section */}
+      <section className="portfolio-section">
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">
-              Technology <span className="highlight">Stack</span>
+              Our Creative <span className="highlight">Portfolio</span>
             </h2>
             <p className="section-desc">
-              Leveraging the best mobile development technologies
+              Explore our latest design projects and creative work
             </p>
           </div>
 
-          <div className="tech-categories">
-            <div className="tech-category">
-              <h3 className="category-title">Cross-Platform</h3>
-              <div className="tech-grid">
-                {technologies.crossPlatform.map((tech, idx) => (
-                  <div key={idx} className="tech-item">
-                    <img src={tech.icon} alt={tech.name} />
-                    <span>{tech.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="portfolio-filters">
+            <button 
+              className={`filter-btn ${activeCategory === "all" ? "active" : ""}`}
+              onClick={() => setActiveCategory("all")}
+            >
+              <FiGrid /> All Work
+            </button>
+            <button 
+              className={`filter-btn ${activeCategory === "logo" ? "active" : ""}`}
+              onClick={() => setActiveCategory("logo")}
+            >
+              <FiTarget /> Logos
+            </button>
+            <button 
+              className={`filter-btn ${activeCategory === "branding" ? "active" : ""}`}
+              onClick={() => setActiveCategory("branding")}
+            >
+              <FiLayers /> Branding
+            </button>
+            <button 
+              className={`filter-btn ${activeCategory === "print" ? "active" : ""}`}
+              onClick={() => setActiveCategory("print")}
+            >
+              <FiPackage /> Print
+            </button>
+            <button 
+              className={`filter-btn ${activeCategory === "digital" ? "active" : ""}`}
+              onClick={() => setActiveCategory("digital")}
+            >
+              <FiLayout /> Digital
+            </button>
+          </div>
 
-            <div className="tech-category">
-              <h3 className="category-title">Native Development</h3>
-              <div className="tech-grid">
-                {technologies.native.map((tech, idx) => (
-                  <div key={idx} className="tech-item">
-                    <img src={tech.icon} alt={tech.name} />
-                    <span>{tech.name}</span>
+          <div className="portfolio-grid">
+            {filteredPortfolio.map((item, idx) => (
+              <div key={idx} className="portfolio-item">
+                <div className="portfolio-image-wrapper">
+                  <img src={item.image} alt={item.title} className="portfolio-image" />
+                  <div className="portfolio-overlay">
+                    <h4 className="portfolio-title">{item.title}</h4>
+                    <p className="portfolio-desc">{item.description}</p>
+                    <button className="view-btn">
+                      View Project <FiArrowRight />
+                    </button>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-
-            <div className="tech-category">
-              <h3 className="category-title">Backend & APIs</h3>
-              <div className="tech-grid">
-                {technologies.backend.map((tech, idx) => (
-                  <div key={idx} className="tech-item">
-                    <img src={tech.icon} alt={tech.name} />
-                    <span>{tech.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="tech-category">
-              <h3 className="category-title">Development Tools</h3>
-              <div className="tech-grid">
-                {technologies.tools.map((tech, idx) => (
-                  <div key={idx} className="tech-item">
-                    <img src={tech.icon} alt={tech.name} />
-                    <span>{tech.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -361,7 +379,7 @@ const MobileAppDevelopment = () => {
               Why Choose <span className="highlight">Verapixels</span>
             </h2>
             <p className="section-desc">
-              Excellence in mobile app development
+              Excellence in graphic design and creative solutions
             </p>
           </div>
 
@@ -379,41 +397,14 @@ const MobileAppDevelopment = () => {
         </div>
       </section>
 
-      {/* Process Section */}
-      <section className="process-section">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">
-              Development <span className="highlight">Process</span>
-            </h2>
-            <p className="section-desc">
-              Our proven approach to building successful apps
-            </p>
-          </div>
-
-          <div className="process-timeline">
-            {process.map((step, idx) => (
-              <div key={idx} className="process-step">
-                <div className="step-number">{step.num}</div>
-                <div className="step-content">
-                  <h3 className="step-title">{step.title}</h3>
-                  <p className="step-desc">{step.desc}</p>
-                </div>
-                {idx < process.length - 1 && <div className="step-connector"></div>}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="final-cta">
         <div className="container">
           <div className="cta-card">
-            <FiRefreshCw className="cta-icon" />
-            <h2 className="cta-title">Ready to Launch Your Mobile App?</h2>
+            <FiFeather className="cta-icon" />
+            <h2 className="cta-title">Ready to Elevate Your Brand?</h2>
             <p className="cta-text">
-              Let's bring your mobile app idea to life and reach millions of users.
+              Let's create stunning designs that make your brand stand out and leave a lasting impression.
             </p>
             <div className="cta-actions">
               <button className="cta-btn-primary">
@@ -426,13 +417,12 @@ const MobileAppDevelopment = () => {
               </button>
               <button className="cta-btn-tertiary">
                 <FiGlobe />
-                View Portfolio
+                View More Work
               </button>
             </div>
           </div>
         </div>
       </section>
-          <VeeAIChatbot />
 
       <style>{`
         * {
@@ -441,7 +431,7 @@ const MobileAppDevelopment = () => {
           box-sizing: border-box;
         }
 
-        .mobile-app-page {
+        .graphics-design-page {
           background: #0a0a0f;
           color: #ffffff;
           min-height: 100vh;
@@ -450,7 +440,7 @@ const MobileAppDevelopment = () => {
           overflow-x: hidden;
         }
 
-        .mobile-bg {
+        .design-bg {
           position: fixed;
           inset: 0;
           pointer-events: none;
@@ -496,7 +486,7 @@ const MobileAppDevelopment = () => {
         .shape-2 {
           width: 400px;
           height: 400px;
-          background: linear-gradient(135deg, #f43f5e, #ec4899);
+          background: linear-gradient(135deg, #7289da, #8b5cf6);
           bottom: 20%;
           left: 10%;
           animation: float 25s ease-in-out infinite reverse;
@@ -505,7 +495,7 @@ const MobileAppDevelopment = () => {
         .shape-3 {
           width: 350px;
           height: 350px;
-          background: linear-gradient(135deg, #8b5cf6, #a855f7);
+          background: linear-gradient(135deg, #5865f2, #a855f7);
           top: 50%;
           left: 50%;
           animation: float 22s ease-in-out infinite;
@@ -525,7 +515,7 @@ const MobileAppDevelopment = () => {
           z-index: 1;
         }
 
-        .mobile-hero {
+        .design-hero {
           min-height: 100vh;
           display: flex;
           align-items: center;
@@ -655,11 +645,11 @@ const MobileAppDevelopment = () => {
 
         .hero-visual {
           position: relative;
-          height: 650px;
+          height: 600px;
           perspective: 1500px;
         }
 
-        .phone-images-stack {
+        .design-showcase {
           position: absolute;
           inset: 0;
           display: flex;
@@ -667,12 +657,12 @@ const MobileAppDevelopment = () => {
           justify-content: center;
         }
 
-        .phone-img {
+        .showcase-img {
           position: absolute;
-          width: 320px;
-          height: 650px;
+          width: 350px;
+          height: 350px;
           object-fit: cover;
-          border-radius: 45px;
+          border-radius: 24px;
           box-shadow: 
             0 50px 100px rgba(0, 0, 0, 0.6),
             0 0 0 1px rgba(255, 255, 255, 0.1),
@@ -681,46 +671,46 @@ const MobileAppDevelopment = () => {
           transform-style: preserve-3d;
         }
 
-        .phone-img-1 {
+        .img-1 {
           left: 50%;
           top: 50%;
           transform: translate(-50%, -50%) rotate(-12deg) translateZ(50px);
           z-index: 3;
-          animation: phoneImg1Float 6s ease-in-out infinite;
+          animation: img1Float 6s ease-in-out infinite;
         }
 
-        .phone-img-2 {
+        .img-2 {
           left: 50%;
           top: 50%;
           transform: translate(-25%, -50%) rotate(8deg) translateZ(0px);
           z-index: 2;
-          animation: phoneImg2Float 7s ease-in-out infinite;
+          animation: img2Float 7s ease-in-out infinite;
         }
 
-        .phone-img-3 {
+        .img-3 {
           left: 50%;
           top: 50%;
           transform: translate(-75%, -50%) rotate(-3deg) translateZ(-50px);
           z-index: 1;
-          animation: phoneImg3Float 8s ease-in-out infinite;
+          animation: img3Float 8s ease-in-out infinite;
         }
 
-        @keyframes phoneImg1Float {
+        @keyframes img1Float {
           0%, 100% { transform: translate(-50%, -50%) rotate(-12deg) translateZ(50px) translateY(0); }
           50% { transform: translate(-50%, -50%) rotate(-12deg) translateZ(50px) translateY(-20px); }
         }
 
-        @keyframes phoneImg2Float {
+        @keyframes img2Float {
           0%, 100% { transform: translate(-25%, -50%) rotate(8deg) translateZ(0px) translateY(0); }
           50% { transform: translate(-25%, -50%) rotate(8deg) translateZ(0px) translateY(-25px); }
         }
 
-        @keyframes phoneImg3Float {
+        @keyframes img3Float {
           0%, 100% { transform: translate(-75%, -50%) rotate(-3deg) translateZ(-50px) translateY(0); }
           50% { transform: translate(-75%, -50%) rotate(-3deg) translateZ(-50px) translateY(-15px); }
         }
 
-        .phone-img:hover {
+        .showcase-img:hover {
           transform: translate(-50%, -50%) rotate(0deg) scale(1.1) translateZ(150px) !important;
           z-index: 10 !important;
           box-shadow: 
@@ -919,67 +909,129 @@ const MobileAppDevelopment = () => {
           transform: translateX(5px);
         }
 
-        .tech-section {
+        .portfolio-section {
           padding: 100px 0;
           background: rgba(255, 255, 255, 0.01);
         }
 
-        .tech-categories {
-          display: grid;
-          gap: 60px;
-        }
-
-        .tech-category {
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          border-radius: 20px;
-          padding: 40px;
-          backdrop-filter: blur(10px);
-        }
-
-        .category-title {
-          font-size: 1.8rem;
-          font-weight: 700;
-          margin-bottom: 32px;
-          color: #5865f2;
-        }
-
-        .tech-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 24px;
-        }
-
-        .tech-item {
+        .portfolio-filters {
           display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 12px;
-          padding: 24px;
+          gap: 16px;
+          justify-content: center;
+          flex-wrap: wrap;
+          margin-bottom: 60px;
+        }
+
+        .filter-btn {
+          padding: 14px 28px;
           background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 50px;
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
           transition: all 0.3s ease;
         }
 
-        .tech-item:hover {
-          transform: translateY(-8px);
+        .filter-btn:hover {
           background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(88, 101, 242, 0.4);
-          box-shadow: 0 10px 30px rgba(88, 101, 242, 0.2);
+          border-color: rgba(88, 101, 242, 0.3);
+          transform: translateY(-2px);
         }
 
-        .tech-item img {
-          width: 48px;
-          height: 48px;
-          object-fit: contain;
+        .filter-btn.active {
+          background: rgba(88, 101, 242, 0.2);
+          border-color: #5865f2;
+          color: white;
         }
 
-        .tech-item span {
-          font-size: 0.95rem;
+        .portfolio-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+          gap: 32px;
+        }
+
+        .portfolio-item {
+          border-radius: 20px;
+          overflow: hidden;
+          transition: transform 0.3s ease;
+        }
+
+        .portfolio-item:hover {
+          transform: translateY(-8px);
+        }
+
+        .portfolio-image-wrapper {
+          position: relative;
+          overflow: hidden;
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .portfolio-image {
+          width: 100%;
+          height: 350px;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.5s ease;
+        }
+
+        .portfolio-item:hover .portfolio-image {
+          transform: scale(1.1);
+        }
+
+        .portfolio-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(10, 10, 15, 0.95), transparent);
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-end;
+          padding: 32px;
+          opacity: 0;
+          transition: opacity 0.4s ease;
+        }
+
+        .portfolio-item:hover .portfolio-overlay {
+          opacity: 1;
+        }
+
+        .portfolio-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin-bottom: 8px;
+          color: white;
+        }
+
+        .portfolio-desc {
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.8);
+          margin-bottom: 20px;
+        }
+
+        .view-btn {
+          align-self: flex-start;
+          padding: 12px 24px;
+          background: #5865f2;
+          border: none;
+          border-radius: 8px;
+          color: white;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.85);
-          text-align: center;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .view-btn:hover {
+          background: #7289da;
+          transform: translateX(5px);
         }
 
         .features-section {
@@ -1038,79 +1090,6 @@ const MobileAppDevelopment = () => {
           color: rgba(255, 255, 255, 0.7);
         }
 
-        .process-section {
-          padding: 100px 0;
-          background: rgba(255, 255, 255, 0.01);
-        }
-
-        .process-timeline {
-          max-width: 1000px;
-          margin: 0 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 40px;
-        }
-
-        .process-step {
-          position: relative;
-          display: grid;
-          grid-template-columns: 120px 1fr;
-          gap: 40px;
-          padding: 40px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 20px;
-          transition: all 0.4s ease;
-          backdrop-filter: blur(10px);
-        }
-
-        .process-step:hover {
-          transform: translateX(10px);
-          background: rgba(88, 101, 242, 0.08);
-          border-color: rgba(88, 101, 242, 0.4);
-          box-shadow: 0 15px 40px rgba(88, 101, 242, 0.25);
-        }
-
-        .step-number {
-          font-size: 4rem;
-          font-weight: 900;
-          background: linear-gradient(135deg, #5865f2, #7289da);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          line-height: 1;
-        }
-
-        .step-content {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-
-        .step-title {
-          font-size: 2rem;
-          font-weight: 700;
-        }
-
-        .step-desc {
-          font-size: 1.15rem;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.7);
-        }
-
-        .step-connector {
-          position: absolute;
-          left: 80px;
-          bottom: -40px;
-          width: 2px;
-          height: 40px;
-          background: linear-gradient(180deg, #5865f2, transparent);
-        }
-
-        .process-step:last-child .step-connector {
-          display: none;
-        }
-
         .final-cta {
           padding: 100px 0 120px;
         }
@@ -1136,7 +1115,7 @@ const MobileAppDevelopment = () => {
           opacity: 0.5;
         }
 
-       .cta-icon {
+        .cta-icon {
           font-size: 64px;
           color: #5865f2;
           margin: 0 auto 32px;
@@ -1206,13 +1185,13 @@ const MobileAppDevelopment = () => {
         }
 
         .cta-btn-secondary {
-          background: rgba(244, 63, 94, 0.2);
+          background: rgba(114, 137, 218, 0.2);
           color: white;
-          border: 2px solid #f43f5e;
+          border: 2px solid #7289da;
         }
 
         .cta-btn-secondary:hover {
-          background: #f43f5e;
+          background: #7289da;
           transform: translateY(-3px);
         }
 
@@ -1237,9 +1216,9 @@ const MobileAppDevelopment = () => {
             height: 500px;
           }
 
-          .phone-img {
-            width: 260px;
-            height: 540px;
+          .showcase-img {
+            width: 300px;
+            height: 300px;
           }
 
           .services-layout {
@@ -1257,18 +1236,8 @@ const MobileAppDevelopment = () => {
             min-width: 200px;
           }
 
-          .process-step {
-            grid-template-columns: 80px 1fr;
-            gap: 24px;
-            padding: 32px;
-          }
-
-          .step-number {
-            font-size: 3rem;
-          }
-
-          .step-connector {
-            left: 60px;
+          .portfolio-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
           }
         }
 
@@ -1303,20 +1272,20 @@ const MobileAppDevelopment = () => {
             height: 400px;
           }
 
-          .phone-img {
-            width: 220px;
-            height: 460px;
+          .showcase-img {
+            width: 250px;
+            height: 250px;
           }
 
-          .phone-img-1 {
+          .img-1 {
             transform: translate(-50%, -50%) rotate(0deg);
           }
 
-          .phone-img-2 {
+          .img-2 {
             transform: translate(-20%, -50%) rotate(5deg);
           }
 
-          .phone-img-3 {
+          .img-3 {
             transform: translate(-80%, -50%) rotate(-5deg);
           }
 
@@ -1336,36 +1305,21 @@ const MobileAppDevelopment = () => {
             font-size: 1.8rem;
           }
 
-          .tech-grid {
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 16px;
+          .portfolio-filters {
+            gap: 12px;
           }
 
-          .tech-item {
-            padding: 20px 12px;
+          .filter-btn {
+            padding: 12px 20px;
+            font-size: 0.95rem;
           }
 
-          .tech-item img {
-            width: 40px;
-            height: 40px;
+          .portfolio-grid {
+            grid-template-columns: 1fr;
           }
 
           .features-grid {
             grid-template-columns: 1fr;
-          }
-
-          .process-step {
-            grid-template-columns: 1fr;
-            gap: 20px;
-            padding: 28px;
-          }
-
-          .step-number {
-            font-size: 2.5rem;
-          }
-
-          .step-connector {
-            display: none;
           }
 
           .cta-card {
@@ -1408,14 +1362,6 @@ const MobileAppDevelopment = () => {
             font-size: 1rem;
           }
 
-          .tech-category {
-            padding: 24px;
-          }
-
-          .category-title {
-            font-size: 1.4rem;
-          }
-
           .feature-card {
             padding: 28px;
           }
@@ -1430,13 +1376,13 @@ const MobileAppDevelopment = () => {
             font-size: 48px;
           }
 
-          .phone-images-stack {
-            transform: scale(0.75);
+          .design-showcase {
+            transform: scale(0.8);
           }
 
-          .phone-img {
-            width: 200px;
-            height: 420px;
+          .showcase-img {
+            width: 220px;
+            height: 220px;
           }
         }
       `}</style>
@@ -1444,4 +1390,4 @@ const MobileAppDevelopment = () => {
   );
 };
 
-export default MobileAppDevelopment;
+export default GraphicsDesign;

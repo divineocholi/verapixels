@@ -1166,14 +1166,18 @@ const CybersecurityPage = () => {
           to { transform: rotate(360deg); }
         }
 
-        .cta-icon {
+         .cta-icon {
           font-size: 64px;
-          color: #00ff41;
-          margin-bottom: 32px;
+          color: #5865f2;
+          margin: 0 auto 32px;
+          animation: shieldPulse 2s ease-in-out infinite;
           position: relative;
           z-index: 1;
-          animation: shieldPulse 2s ease-in-out infinite;
+          display: block;
+          width: fit-content;
         }
+
+        
 
         @keyframes shieldPulse {
           0%, 100% { 

@@ -75,9 +75,7 @@ const Navbar: React.FC = () => {
                   <Link to="/webdevelopment" className="vp-dropdown-item">Web Development</Link>
                   <Link to="/mobileappdevelopment" className="vp-dropdown-item">Mobile App Development</Link>
                   <Link to="/uiuxdesign" className="vp-dropdown-item">UI/UX Design</Link>
-                  <Link to="/graphicdesign" className="vp-dropdown-item">Graphic Design</Link>
-                  <Link to="/cybersecurity" className="vp-dropdown-item">Cybersecurity</Link>
-                  <Link to="/digitalmarketing" className="vp-dropdown-item">Digital Marketing</Link>
+                  <Link to="/graphicsdesign" className="vp-dropdown-item">Graphic Design</Link>
                 </div>
               )}
             </div>

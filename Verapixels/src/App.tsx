@@ -18,7 +18,7 @@ import WebDevelopment from './Pages/WebDevelopment'
 import MobileAppDevelopment from './Pages/MobileAppDevelopment'
 import UIUXDesign from './Pages/UIUXDesign'
 import CloudSolutions from './Pages/Cloudsolitions'
-import DevOpsServices from './Pages/DevOpsServices'
+import GraphicsDesign from './Pages/GraphicsDesign'
 import Cybersecurity from './Pages/Cybersecurity'
 import DigitalMarketing from './Pages/DigitalMarketing'
 import WebApplearnMore from './Pages/Webappleanmore' // ADD THIS IMPORT
@@ -26,7 +26,7 @@ import WebApplearnMore from './Pages/Webappleanmore' // ADD THIS IMPORT
 // Portfolio Pages
 import AllProjects from './Pages/AllProjects'
 import WebApplications from './Pages/WebApplications'
-import MobileApps from './Pages/MobileApps'
+import MobileApps from './Pages/CareersPage'
 import EcommerceSolutions from './Pages/EcommerceSolutions'
 import EnterpriseSoftware from './Pages/EnterpriseSoftware'
 import CaseStudies from './Pages/CaseStudies'
@@ -35,6 +35,7 @@ import CaseStudies from './Pages/CaseStudies'
 import Contact from './Pages/Contact'
 import Footer from './Components/Footer'
 import Index from './Components/Index'
+import CareersPage from './Pages/CareersPage'
 
 const App = () => {
   return (
@@ -59,7 +60,7 @@ const App = () => {
         <Route path="/mobile-app-learn-more" element={<WebApplearnMore />} /> {/* ADD THIS ROUTE */}
         <Route path="/uiuxdesign" element={<UIUXDesign />} />
         <Route path="/cloudsolutions" element={<CloudSolutions />} />
-        <Route path="/devopsservices" element={<DevOpsServices />} />
+        <Route path="/graphicsdesign" element={<GraphicsDesign />} />
         <Route path="/cybersecurity" element={<Cybersecurity />} />
         <Route path="/digitalmarketing" element={<DigitalMarketing />} />
         
@@ -72,6 +73,7 @@ const App = () => {
         <Route path="/casestudies" element={<CaseStudies />} />
         
         {/* Contact Route */}
+        <Route path="//career" element={<CareersPage />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>
       <Footer />                                
