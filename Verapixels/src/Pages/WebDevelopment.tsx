@@ -51,7 +51,6 @@ import {
   SiEslint,
   SiPrettier
 } from 'react-icons/si';
-import VeeAIChatbot from "../Components/VeeAIChatbot";
 
 const WebDevelopment = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -64,6 +63,26 @@ const WebDevelopment = () => {
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
+
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-in');
+        }
+      });
+    }, observerOptions);
+
+    const animatedElements = document.querySelectorAll('.animate-on-scroll');
+    animatedElements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [activeTab]);
 
   const services = [
     {
@@ -370,8 +389,7 @@ export default App;`}</code></pre>
             {services.map((service, i) => (
               <div 
                 key={i} 
-                className="service-card"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className={`service-card animate-on-scroll ${i % 2 === 0 ? 'slide-left' : 'slide-right'}`}
               >
                 <div className="service-icon" style={{ color: service.color }}>
                   {service.icon}
@@ -422,8 +440,7 @@ export default App;`}</code></pre>
               {technologies[activeTab].stack.map((tech, i) => (
                 <div 
                   key={i} 
-                  className="tech-card"
-                  style={{ animationDelay: `${i * 0.1}s` }}
+                  className="tech-card animate-on-scroll zoom-in"
                 >
                   <div 
                     className="tech-icon"
@@ -457,8 +474,7 @@ export default App;`}</code></pre>
             {process.map((item, i) => (
               <div 
                 key={i} 
-                className="process-card"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className="process-card animate-on-scroll fade-in"
               >
                 <div className="process-number">{item.step}</div>
                 <div className="process-icon">{item.icon}</div>
@@ -487,8 +503,7 @@ export default App;`}</code></pre>
             {benefits.map((benefit, i) => (
               <div 
                 key={i} 
-                className="benefit-card"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className="benefit-card animate-on-scroll zoom-in"
               >
                 <div className="benefit-icon">{benefit.icon}</div>
                 <h3 className="benefit-title">{benefit.title}</h3>
@@ -515,8 +530,7 @@ export default App;`}</code></pre>
             {contactMethods.map((method, i) => (
               <div 
                 key={i} 
-                className="contact-card"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className={`contact-card animate-on-scroll ${i % 2 === 0 ? 'slide-left' : 'slide-right'}`}
               >
                 <div className="contact-icon">{method.icon}</div>
                 <h3 className="contact-title">{method.title}</h3>
@@ -528,7 +542,7 @@ export default App;`}</code></pre>
             ))}
           </div>
 
-          <div className="pricing-note">
+          <div className="pricing-note animate-on-scroll fade-in">
             <div className="note-content">
               <FiCheckCircle className="note-icon" />
               <p>
@@ -543,7 +557,7 @@ export default App;`}</code></pre>
       {/* CTA Section */}
       <section className="cta-section">
         <div className="webdev-container">
-          <div className="cta-content">
+          <div className="cta-content animate-on-scroll zoom-in">
             <h2 className="cta-title">Ready to Build Something Amazing?</h2>
             <p className="cta-text">
               Let's turn your vision into a powerful web application that drives growth and delights users.
@@ -559,7 +573,7 @@ export default App;`}</code></pre>
           </div>
         </div>
       </section>
-       <VeeAIChatbot />
+
       <style>{`
         * {
           margin: 0;
@@ -749,7 +763,7 @@ export default App;`}</code></pre>
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          color: #fff; /* Fixed: Ensure text color stays white */
+          color: #fff;
         }
 
         .btn-primary {
@@ -775,7 +789,7 @@ export default App;`}</code></pre>
         .btn-primary:hover {
           transform: translateY(-3px);
           box-shadow: 0 15px 50px rgba(0, 99, 244, 0.7);
-          color: #fff; /* Fixed: Keep text white on hover */
+          color: #fff;
         }
 
         .btn-primary svg, .btn-primary span {
@@ -794,7 +808,7 @@ export default App;`}</code></pre>
           border-color: rgba(255, 255, 255, 0.4);
           transform: translateY(-3px);
           box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
-          color: #fff; /* Fixed: Keep text white on hover */
+          color: #fff;
         }
 
         .hero-stats {
@@ -916,6 +930,61 @@ export default App;`}</code></pre>
           margin-bottom: 80px;
         }
 
+        /* Scroll Animation Base Styles */
+        .animate-on-scroll {
+          opacity: 0;
+          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animate-on-scroll.animate-in {
+          opacity: 1;
+        }
+
+        /* Slide Left Animation */
+        .animate-on-scroll.slide-left {
+          transform: translateX(-80px);
+        }
+
+        .animate-on-scroll.slide-left.animate-in {
+          transform: translateX(0);
+        }
+
+        /* Slide Right Animation */
+        .animate-on-scroll.slide-right {
+          transform: translateX(80px);
+        }
+
+        .animate-on-scroll.slide-right.animate-in {
+          transform: translateX(0);
+        }
+
+        /* Zoom In Animation */
+        .animate-on-scroll.zoom-in {
+          transform: scale(0.8);
+        }
+
+        .animate-on-scroll.zoom-in.animate-in {
+          transform: scale(1);
+        }
+
+        /* Zoom Out Animation */
+        .animate-on-scroll.zoom-out {
+          transform: scale(1.2);
+        }
+
+        .animate-on-scroll.zoom-out.animate-in {
+          transform: scale(1);
+        }
+
+        /* Fade In Animation */
+        .animate-on-scroll.fade-in {
+          opacity: 0;
+        }
+
+        .animate-on-scroll.fade-in.animate-in {
+          opacity: 1;
+        }
+
         .section-title {
           font-size: clamp(36px, 6vw, 64px);
           font-weight: 900;
@@ -949,7 +1018,6 @@ export default App;`}</code></pre>
           border-radius: 24px;
           transition: all 0.5s ease;
           overflow: hidden;
-          animation: fadeInUp 0.8s ease both;
           backdrop-filter: blur(10px);
         }
 
@@ -1079,9 +1147,11 @@ export default App;`}</code></pre>
           border-radius: 20px;
           text-align: center;
           transition: all 0.4s ease;
-          animation: fadeInUp 0.6s ease both;
           backdrop-filter: blur(10px);
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .tech-card:hover {
@@ -1151,7 +1221,6 @@ export default App;`}</code></pre>
           border-radius: 24px;
           text-align: center;
           transition: all 0.5s ease;
-          animation: fadeInUp 0.8s ease both;
           backdrop-filter: blur(10px);
         }
 
@@ -1229,8 +1298,8 @@ export default App;`}</code></pre>
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 24px;
           transition: all 0.5s ease;
-          animation: fadeInUp 0.8s ease both;
           backdrop-filter: blur(10px);
+          text-align: center;
         }
 
         .benefit-card:hover {
@@ -1245,6 +1314,9 @@ export default App;`}</code></pre>
           color: #00bfff;
           margin-bottom: 28px;
           transition: all 0.4s ease;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
 
         .benefit-card:hover .benefit-icon {
@@ -1283,7 +1355,6 @@ export default App;`}</code></pre>
           border-radius: 24px;
           text-align: center;
           transition: all 0.5s ease;
-          animation: fadeInUp 0.8s ease both;
           backdrop-filter: blur(10px);
           overflow: hidden;
         }
@@ -1314,6 +1385,9 @@ export default App;`}</code></pre>
           transition: all 0.4s ease;
           position: relative;
           z-index: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
 
         .contact-card:hover .contact-icon {
@@ -1363,7 +1437,7 @@ export default App;`}</code></pre>
           border-color: transparent;
           box-shadow: 0 10px 40px rgba(0, 99, 244, 0.5);
           transform: translateY(-3px);
-          color: #fff; /* Fixed: Keep text white on hover */
+          color: #fff;
         }
 
         .pricing-note {
@@ -1459,7 +1533,7 @@ export default App;`}</code></pre>
           display: inline-flex;
           align-items: center;
           gap: 14px;
-          color: #fff; /* Fixed: Ensure text color stays white */
+          color: #fff;
         }
 
         .btn-primary-large {
@@ -1485,7 +1559,7 @@ export default App;`}</code></pre>
         .btn-primary-large:hover {
           transform: translateY(-5px);
           box-shadow: 0 20px 60px rgba(0, 99, 244, 0.7);
-          color: #fff; /* Fixed: Keep text white on hover */
+          color: #fff;
         }
 
         .btn-primary-large svg, .btn-primary-large span {
@@ -1504,7 +1578,7 @@ export default App;`}</code></pre>
           border-color: rgba(255, 255, 255, 0.5);
           transform: translateY(-5px);
           box-shadow: 0 15px 40px rgba(255, 255, 255, 0.15);
-          color: #fff; /* Fixed: Keep text white on hover */
+          color: #fff;
         }
 
         @media (max-width: 1024px) {
@@ -1643,10 +1717,9 @@ export default App;`}</code></pre>
           .pricing-note {
             padding: 30px 24px;
           }
-        }
-      `}</style>
+        } `}</style>
     </div>
   );
 };
 
-export default WebDevelopment;
+export  default WebDevelopment
