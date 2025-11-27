@@ -33,18 +33,7 @@ const slides = [
       "Brand systems that stand out — from identity to motion design.",
     cta: "See Our Work",
   },
-  {
-    title: "Cloud & DevOps",
-    subtitle:
-      "Reliable infrastructure to scale and ship faster with automation.",
-    cta: "Learn More",
-  },
-  {
-    title: "Cybersecurity & Support",
-    subtitle:
-      "Protecting your users and systems with battle-tested practices.",
-    cta: "Talk to Sales",
-  },
+  
 ];
 
 const AUTOPLAY_DELAY = 6000;

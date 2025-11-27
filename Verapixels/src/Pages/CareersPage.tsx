@@ -208,7 +208,7 @@ const CareersPage = () => {
 
     try {
       // Replace with your Formspree endpoint
-      await fetch("https://submit-form.com/OIXKpD7nu", {
+      await fetch("https://submit-form.com/", {
         method: "POST",
         body: formDataToSend,
         headers: {
@@ -747,7 +747,7 @@ const CareersPage = () => {
         }
 
         /* Hero Section */
-        .careers-hero {
+        .careers-hero {       
           min-height: 90vh;
           display: flex;
           align-items: center;
@@ -1527,6 +1527,9 @@ const CareersPage = () => {
           font-weight: 700;
           color: rgba(255, 255, 255, 0.9);
         }
+
+        #position{
+        background-color: #0a0a0a;}
 
         .form-group input,
         .form-group select,

@@ -187,14 +187,14 @@ a {
   color: #00d1ff;
 }
 
-/* Mobile Menu Button */
+/* Mobile Menu Button - FIXED VERSION */
 .vp-mobile-menu-btn {
   display: none;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 15% !important;
+  padding: 20px !important;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
   color: #fff;
@@ -202,16 +202,19 @@ a {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  width: 44px;
+  height: 44px;
 }
 
 .vp-mobile-menu-btn:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: #0063f4;
   color: #0063f4;
+  transform: scale(1.1);
 }
 
 .vp-mobile-menu-btn .menu-icon {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .vp-mobile-menu-btn .menu-text {
@@ -227,6 +230,37 @@ a {
   margin: 0 auto;
   opacity: 0.95;
 }
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width: 768px) {
+  /* Show mobile menu button */
+  .vp-mobile-menu-btn {
+    display: flex;
+    justify-self: end;
+  }
+
+  /* Hide desktop nav */
+  .vp-links {
+    display: none;
+  }
+
+  /* Hide contact button on mobile */
+  .vp-phone {
+    display: none !important;
+  }
+
+  /* Adjust navbar grid for mobile without contact button */
+  .vp-brand {
+    grid-template-columns: auto 1fr auto;
+    gap: 8px;
+  }
+
+  
+  .vp-mobile-menu-btn {
+    gap: 0;
+  }
+}
+
 
 /* ---------------- HERO SECTION ---------------- */
 .vp-hero {

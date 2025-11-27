@@ -103,7 +103,7 @@ const Navbar: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <button className="vp-mobile-menu-btn" onClick={toggleMobileMenu}>
-            <FiMenu className="menu-icon" />
+            
             <span className="menu-text">Menu</span>
           </button>
 

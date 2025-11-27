@@ -13,9 +13,7 @@ import {
   FiZap,
   FiShield,
   FiTrendingUp,
-  FiUsers,
-  FiHelpCircle,
-  FiChevronDown
+  FiUsers
 } from 'react-icons/fi';
 import { 
   FaFacebookF, 
@@ -38,7 +36,6 @@ const Contact = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const [activeTab, setActiveTab] = useState('general');
-  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -57,12 +54,41 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    // Get the inquiry type label from activeTab
+    const inquiryType = contactTabs.find(tab => tab.id === activeTab)?.label || 'General Inquiry';
+
+    // Formspree integration
+    const formDataToSend = new FormData();
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('email', formData.email);
+    formDataToSend.append('subject', formData.subject);
+    formDataToSend.append('message', formData.message);
+    formDataToSend.append('inquiry_type', inquiryType);
+    formDataToSend.append('_subject', `New ${inquiryType} - Contact Form Submission`);
+    
+    try {
+      const response = await fetch('https://formspree.io/f/mldylrwj', {
+        method: 'POST',
+        body: formDataToSend,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setIsSubmitting(false);
+        setShowSuccess(true);
+        setFormData({ name: '', email: '', subject: '', message: '' });
+        setActiveTab('general'); // Reset to default tab
+        setTimeout(() => setShowSuccess(false), 5000);
+      } else {
+        throw new Error('Form submission failed');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
       setIsSubmitting(false);
-      setShowSuccess(true);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-      setTimeout(() => setShowSuccess(false), 5000);
-    }, 2000);
+      // You can add error handling here, like showing an error message
+    }
   };
 
   const socialLinks = [
@@ -91,29 +117,6 @@ const Contact = () => {
     { icon: <FiShield />, title: 'Secure & Private', desc: 'Your data is always protected', color: '#007AFF' },
     { icon: <FiTrendingUp />, title: 'Proven Results', desc: '500+ successful projects', color: '#3DDC84' },
     { icon: <FiUsers />, title: 'Expert Team', desc: '50+ professionals ready to help', color: '#8B5CF6' }
-  ];
-
-  const faqs = [
-    {
-      question: 'What is your typical response time?',
-      answer: 'We aim to respond to all inquiries within 24 hours during business days. For urgent matters, you can reach us via phone or WhatsApp for immediate assistance.'
-    },
-    {
-      question: 'Do you offer free consultations?',
-      answer: 'Yes! We offer a free 30-minute initial consultation to discuss your project requirements and how we can help bring your vision to life.'
-    },
-    {
-      question: 'What services do you provide?',
-      answer: 'We offer mobile app development (iOS & Android), web development, UI/UX design, enterprise solutions, and digital transformation consulting.'
-    },
-    {
-      question: 'How do you handle project pricing?',
-      answer: 'Pricing varies based on project scope, complexity, and timeline. After our initial consultation, we provide a detailed quote tailored to your specific needs.'
-    },
-    {
-      question: 'Do you provide ongoing support?',
-      answer: 'Absolutely! We offer comprehensive post-launch support and maintenance packages to ensure your application runs smoothly and stays up-to-date.'
-    }
   ];
 
   const contactTabs = [
@@ -255,7 +258,9 @@ const Contact = () => {
         <div className="container">
           <div className="hours-wrapper">
             <div className="hours-header">
-              <FiClock className="hours-icon" />
+              <div className="hours-icon-container">
+                <FiClock className="hours-icon" />
+              </div>
               <h2>Business Hours</h2>
               <p>We're here when you need us</p>
             </div>
@@ -278,7 +283,9 @@ const Contact = () => {
           <div className="form-wrapper">
             <div className="form-container">
               <div className="form-header">
-                <FiMessageSquare className="form-header-icon" />
+                <div className="form-header-icon-container">
+                  <FiMessageSquare className="form-header-icon" />
+                </div>
                 <h2>Send us a Message</h2>
                 <p>Choose your inquiry type and we'll route it to the right team</p>
               </div>
@@ -288,6 +295,7 @@ const Contact = () => {
                 {contactTabs.map((tab) => (
                   <button
                     key={tab.id}
+                    type="button"
                     className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
                     onClick={() => setActiveTab(tab.id)}
                   >
@@ -297,7 +305,31 @@ const Contact = () => {
                 ))}
               </div>
 
-              <form onSubmit={handleSubmit} className="contact-form">
+              {/* Display selected inquiry type */}
+              <div className="selected-inquiry">
+                <span className="inquiry-badge">
+                  Selected: {contactTabs.find(tab => tab.id === activeTab)?.label}
+                </span>
+              </div>
+
+              <form 
+                onSubmit={handleSubmit} 
+                className="contact-form"
+                action="https://formspree.io/f/your-form-id"
+                method="POST"
+              >
+                {/* Hidden input for inquiry type */}
+                <input 
+                  type="hidden" 
+                  name="inquiry_type" 
+                  value={contactTabs.find(tab => tab.id === activeTab)?.label || 'General Inquiry'} 
+                />
+                <input 
+                  type="hidden" 
+                  name="_subject" 
+                  value={`New ${contactTabs.find(tab => tab.id === activeTab)?.label || 'General Inquiry'} - Contact Form Submission`} 
+                />
+                
                 <div className="form-grid">
                   <div className="form-group">
                     <label htmlFor="name">
@@ -393,33 +425,6 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="faq-section">
-        <div className="container">
-          <div className="faq-header">
-            <FiHelpCircle className="faq-icon" />
-            <h2>Frequently Asked Questions</h2>
-            <p>Quick answers to common questions</p>
-          </div>
-          <div className="faq-list">
-            {faqs.map((faq, idx) => (
-              <div key={idx} className="faq-item">
-                <button
-                  className={`faq-question ${expandedFaq === idx ? 'active' : ''}`}
-                  onClick={() => setExpandedFaq(expandedFaq === idx ? null : idx)}
-                >
-                  <span>{faq.question}</span>
-                  <FiChevronDown className={`faq-chevron ${expandedFaq === idx ? 'rotate' : ''}`} />
-                </button>
-                <div className={`faq-answer ${expandedFaq === idx ? 'show' : ''}`}>
-                  <p>{faq.answer}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials */}
       <section className="testimonials-section">
         <div className="container">
@@ -487,6 +492,24 @@ const Contact = () => {
       <VeeAIChatbot />
 
       <style>{`
+        /* Add this new CSS for the selected inquiry display */
+        .selected-inquiry {
+          text-align: center;
+          margin-bottom: 24px;
+        }
+
+        .inquiry-badge {
+          display: inline-block;
+          padding: 8px 16px;
+          background: linear-gradient(135deg, #007AFF, #5AC8FA);
+          color: white;
+          border-radius: 20px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
+        }
+
+        /* Rest of your existing CSS remains the same */
         * {
           scroll-behavior: smooth;
           margin: 0;
@@ -723,7 +746,7 @@ const Contact = () => {
           }
         }
 
-        /* Social Links */
+        /* Social Links - Fixed Icon Centering */
         .social-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -737,6 +760,7 @@ const Contact = () => {
           display: flex;
           flex-direction: column;
           align-items: center;
+          justify-content: center;
           gap: 12px;
           padding: 28px 20px;
           background: rgba(255, 255, 255, 0.03);
@@ -747,6 +771,7 @@ const Contact = () => {
           transition: all 0.4s ease;
           overflow: hidden;
           backdrop-filter: blur(10px);
+          min-height: 120px;
         }
 
         .social-card:hover {
@@ -760,6 +785,9 @@ const Contact = () => {
           transition: all 0.4s ease;
           position: relative;
           z-index: 2;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .social-card:hover .social-icon {
@@ -772,6 +800,7 @@ const Contact = () => {
           font-weight: 600;
           position: relative;
           z-index: 2;
+          text-align: center;
         }
 
         .social-glow {
@@ -786,7 +815,7 @@ const Contact = () => {
           opacity: 0.3;
         }
 
-        /* Why Choose Us */
+        /* Why Choose Us - Fixed Icon Centering */
         .why-section {
           padding: 80px 0;
         }
@@ -806,6 +835,9 @@ const Contact = () => {
           backdrop-filter: blur(10px);
           animation: slideInUp 0.6s ease-out backwards;
           transition: all 0.4s ease;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .why-card:hover {
@@ -854,7 +886,7 @@ const Contact = () => {
           50% { transform: translateY(-10px) rotate(5deg); }
         }
 
-        /* Contact Info */
+        /* Contact Info - Fixed Icon Centering */
         .info-section {
           padding: 60px 0;
         }
@@ -881,6 +913,9 @@ const Contact = () => {
           text-decoration: none;
           color: white;
           display: block;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .info-card:hover {
@@ -930,7 +965,7 @@ const Contact = () => {
           100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
 
-        /* Working Hours */
+        /* Working Hours - Fixed Icon Centering */
         .hours-section {
           padding: 80px 0;
           background: rgba(255, 255, 255, 0.01);
@@ -951,10 +986,16 @@ const Contact = () => {
           margin-bottom: 40px;
         }
 
+        .hours-icon-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
         .hours-icon {
           font-size: 56px;
           color: #007AFF;
-          margin-bottom: 20px;
           animation: iconPulse 2s ease-in-out infinite;
         }
 
@@ -1010,7 +1051,7 @@ const Contact = () => {
           font-weight: 600;
         }
 
-        /* Form Section */
+        /* Form Section - Fixed Icon Centering */
         .form-section {
           padding: 80px 0 120px;
         }
@@ -1037,10 +1078,16 @@ const Contact = () => {
           margin-bottom: 48px;
         }
 
+        .form-header-icon-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
         .form-header-icon {
           font-size: 56px;
           color: #007AFF;
-          margin-bottom: 20px;
           animation: iconPulse 2s ease-in-out infinite;
         }
 
@@ -1060,7 +1107,7 @@ const Contact = () => {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
           gap: 12px;
-          margin-bottom: 40px;
+          margin-bottom: 24px;
         }
 
         .tab-btn {
@@ -1252,106 +1299,6 @@ const Contact = () => {
           0%, 100% { transform: translate(0, 0); }
           33% { transform: translate(30px, -30px); }
           66% { transform: translate(-30px, 30px); }
-        }
-
-        /* FAQ Section */
-        .faq-section {
-          padding: 80px 0;
-          background: rgba(255, 255, 255, 0.01);
-        }
-
-        .faq-header {
-          text-align: center;
-          margin-bottom: 60px;
-        }
-
-        .faq-icon {
-          font-size: 56px;
-          color: #8B5CF6;
-          margin-bottom: 20px;
-          animation: iconPulse 2s ease-in-out infinite;
-        }
-
-        .faq-header h2 {
-          font-size: 2.5rem;
-          font-weight: 900;
-          margin-bottom: 12px;
-        }
-
-        .faq-header p {
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 1.1rem;
-        }
-
-        .faq-list {
-          max-width: 900px;
-          margin: 0 auto;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-
-        .faq-item {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          overflow: hidden;
-          backdrop-filter: blur(10px);
-          transition: all 0.3s ease;
-        }
-
-        .faq-item:hover {
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .faq-question {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 24px 28px;
-          background: transparent;
-          border: none;
-          color: white;
-          font-size: 1.1rem;
-          font-weight: 700;
-          text-align: left;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .faq-question:hover {
-          color: #007AFF;
-        }
-
-        .faq-question.active {
-          color: #007AFF;
-        }
-
-        .faq-chevron {
-          font-size: 24px;
-          transition: transform 0.3s ease;
-        }
-
-        .faq-chevron.rotate {
-          transform: rotate(180deg);
-        }
-
-        .faq-answer {
-          max-height: 0;
-          overflow: hidden;
-          transition: max-height 0.3s ease, padding 0.3s ease;
-        }
-
-        .faq-answer.show {
-          max-height: 300px;
-          padding: 0 28px 24px;
-        }
-
-        .faq-answer p {
-          color: rgba(255, 255, 255, 0.7);
-          line-height: 1.8;
-          font-size: 1rem;
         }
 
         /* Testimonials */
@@ -1736,11 +1683,6 @@ const Contact = () => {
           .tab-btn {
             font-size: 0.85rem;
             padding: 14px 16px;
-          }
-
-          .faq-question {
-            font-size: 1rem;
-            padding: 20px;
           }
 
           .testimonial-card {
