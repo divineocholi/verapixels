@@ -4691,6 +4691,49 @@ export default App;`})})})]})})]})}),n.jsx("section",{className:"services-sectio
           margin-bottom: 8px;
         }
 
+        /* Fix for hero stats on mobile */
+@media (max-width: 768px) {
+  .hero-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    justify-items: center; /* This centers the items in their grid cells */
+  }
+
+  .stat-item {
+    width: 100%;
+    max-width: 200px; /* Optional: Limit max width for better centering */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* This centers the content inside each stat item */
+    text-align: center;
+    padding: 20px 15px;
+  }
+
+  .stat-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .stat-value, .stat-label {
+    text-align: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-stats {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .stat-item {
+    max-width: 280px; /* Wider on very small screens */
+    margin: 0 auto; /* Center the stat items themselves */
+  }
+}
+
         .stat-label {
           font-size: 0.9rem;
           color: rgba(255, 255, 255, 0.7);
