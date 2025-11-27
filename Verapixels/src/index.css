@@ -193,8 +193,8 @@ a {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 15% !important;
-  padding: 20px !important;
+  border-radius: 25% !important;
+  padding: 30px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
   color: #fff;
