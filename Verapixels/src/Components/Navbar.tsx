@@ -164,7 +164,7 @@ const Navbar: React.FC = () => {
                     <Link to="/webdevelopment" className="vp-mobile-sublink" onClick={closeMobileMenu}>Web Development</Link>
                     <Link to="/mobileappdevelopment" className="vp-mobile-sublink" onClick={closeMobileMenu}>Mobile App Development</Link>
                     <Link to="/uiuxdesign" className="vp-mobile-sublink" onClick={closeMobileMenu}>UI/UX Design</Link>
-                    <Link to="/graphicdesign" className="vp-mobile-sublink" onClick={closeMobileMenu}>Graphic Design</Link>
+                    <Link to="/graphicsdesign" className="vp-mobile-sublink" onClick={closeMobileMenu}>Graphic Design</Link>
                   </div>
                 )}
               </div>
