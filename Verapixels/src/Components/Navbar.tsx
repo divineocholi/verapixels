@@ -123,7 +123,7 @@ const Navbar: React.FC = () => {
           <div className="vp-mobile-overlay" onClick={closeMobileMenu} />
           <div className="vp-mobile-menu">
             <div className="vp-mobile-header">
-              <span className="vp-mobile-title">Navigation</span>
+              <span className="vp-mobile-title">Verapixels</span>
               <button className="vp-mobile-close" onClick={closeMobileMenu}>
                 <FiX />
               </button>
@@ -165,8 +165,6 @@ const Navbar: React.FC = () => {
                     <Link to="/mobileappdevelopment" className="vp-mobile-sublink" onClick={closeMobileMenu}>Mobile App Development</Link>
                     <Link to="/uiuxdesign" className="vp-mobile-sublink" onClick={closeMobileMenu}>UI/UX Design</Link>
                     <Link to="/graphicdesign" className="vp-mobile-sublink" onClick={closeMobileMenu}>Graphic Design</Link>
-                    <Link to="/cybersecurity" className="vp-mobile-sublink" onClick={closeMobileMenu}>Cybersecurity</Link>
-                    <Link to="/digitalmarketing" className="vp-mobile-sublink" onClick={closeMobileMenu}>Digital Marketing</Link>
                   </div>
                 )}
               </div>
