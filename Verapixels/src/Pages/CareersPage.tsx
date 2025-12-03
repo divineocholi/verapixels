@@ -51,65 +51,64 @@ const CareersPage = () => {
   }, []);
 
   // Cloudinary Configuration
-// Cloudinary Configuration
-  const CLOUDINARY_CLOUD_NAME = "dshuyc7xg";
-  const CLOUDINARY_UPLOAD_PRESET = "verapixels_cv";
+// Cloudinary Configuration - FIXED
+const CLOUDINARY_CLOUD_NAME = "dshuyc7xg";
+const CLOUDINARY_UPLOAD_PRESET = "verapixels_cv";
 
-  // Upload file to Cloudinary with proper resource type
-  const uploadToCloudinary = async (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-      formData.append('folder', 'verapixels-careers');
-      
-      // Use the correct endpoint for raw/document files
-      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`;
-      
-      const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 50) + 20;
-          setUploadProgress(percent);
-        }
-      });
-      
-      xhr.addEventListener('load', () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const response = JSON.parse(xhr.responseText);
-            console.log('Cloudinary response:', response);
-            
-            // Create a download URL with fl_attachment flag for direct download
-            const baseUrl = response.secure_url;
-            const downloadUrl = baseUrl.replace('/upload/', '/upload/fl_attachment/');
-            
-            resolve(downloadUrl);
-          } catch (error) {
-            console.error('Parse error:', error);
-            reject(new Error('Failed to parse Cloudinary response'));
-          }
-        } else {
-          // Get error details from response
-          try {
-            const errorData = JSON.parse(xhr.responseText);
-            console.error('Cloudinary error:', errorData);
-            reject(new Error(`Cloudinary upload failed: ${errorData.error?.message || xhr.statusText}`));
-          } catch {
-            reject(new Error(`Cloudinary upload failed: ${xhr.statusText}`));
-          }
-        }
-      });
-      
-      xhr.addEventListener('error', () => {
-        reject(new Error('Network error during upload'));
-      });
-      
-      xhr.open('POST', cloudinaryUrl);
-      xhr.send(formData);
+
+const uploadToCloudinary = async (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('folder', 'verapixels-careers');
+    
+    // Use the standard upload endpoint
+    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/upload`;
+    
+    const xhr = new XMLHttpRequest();
+    
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 50) + 20;
+        setUploadProgress(percent);
+      }
     });
-  };
+    
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          console.log('Cloudinary upload response:', response);
+          
+          // MANUALLY CREATE THE CORRECT DOWNLOAD URL
+          const publicId = response.public_id;
+          const version = response.version;
+          
+          // Create raw document URL format
+          const downloadUrl = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/raw/upload/v${version}/${publicId}.${response.format}?fl_attachment`;
+          
+          console.log('Manual download URL:', downloadUrl);
+          resolve(downloadUrl);
+          
+        } catch (error) {
+          console.error('Parse error:', error);
+          reject(new Error('Failed to parse Cloudinary response'));
+        }
+      } else {
+        reject(new Error(`Upload failed: ${xhr.statusText}`));
+      }
+    });
+    
+    xhr.addEventListener('error', () => {
+      reject(new Error('Network error during upload'));
+    });
+    
+    xhr.open('POST', cloudinaryUrl);
+    xhr.send(formData);
+  });
+};
+
 
   const benefits = [
     {
@@ -251,24 +250,27 @@ const CareersPage = () => {
       }
       
       // STEP 2: Prepare email with Cloudinary download link
-      const templateParams = {
-        to_email: "info.verapixels@gmail.com",
-        from_name: formData.name,
-        from_email: formData.email,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || "Not provided",
-        position: formData.position,
-        cover_letter: formData.coverLetter || "No cover letter provided",
-        cv_filename: cvFile.name,
-        cv_size: `${(cvFile.size / 1024).toFixed(2)} KB`,
-        cv_type: cvFile.type,
-        cv_url: cloudinaryUrl, // 👈 CLOUDINARY DOWNLOAD LINK
-        reply_to: formData.email,
-        date: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString()
-      };
-      
+    const templateParams = {
+  to_email: "info.verapixels@gmail.com",
+  from_name: formData.name,
+  from_email: formData.email,
+  name: formData.name,
+  email: formData.email,
+  phone: formData.phone || "Not provided",
+  position: formData.position,
+  cover_letter: formData.coverLetter || "No cover letter provided",
+  cv_filename: cvFile.name,
+  cv_size: `${(cvFile.size / 1024).toFixed(2)} KB`,
+  cv_url: cloudinaryUrl, // This is the Cloudinary link
+  reply_to: formData.email,
+  date: new Date().toLocaleDateString(),
+  time: new Date().toLocaleTimeString(),
+  
+  // Also try these alternative names if above doesn't work:
+  cv_link: cloudinaryUrl,
+  cv_download_url: cloudinaryUrl,
+  resume_url: cloudinaryUrl
+};
       setUploadProgress(80);
       
       // STEP 3: Send email via EmailJS
