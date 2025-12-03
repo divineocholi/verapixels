@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import emailjs from '@emailjs/browser';
 import {
   FiHeart,
   FiTrendingUp,
@@ -23,10 +24,13 @@ import {
   FiSmile,
   FiShield,
   FiBook,
+  FiFileText,
+  FiUpload,
+  FiCloud,
+  FiDownload
 } from "react-icons/fi";
 
 const CareersPage = () => {
-  const [selectedDepartment, setSelectedDepartment] = useState("all");
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -37,6 +41,76 @@ const CareersPage = () => {
   });
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [cvCloudinaryUrl, setCvCloudinaryUrl] = useState("");
+
+  // Initialize EmailJS
+  useEffect(() => {
+    emailjs.init("agi6_BDweID97BzFE");
+  }, []);
+
+  // Cloudinary Configuration
+// Cloudinary Configuration
+  const CLOUDINARY_CLOUD_NAME = "dshuyc7xg";
+  const CLOUDINARY_UPLOAD_PRESET = "verapixels_cv";
+
+  // Upload file to Cloudinary with proper resource type
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'verapixels-careers');
+      
+      // Use the correct endpoint for raw/document files
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`;
+      
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 50) + 20;
+          setUploadProgress(percent);
+        }
+      });
+      
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const response = JSON.parse(xhr.responseText);
+            console.log('Cloudinary response:', response);
+            
+            // Create a download URL with fl_attachment flag for direct download
+            const baseUrl = response.secure_url;
+            const downloadUrl = baseUrl.replace('/upload/', '/upload/fl_attachment/');
+            
+            resolve(downloadUrl);
+          } catch (error) {
+            console.error('Parse error:', error);
+            reject(new Error('Failed to parse Cloudinary response'));
+          }
+        } else {
+          // Get error details from response
+          try {
+            const errorData = JSON.parse(xhr.responseText);
+            console.error('Cloudinary error:', errorData);
+            reject(new Error(`Cloudinary upload failed: ${errorData.error?.message || xhr.statusText}`));
+          } catch {
+            reject(new Error(`Cloudinary upload failed: ${xhr.statusText}`));
+          }
+        }
+      });
+      
+      xhr.addEventListener('error', () => {
+        reject(new Error('Network error during upload'));
+      });
+      
+      xhr.open('POST', cloudinaryUrl);
+      xhr.send(formData);
+    });
+  };
+
   const benefits = [
     {
       icon: <FiDollarSign />,
@@ -111,74 +185,12 @@ const CareersPage = () => {
     },
   ];
 
-  const positions = [
-    {
-      id: 1,
-      title: "Senior Full-Stack Developer",
-      department: "Engineering",
-      location: "Remote",
-      type: "Full-time",
-      experience: "5+ years",
-      description: "Build scalable web applications using React, Node.js, and cloud technologies",
-      skills: ["React", "Node.js", "AWS", "TypeScript", "PostgreSQL"],
-    },
-    {
-      id: 2,
-      title: "Product Designer",
-      department: "Design",
-      location: "Remote",
-      type: "Full-time",
-      experience: "3+ years",
-      description: "Create beautiful, user-centered designs that solve real problems",
-      skills: ["Figma", "UI/UX", "Prototyping", "User Research", "Design Systems"],
-    },
-    {
-      id: 3,
-      title: "DevOps Engineer",
-      department: "Engineering",
-      location: "Remote",
-      type: "Full-time",
-      experience: "4+ years",
-      description: "Build and maintain our infrastructure, CI/CD pipelines, and monitoring systems",
-      skills: ["Kubernetes", "Docker", "AWS", "Terraform", "GitLab CI"],
-    },
-    {
-      id: 4,
-      title: "Marketing Manager",
-      department: "Marketing",
-      location: "Remote / Hybrid",
-      type: "Full-time",
-      experience: "4+ years",
-      description: "Lead our marketing efforts and grow our brand presence globally",
-      skills: ["SEO", "Content Marketing", "Analytics", "Social Media", "Strategy"],
-    },
-    {
-      id: 5,
-      title: "Frontend Developer",
-      department: "Engineering",
-      location: "Remote",
-      type: "Full-time",
-      experience: "2+ years",
-      description: "Craft pixel-perfect, performant user interfaces with modern frameworks",
-      skills: ["React", "TypeScript", "CSS", "Responsive Design", "Animation"],
-    },
-    {
-      id: 6,
-      title: "Product Manager",
-      department: "Product",
-      location: "Remote",
-      type: "Full-time",
-      experience: "5+ years",
-      description: "Define product strategy and roadmap, working with cross-functional teams",
-      skills: ["Product Strategy", "Agile", "Data Analysis", "User Research", "Roadmapping"],
-    },
+  const stats = [
+    { icon: <FiUsers />, value: "50+", label: "Team Members" },
+    { icon: <FiGlobe />, value: "15+", label: "Countries" },
+    { icon: <FiTrendingUp />, value: "200%", label: "Growth YoY" },
+    { icon: <FiStar />, value: "4.9/5", label: "Glassdoor Rating" },
   ];
-
-  const departments = ["all", "Engineering", "Design", "Marketing", "Product"];
-
-  const filteredPositions = selectedDepartment === "all" 
-    ? positions 
-    : positions.filter(pos => pos.department === selectedDepartment);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({
@@ -189,62 +201,151 @@ const CareersPage = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setCvFile(e.target.files[0]);
+      const file = e.target.files[0];
+      
+      const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      const allowedExtensions = ['.pdf', '.doc', '.docx'];
+      const fileName = file.name.toLowerCase();
+      const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+      
+      if (!allowedTypes.includes(file.type) && !hasValidExtension) {
+        alert('Please upload only PDF, DOC, or DOCX files.');
+        e.target.value = '';
+        return;
+      }
+      
+      const maxSize = 10 * 1024 * 1024; // 10MB for Cloudinary
+      if (file.size > maxSize) {
+        alert('File size must be less than 10MB. Please compress your PDF or use a smaller file.');
+        e.target.value = '';
+        return;
+      }
+      
+      setCvFile(file);
     }
   };
 
+  // **MAIN SUBMIT FUNCTION WITH CLOUDINARY**
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setUploadProgress(10);
+    setCvCloudinaryUrl("");
     
-    const formDataToSend = new FormData();
-    formDataToSend.append("name", formData.name);
-    formDataToSend.append("email", formData.email);
-    formDataToSend.append("phone", formData.phone);
-    formDataToSend.append("position", formData.position);
-    formDataToSend.append("coverLetter", formData.coverLetter);
-    if (cvFile) {
-      formDataToSend.append("cv", cvFile);
-    }
-
     try {
-      // Replace with your Formspree endpoint
-      await fetch("https://submit-form.com/", {
-        method: "POST",
-        body: formDataToSend,
-        headers: {
-          Accept: "application/json",
-        },
-      });
+      if (!formData.name || !formData.email || !formData.position || !cvFile) {
+        throw new Error('Please fill all required fields and upload your CV');
+      }
       
-      setShowSuccessAlert(true);
-      setShowApplicationForm(false);
-      setFormData({ name: "", email: "", phone: "", position: "", coverLetter: "" });
-      setCvFile(null);
+      setUploadProgress(20);
       
-      // Hide success alert after 5 seconds
-      setTimeout(() => {
-        setShowSuccessAlert(false);
-      }, 5000);
+      // STEP 1: Upload CV to Cloudinary
+      let cloudinaryUrl = "";
+      try {
+        cloudinaryUrl = await uploadToCloudinary(cvFile);
+        setCvCloudinaryUrl(cloudinaryUrl);
+        setUploadProgress(70);
+      } catch (uploadError) {
+        console.error('Cloudinary upload failed:', uploadError);
+        throw new Error('Failed to upload CV. Please try again or use manual email.');
+      }
+      
+      // STEP 2: Prepare email with Cloudinary download link
+      const templateParams = {
+        to_email: "info.verapixels@gmail.com",
+        from_name: formData.name,
+        from_email: formData.email,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || "Not provided",
+        position: formData.position,
+        cover_letter: formData.coverLetter || "No cover letter provided",
+        cv_filename: cvFile.name,
+        cv_size: `${(cvFile.size / 1024).toFixed(2)} KB`,
+        cv_type: cvFile.type,
+        cv_url: cloudinaryUrl, // 👈 CLOUDINARY DOWNLOAD LINK
+        reply_to: formData.email,
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString()
+      };
+      
+      setUploadProgress(80);
+      
+      // STEP 3: Send email via EmailJS
+      const serviceId = "service_0ve4bub";
+      const templateId = "template_3nzcg29";
+      
+      const response = await emailjs.send(
+        serviceId,
+        templateId,
+        templateParams
+      );
+      
+      setUploadProgress(90);
+      
+      if (response.status === 200) {
+        setShowSuccessAlert(true);
+        setShowApplicationForm(false);
+        setFormData({ name: "", email: "", phone: "", position: "", coverLetter: "" });
+        setCvFile(null);
+        setUploadProgress(100);
+        
+        setTimeout(() => {
+          setShowSuccessAlert(false);
+          setUploadProgress(0);
+          setCvCloudinaryUrl("");
+        }, 5000);
+      } else {
+        throw new Error('Failed to send email notification');
+      }
+      
     } catch (error) {
-      alert("Error submitting application. Please try again.");
+      console.error('Error submitting application:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to process application'}\n\nPlease try the manual email option below.`);
+    } finally {
+      setIsSubmitting(false);
+      if (!showSuccessAlert) {
+        setUploadProgress(0);
+      }
     }
   };
 
-  const stats = [
-    { icon: <FiUsers />, value: "50+", label: "Team Members" },
-    { icon: <FiGlobe />, value: "15+", label: "Countries" },
-    { icon: <FiTrendingUp />, value: "200%", label: "Growth YoY" },
-    { icon: <FiStar />, value: "4.9/5", label: "Glassdoor Rating" },
-  ];
+  // Manual email fallback
+  const handleEmailFallback = () => {
+    const subject = `Career Application: ${formData.position} - ${formData.name}`;
+    let body = `
+APPLICATION DETAILS:
 
-  const getDepartmentIcon = (dept: string) => {
-    switch(dept) {
-      case "Engineering": return <FiCode />;
-      case "Design": return <FiPenTool />;
-      case "Marketing": return <FiTrendingUp />;
-      case "Product": return <FiBriefcase />;
-      default: return <FiBriefcase />;
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone || "Not provided"}
+Position: ${formData.position}
+
+COVER LETTER:
+${formData.coverLetter || "No cover letter provided"}
+
+CV DETAILS:
+File: ${cvFile?.name || "No file"}
+Size: ${cvFile ? `${(cvFile.size / 1024).toFixed(2)} KB` : "N/A"}
+    `;
+    
+    // Add Cloudinary URL if available
+    if (cvCloudinaryUrl) {
+      body += `\n\n📎 DOWNLOAD CV: ${cvCloudinaryUrl}`;
     }
+    
+    body += `\n\nSubmitted via VeraPixels Careers Page`;
+    
+    const mailtoLink = `mailto:info.verapixels@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body.trim())}`;
+    window.open(mailtoLink, '_blank');
+  };
+
+  // Progress text helper
+  const getProgressText = () => {
+    if (uploadProgress < 30) return "Preparing upload...";
+    if (uploadProgress < 70) return `Uploading CV to Cloudinary... ${uploadProgress}%`;
+    if (uploadProgress < 90) return "Sending email notification...";
+    return "Complete!";
   };
 
   return (
@@ -347,90 +448,6 @@ const CareersPage = () => {
         </div>
       </section>
 
-      {/* Open Positions Section - Hidden */}
-      <section className="positions-section" style={{ display: 'none' }}>
-        <div className="careers-container">
-          <div className="section-header">
-            <h2 className="section-title">
-              Open <span className="gradient-text">Positions</span>
-            </h2>
-            <p className="section-subtitle">
-              Find your next opportunity and join our growing team
-            </p>
-          </div>
-
-          {/* Department Filter */}
-          <div className="department-filter">
-            {departments.map((dept, i) => (
-              <button
-                key={i}
-                className={`filter-btn ${selectedDepartment === dept ? "active" : ""}`}
-                onClick={() => setSelectedDepartment(dept)}
-              >
-                {dept === "all" ? "All Positions" : dept}
-              </button>
-            ))}
-          </div>
-
-          {/* Positions List */}
-          <div className="positions-list">
-            {filteredPositions.map((position, i) => (
-              <div
-                key={position.id}
-                className="position-card"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="position-header">
-                  <div className="position-left">
-                    <div className="position-dept">
-                      {getDepartmentIcon(position.department)}
-                      <span>{position.department}</span>
-                    </div>
-                    <h3 className="position-title">{position.title}</h3>
-                    <p className="position-description">{position.description}</p>
-                  </div>
-                </div>
-
-                <div className="position-meta">
-                  <div className="meta-item">
-                    <FiMapPin />
-                    <span>{position.location}</span>
-                  </div>
-                  <div className="meta-item">
-                    <FiClock />
-                    <span>{position.type}</span>
-                  </div>
-                  <div className="meta-item">
-                    <FiAward />
-                    <span>{position.experience}</span>
-                  </div>
-                </div>
-
-                <div className="position-skills">
-                  {position.skills.map((skill, idx) => (
-                    <span key={idx} className="skill-tag">
-                      {skill}
-                    </span>
-                  ))}
-                </div>
-
-                <button className="apply-btn">
-                  <span>Apply Now</span>
-                  <FiArrowRight className="arrow-icon" />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {filteredPositions.length === 0 && (
-            <div className="no-positions">
-              <p>No positions available in this department right now.</p>
-              <p>Check back soon or view all positions!</p>
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* No Openings Section */}
       <section className="no-openings-section">
         <div className="careers-container">
@@ -441,33 +458,8 @@ const CareersPage = () => {
             <h2 className="no-openings-title">No Open Positions Right Now</h2>
             <p className="no-openings-text">
               We're not actively hiring at the moment, but we're always looking for exceptional talent! 
-              Follow us on social media to stay updated on future opportunities, company news, and insights.
+              Submit your CV below and we'll contact you when suitable opportunities arise.
             </p>
-            
-            <div className="social-links">
-              <a href="#" className="social-btn" aria-label="LinkedIn">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                </svg>
-              </a>
-              <a href="#" className="social-btn" aria-label="Twitter">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
-                </svg>
-              </a>
-              <a href="#" className="social-btn" aria-label="Instagram">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                  <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" fill="none" stroke="#000" strokeWidth="2"/>
-                  <circle cx="17.5" cy="6.5" r="1.5" fill="#000"/>
-                </svg>
-              </a>
-              <a href="#" className="social-btn" aria-label="Facebook">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-              </a>
-            </div>
           </div>
         </div>
       </section>
@@ -478,13 +470,12 @@ const CareersPage = () => {
           <div className="submit-cv-wrapper">
             <div className="submit-cv-content">
               <div className="submit-cv-badge">
-                <FiZap /> Submit Your Application
+                <FiZap /> Submit Your CV
               </div>
               <h2 className="submit-cv-title">Join Our Talent Pool</h2>
               <p className="submit-cv-text">
-                Even though we don't have open positions right now, we'd love to hear from you! 
                 Submit your CV and tell us about yourself. When the right opportunity opens up, 
-                you'll be the first to know.
+                you'll be the first to know. We're always interested in connecting with talented people.
               </p>
               <button 
                 className="upload-cv-btn"
@@ -500,11 +491,12 @@ const CareersPage = () => {
 
       {/* Application Form Modal */}
       {showApplicationForm && (
-        <div className="modal-overlay" onClick={() => setShowApplicationForm(false)}>
+        <div className="modal-overlay" onClick={() => !isSubmitting && setShowApplicationForm(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <button 
               className="modal-close"
-              onClick={() => setShowApplicationForm(false)}
+              onClick={() => !isSubmitting && setShowApplicationForm(false)}
+              disabled={isSubmitting}
             >
               ×
             </button>
@@ -525,6 +517,7 @@ const CareersPage = () => {
                   onChange={handleInputChange}
                   required
                   placeholder="John Doe"
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -539,19 +532,20 @@ const CareersPage = () => {
                     onChange={handleInputChange}
                     required
                     placeholder="john@example.com"
+                    disabled={isSubmitting}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="phone">Phone Number *</label>
+                  <label htmlFor="phone">Phone Number</label>
                   <input
                     type="tel"
                     id="phone"
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    required
                     placeholder="+1 (555) 000-0000"
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -564,6 +558,7 @@ const CareersPage = () => {
                   value={formData.position}
                   onChange={handleInputChange}
                   required
+                  disabled={isSubmitting}
                 >
                   <option value="">Select a position</option>
                   <option value="Full-Stack Developer">Full-Stack Developer</option>
@@ -579,7 +574,10 @@ const CareersPage = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="cv">Upload Your CV/Resume *</label>
+                <label htmlFor="cv">
+                  Upload Your CV/Resume * 
+                  <span className="file-requirements"> (PDF, DOC, DOCX - Max 10MB)</span>
+                </label>
                 <div className="file-upload-wrapper">
                   <input
                     type="file"
@@ -588,10 +586,27 @@ const CareersPage = () => {
                     onChange={handleFileChange}
                     accept=".pdf,.doc,.docx"
                     required
+                    disabled={isSubmitting}
                   />
                   <label htmlFor="cv" className="file-upload-label">
-                    <FiArrowRight />
-                    {cvFile ? cvFile.name : "Choose File (PDF, DOC, DOCX)"}
+                    <FiUpload />
+                    {cvFile ? (
+                      <>
+                        <FiFileText style={{ marginRight: '8px' }} />
+                        <span className="file-name">{cvFile.name}</span>
+                        <span className="file-size">({(cvFile.size / 1024 / 1024).toFixed(2)} MB)</span>
+                        <span className="cloud-storage-badge">
+                          <FiCloud /> Cloud Storage
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="upload-text">Choose File (PDF, DOC, DOCX)</span>
+                        <span className="cloud-storage-badge">
+                          <FiCloud /> Secure Cloud Storage
+                        </span>
+                      </>
+                    )}
                   </label>
                 </div>
               </div>
@@ -605,13 +620,64 @@ const CareersPage = () => {
                   onChange={handleInputChange}
                   rows={5}
                   placeholder="Tell us why you'd be a great fit for our team..."
+                  disabled={isSubmitting}
                 />
               </div>
 
-              <button type="submit" className="submit-form-btn">
-                <FiCheck />
-                <span>Submit Application</span>
-              </button>
+              {isSubmitting && uploadProgress > 0 && (
+                <div className="upload-progress">
+                  <div className="progress-bar">
+                    <div 
+                      className="progress-fill" 
+                      style={{ width: `${uploadProgress}%` }}
+                    ></div>
+                  </div>
+                  <div className="progress-text">
+                    {getProgressText()}
+                  </div>
+                  {uploadProgress > 70 && cvCloudinaryUrl && (
+                    <div className="cv-upload-success">
+                      <FiCloud style={{ color: '#00ff88', marginRight: '8px' }} />
+                      <span>CV uploaded to Cloudinary ✓ Download link included in email</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="form-notice">
+                <FiCloud style={{ color: '#00bfff', marginRight: '8px' }} />
+                <span>Your CV will be securely stored on Cloudinary and a download link will be emailed to us.</span>
+              </div>
+
+              <div className="form-buttons">
+                <button 
+                  type="submit" 
+                  className="submit-form-btn"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="form-spinner"></div>
+                      <span>Processing...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiCheck />
+                      <span>Submit Application</span>
+                    </>
+                  )}
+                </button>
+                
+                <button 
+                  type="button"
+                  className="email-fallback-btn"
+                  onClick={handleEmailFallback}
+                  disabled={isSubmitting || !formData.name || !formData.email || !formData.position}
+                >
+                  <FiArrowRight />
+                  <span>Manual Email (Backup)</span>
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -625,8 +691,27 @@ const CareersPage = () => {
               <FiCheck />
             </div>
             <div className="success-text">
-              <h4>Application Submitted Successfully!</h4>
-              <p>We'll review your application and get back to you soon.</p>
+              <h4>Application Submitted Successfully! ✅</h4>
+              <p>CV uploaded to Cloudinary ✓<br />Email sent with download link 📧</p>
+              {cvCloudinaryUrl && (
+                <a 
+                  href={cvCloudinaryUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="download-cv-link"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    marginTop: '8px',
+                    color: '#00bfff',
+                    textDecoration: 'none',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <FiDownload /> Download CV Now
+                </a>
+              )}
             </div>
             <button 
               className="success-close"
@@ -637,28 +722,6 @@ const CareersPage = () => {
           </div>
         </div>
       )}
-
-      {/* CTA Section - Hidden */}
-      <section className="cta-section" style={{ display: 'none' }}>
-        <div className="careers-container">
-          <div className="cta-wrapper">
-            <div className="cta-content">
-              <div className="cta-badge">
-                <FiZap /> Don't See Your Role?
-              </div>
-              <h2 className="cta-title">We're Always Looking for Talent</h2>
-              <p className="cta-text">
-                Can't find a position that matches your skills? We're always interested 
-                in connecting with talented people. Send us your resume and let's talk!
-              </p>
-              <button className="cta-button">
-                <span>Send General Application</span>
-                <FiArrowRight className="arrow-icon" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <style>{`
         * {
@@ -993,263 +1056,6 @@ const CareersPage = () => {
           color: rgba(255, 255, 255, 0.75);
         }
 
-        /* Positions Section */
-        .positions-section {
-          padding: 120px 0;
-        }
-
-        .department-filter {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 15px;
-          justify-content: center;
-          margin-bottom: 60px;
-        }
-
-        .filter-btn {
-          padding: 14px 32px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 30px;
-          color: rgba(255, 255, 255, 0.7);
-          font-weight: 700;
-          font-size: 1rem;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .filter-btn:hover {
-          background: rgba(0, 99, 244, 0.1);
-          border-color: rgba(0, 99, 244, 0.3);
-          color: #00bfff;
-        }
-
-        .filter-btn.active {
-          background: linear-gradient(135deg, #0063f4, #00bfff);
-          border-color: transparent;
-          color: #fff;
-          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
-        }
-
-        .positions-list {
-          display: grid;
-          gap: 30px;
-        }
-
-        .position-card {
-          padding: 40px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 24px;
-          transition: all 0.4s ease;
-          animation: fadeInUp 0.8s ease both;
-        }
-
-        .position-card:hover {
-          transform: translateY(-5px);
-          border-color: rgba(0, 99, 244, 0.5);
-          background: rgba(0, 99, 244, 0.05);
-          box-shadow: 0 20px 60px rgba(0, 99, 244, 0.3);
-        }
-
-        .position-header {
-          margin-bottom: 24px;
-        }
-
-        .position-dept {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          background: rgba(0, 99, 244, 0.1);
-          border: 1px solid rgba(0, 99, 244, 0.3);
-          border-radius: 20px;
-          color: #00bfff;
-          font-size: 0.9rem;
-          font-weight: 700;
-          margin-bottom: 16px;
-        }
-
-        .position-title {
-          font-size: 1.8rem;
-          font-weight: 800;
-          margin-bottom: 12px;
-        }
-
-        .position-description {
-          font-size: 1.05rem;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.75);
-        }
-
-        .position-meta {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 24px;
-          margin-bottom: 24px;
-          padding-bottom: 24px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .meta-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 0.95rem;
-        }
-
-        .meta-item svg {
-          color: #00bfff;
-        }
-
-        .position-skills {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-bottom: 24px;
-        }
-
-        .skill-tag {
-          padding: 8px 16px;
-          background: rgba(0, 255, 136, 0.1);
-          border: 1px solid rgba(0, 255, 136, 0.3);
-          border-radius: 20px;
-          color: #00ff88;
-          font-size: 0.9rem;
-          font-weight: 600;
-        }
-
-        .apply-btn {
-          padding: 16px 40px;
-          background: linear-gradient(135deg, #0063f4, #00bfff);
-          border: none;
-          border-radius: 30px;
-          color: #fff;
-          font-weight: 700;
-          font-size: 1.05rem;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 12px;
-          transition: all 0.3s ease;
-          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.3);
-        }
-
-        .apply-btn:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 40px rgba(0, 99, 244, 0.5);
-          background: linear-gradient(135deg, #0077ff, #00d4ff);
-        }
-
-        .arrow-icon {
-          transition: transform 0.3s ease;
-        }
-
-        .apply-btn:hover .arrow-icon {
-          transform: translateX(5px);
-        }
-
-        .no-positions {
-          text-align: center;
-          padding: 60px 20px;
-          color: rgba(255, 255, 255, 0.6);
-        }
-
-        .no-positions p {
-          font-size: 1.15rem;
-          margin-bottom: 10px;
-        }
-
-        /* CTA Section */
-        .cta-section {
-          padding: 120px 0;
-        }
-
-        .cta-wrapper {
-          padding: 80px 60px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 30px;
-          text-align: center;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .cta-wrapper::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(135deg, rgba(0, 99, 244, 0.08) 0%, transparent 50%);
-          pointer-events: none;
-        }
-
-        .cta-content {
-          position: relative;
-          z-index: 1;
-        }
-
-        .cta-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          padding: 10px 20px;
-          background: rgba(255, 215, 0, 0.15);
-          border: 1px solid rgba(255, 215, 0, 0.4);
-          border-radius: 25px;
-          color: #ffd700;
-          font-weight: 700;
-          font-size: 0.95rem;
-          margin-bottom: 25px;
-        }
-
-        .cta-title {
-          font-size: 3.5rem;
-          font-weight: 900;
-          line-height: 1.2;
-          margin-bottom: 20px;
-        }
-
-        .cta-text {
-          font-size: 1.15rem;
-          line-height: 1.8;
-          color: rgba(255, 255, 255, 0.75);
-          max-width: 700px;
-          margin: 0 auto 40px;
-        }
-
-        .cta-button {
-          padding: 20px 50px;
-          background: linear-gradient(135deg, #ffd700, #ff9f43);
-          border: none;
-          border-radius: 40px;
-          color: #000;
-          font-weight: 700;
-          font-size: 1.2rem;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 12px;
-          transition: all 0.3s ease;
-          box-shadow: 0 15px 40px rgba(255, 215, 0, 0.4);
-        }
-
-        .cta-button:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 25px 60px rgba(255, 215, 0, 0.6);
-        }
-
-        .cta-button .arrow-icon {
-          transition: transform 0.3s ease;
-        }
-
-        .cta-button:hover .arrow-icon {
-          transform: translateX(5px);
-        }
-
         /* No Openings Section */
         .no-openings-section {
           padding: 120px 0 60px;
@@ -1290,38 +1096,6 @@ const CareersPage = () => {
           color: rgba(255, 255, 255, 0.75);
           max-width: 700px;
           margin: 0 auto 40px;
-        }
-
-        .social-links {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-        }
-
-        .social-btn {
-          width: 60px;
-          height: 60px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-          color: #fff;
-          transition: all 0.3s ease;
-          text-decoration: none;
-        }
-
-        .social-btn svg {
-          width: 24px;
-          height: 24px;
-        }
-
-        .social-btn:hover {
-          transform: translateY(-5px);
-          background: linear-gradient(135deg, #0063f4, #00bfff);
-          border-color: transparent;
-          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
         }
 
         /* Submit CV Section */
@@ -1478,7 +1252,12 @@ const CareersPage = () => {
           line-height: 1;
         }
 
-        .modal-close:hover {
+        .modal-close:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .modal-close:not(:disabled):hover {
           background: rgba(255, 0, 0, 0.2);
           border-color: rgba(255, 0, 0, 0.5);
           transform: rotate(90deg);
@@ -1528,8 +1307,12 @@ const CareersPage = () => {
           color: rgba(255, 255, 255, 0.9);
         }
 
-        #position{
-        background-color: #0a0a0a;}
+        .file-requirements {
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.6);
+          font-weight: normal;
+          margin-left: 8px;
+        }
 
         .form-group input,
         .form-group select,
@@ -1542,6 +1325,13 @@ const CareersPage = () => {
           font-size: 1rem;
           font-family: inherit;
           transition: all 0.3s ease;
+        }
+
+        .form-group input:disabled,
+        .form-group select:disabled,
+        .form-group textarea:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
         }
 
         .form-group input:focus,
@@ -1560,6 +1350,7 @@ const CareersPage = () => {
 
         .form-group select {
           cursor: pointer;
+          background-color: #0a0a0a;
         }
 
         /* File Upload Styles */
@@ -1577,8 +1368,9 @@ const CareersPage = () => {
         .file-upload-label {
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 12px;
-          padding: 16px 20px;
+          padding: 20px;
           background: rgba(255, 255, 255, 0.03);
           border: 2px dashed rgba(255, 255, 255, 0.2);
           border-radius: 12px;
@@ -1586,15 +1378,120 @@ const CareersPage = () => {
           font-size: 1rem;
           cursor: pointer;
           transition: all 0.3s ease;
+          min-height: 60px;
+          text-align: center;
+          flex-wrap: wrap;
         }
 
-        .file-upload-label:hover {
+        .file-upload-label:hover:not(:has(+ input:disabled)) {
           border-color: #00bfff;
           background: rgba(0, 191, 255, 0.05);
           color: #00bfff;
         }
 
+        .upload-text {
+          flex: 1;
+        }
+
+        .file-name {
+          flex: 1;
+          text-align: left;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .file-size {
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.5);
+          margin-left: 8px;
+        }
+
+        .cloud-storage-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          padding: 4px 8px;
+          background: rgba(0, 191, 255, 0.1);
+          border: 1px solid rgba(0, 191, 255, 0.3);
+          border-radius: 8px;
+          font-size: 0.75rem;
+          color: #00bfff;
+          margin-left: 8px;
+        }
+
+        /* Progress Bar */
+        .upload-progress {
+          margin-top: 10px;
+        }
+
+        .progress-bar {
+          height: 6px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 3px;
+          overflow: hidden;
+        }
+
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #00ff88, #00bfff);
+          transition: width 0.3s ease;
+        }
+
+        .progress-text {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.6);
+          text-align: center;
+          margin-top: 8px;
+        }
+
+        .cv-upload-success {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-top: 8px;
+          padding: 8px 12px;
+          background: rgba(0, 255, 136, 0.1);
+          border: 1px solid rgba(0, 255, 136, 0.3);
+          border-radius: 6px;
+          font-size: 0.85rem;
+          color: #00ff88;
+        }
+
+        .form-notice {
+          display: flex;
+          align-items: center;
+          padding: 15px 20px;
+          background: rgba(0, 191, 255, 0.05);
+          border: 1px solid rgba(0, 191, 255, 0.2);
+          border-radius: 12px;
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.7);
+          margin-top: 10px;
+        }
+
+        .form-spinner {
+          width: 20px;
+          height: 20px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-right: 10px;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .form-buttons {
+          display: flex;
+          gap: 15px;
+          margin-top: 20px;
+        }
+
         .submit-form-btn {
+          flex: 2;
           padding: 18px 40px;
           background: linear-gradient(135deg, #0063f4, #00bfff);
           border: none;
@@ -1609,13 +1506,46 @@ const CareersPage = () => {
           gap: 12px;
           transition: all 0.3s ease;
           box-shadow: 0 10px 30px rgba(0, 99, 244, 0.3);
-          margin-top: 10px;
         }
 
-        .submit-form-btn:hover {
+        .submit-form-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          transform: none !important;
+        }
+
+        .submit-form-btn:not(:disabled):hover {
           transform: translateY(-3px);
           box-shadow: 0 15px 40px rgba(0, 99, 244, 0.5);
           background: linear-gradient(135deg, #0077ff, #00d4ff);
+        }
+
+        .email-fallback-btn {
+          flex: 1;
+          padding: 18px 20px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 30px;
+          color: #fff;
+          font-weight: 700;
+          font-size: 1rem;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .email-fallback-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        .email-fallback-btn:not(:disabled):hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: rgba(255, 255, 255, 0.2);
+          transform: translateY(-3px);
         }
 
         /* Success Alert */
@@ -1697,6 +1627,21 @@ const CareersPage = () => {
           margin: 0;
         }
 
+        .download-cv-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 8px;
+          color: #00bfff !important;
+          text-decoration: none;
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+
+        .download-cv-link:hover {
+          text-decoration: underline;
+        }
+
         .success-close {
           width: 30px;
           height: 30px;
@@ -1765,44 +1710,6 @@ const CareersPage = () => {
             gap: 30px;
           }
 
-          .department-filter {
-            gap: 10px;
-          }
-
-          .filter-btn {
-            padding: 12px 24px;
-            font-size: 0.9rem;
-          }
-
-          .position-card {
-            padding: 30px 25px;
-          }
-
-          .position-title {
-            font-size: 1.5rem;
-          }
-
-          .position-meta {
-            gap: 16px;
-          }
-
-          .cta-wrapper {
-            padding: 60px 40px;
-          }
-
-          .cta-title {
-            font-size: 2.5rem;
-          }
-
-          .cta-text {
-            font-size: 1.05rem;
-          }
-
-          .cta-button {
-            padding: 18px 40px;
-            font-size: 1.1rem;
-          }
-
           .no-openings-wrapper {
             padding: 60px 30px;
           }
@@ -1817,16 +1724,6 @@ const CareersPage = () => {
 
           .no-openings-text {
             font-size: 1.05rem;
-          }
-
-          .social-btn {
-            width: 50px;
-            height: 50px;
-          }
-
-          .social-btn svg {
-            width: 20px;
-            height: 20px;
           }
 
           .submit-cv-wrapper {
@@ -1857,6 +1754,10 @@ const CareersPage = () => {
           .form-row {
             grid-template-columns: 1fr;
           }
+
+          .form-buttons {
+            flex-direction: column;
+          }
         }
 
         @media (max-width: 480px) {
@@ -1871,19 +1772,6 @@ const CareersPage = () => {
           .hero-badge {
             font-size: 0.9rem;
             padding: 10px 18px;
-          }
-
-          .position-meta {
-            flex-direction: column;
-            gap: 12px;
-          }
-
-          .cta-wrapper {
-            padding: 50px 30px;
-          }
-
-          .cta-title {
-            font-size: 2rem;
           }
 
           .no-openings-title {
