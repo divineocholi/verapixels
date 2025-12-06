@@ -11,7 +11,9 @@ import {
   FiSend,
   FiChevronLeft,
   FiChevronRight,
-  FiAlertCircle
+  FiAlertCircle,
+  FiGlobe,
+  FiRefreshCw
 } from 'react-icons/fi';
 import { SiGooglemeet, SiZoom, SiWhatsapp } from 'react-icons/si';
 import { Client, Databases, Query, ID } from 'appwrite';
@@ -25,6 +27,14 @@ const databases = new Databases(client);
 
 const DATABASE_ID = '6933f49b00278d1abf56';
 const COLLECTION_ID = '6933f4e8001914902fb2';
+
+// Business timezone (Lagos, Nigeria)
+const BUSINESS_TIMEZONE = 'Africa/Lagos';
+const BUSINESS_HOURS = {
+  start: 9, // 9:00 AM
+  end: 16, // 4:00 PM
+  endMinutes: 30 // 4:30 PM (last slot starts at 4:00 PM, ends at 4:30 PM)
+};
 
 // Type definitions
 interface DayType {
@@ -43,17 +53,107 @@ interface Booking {
   timezone: string;
 }
 
+// Timezone utilities
+const convertTimeToTimezone = (time: string, date: string, fromTz: string, toTz: string) => {
+  const [hours, minutes, period] = time.match(/(\d+):(\d+)\s*(AM|PM)/i)?.slice(1) || [];
+  let hour = parseInt(hours);
+  if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+  if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
+
+  const dateTimeString = `${date}T${hour.toString().padStart(2, '0')}:${minutes}:00`;
+  const sourceDate = new Date(dateTimeString + ' GMT');
+  
+  // Get offset difference
+  const sourceFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: fromTz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+  
+  const targetFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: toTz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  });
+
+  // Create date in source timezone
+  const sourceParts = sourceFormatter.formatToParts(new Date(dateTimeString));
+  const sourceHour = parseInt(sourceParts.find(p => p.type === 'hour')?.value || '0');
+  
+  // Create date in target timezone
+  const targetParts = targetFormatter.formatToParts(new Date(dateTimeString));
+  const targetHour = parseInt(targetParts.find(p => p.type === 'hour')?.value || '0');
+  
+  const offsetDiff = targetHour - sourceHour;
+  const convertedHour = hour + offsetDiff;
+  
+  const finalHour = convertedHour % 24;
+  const displayHour = finalHour === 0 ? 12 : finalHour > 12 ? finalHour - 12 : finalHour;
+  const displayPeriod = finalHour >= 12 ? 'PM' : 'AM';
+  
+  return `${displayHour.toString().padStart(2, '0')}:${minutes} ${displayPeriod}`;
+};
+
+const isTimeSlotAvailable = (time: string, date: string, userTz: string) => {
+  // Convert user's selected time to business timezone
+  const businessTime = convertTimeToTimezone(time, date, userTz, BUSINESS_TIMEZONE);
+  const [hours, minutes] = businessTime.match(/(\d+):(\d+)\s*(AM|PM)/i)?.slice(1, 3) || [];
+  let hour = parseInt(hours);
+  const minute = parseInt(minutes);
+  const period = businessTime.split(' ')[1];
+  
+  if (period === 'PM' && hour !== 12) hour += 12;
+  if (period === 'AM' && hour === 12) hour = 0;
+  
+  // Check if time is within business hours (9:00 AM to 4:00 PM, with 4:00 PM being the last slot)
+  if (hour < BUSINESS_HOURS.start) return false;
+  if (hour > BUSINESS_HOURS.end) return false;
+  if (hour === BUSINESS_HOURS.end && minute > 0) return false;
+  
+  // Check if it's today and the time has already passed in Lagos timezone
+  const now = new Date();
+  const lagosNow = new Date(now.toLocaleString('en-US', { timeZone: BUSINESS_TIMEZONE }));
+  const selectedDate = new Date(date + 'T00:00:00');
+  
+  const isToday = selectedDate.toDateString() === lagosNow.toDateString();
+  
+  if (isToday) {
+    const currentHour = lagosNow.getHours();
+    const currentMinute = lagosNow.getMinutes();
+    
+    // If current time is past the selected slot time, mark as unavailable
+    if (hour < currentHour) return false;
+    if (hour === currentHour && minute <= currentMinute) return false;
+  }
+  
+  return true;
+};
+
 // Custom Time Selector Component
 const CustomTimeSelector = ({ 
   selectedTime, 
   onTimeSelect, 
   timeSlots, 
-  bookedSlots 
+  bookedSlots,
+  selectedDate,
+  userTimezone,
+  businessTimezone
 }: { 
   selectedTime: string; 
   onTimeSelect: (time: string) => void; 
   timeSlots: string[];
   bookedSlots: string[];
+  selectedDate: string;
+  userTimezone: string;
+  businessTimezone: string;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -71,10 +171,15 @@ const CustomTimeSelector = ({
   }, [isOpen]);
 
   const handleTimeClick = (time: string) => {
-    if (!bookedSlots.includes(time)) {
+    if (!bookedSlots.includes(time) && isTimeSlotAvailable(time, selectedDate, userTimezone)) {
       onTimeSelect(time);
       setIsOpen(false);
     }
+  };
+
+  const getBusinessTime = (time: string) => {
+    if (!selectedDate) return '';
+    return convertTimeToTimezone(time, selectedDate, userTimezone, businessTimezone);
   };
 
   return (
@@ -92,20 +197,33 @@ const CustomTimeSelector = ({
 
       {isOpen && (
         <div className="time-dropdown" onClick={(e) => e.stopPropagation()}>
+          <div className="timezone-header">
+            <div className="tz-info">
+              <FiGlobe />
+              <span>Times shown in your timezone</span>
+            </div>
+          </div>
           <div className="time-slots-grid">
             {timeSlots.map((slot) => {
               const isBooked = bookedSlots.includes(slot);
+              const isAvailable = selectedDate && isTimeSlotAvailable(slot, selectedDate, userTimezone);
+              const businessTime = selectedDate ? getBusinessTime(slot) : '';
+              
               return (
                 <button
                   key={slot}
                   type="button"
-                  className={`time-slot ${selectedTime === slot ? 'selected' : ''} ${isBooked ? 'booked' : ''}`}
+                  className={`time-slot ${selectedTime === slot ? 'selected' : ''} ${isBooked ? 'booked' : ''} ${!isAvailable ? 'unavailable' : ''}`}
                   onClick={() => handleTimeClick(slot)}
-                  disabled={isBooked}
-                  title={isBooked ? 'This time slot is already booked' : ''}
+                  disabled={isBooked || !isAvailable}
+                  title={isBooked ? 'Already booked' : !isAvailable ? 'Outside business hours' : ''}
                 >
-                  {slot}
-                  {isBooked && <span className="booked-badge">Booked</span>}
+                  <span className="slot-time">{slot}</span>
+                  {businessTime && userTimezone !== businessTimezone && (
+                    <span className="business-time">({businessTime} Lagos)</span>
+                  )}
+                  {isBooked && <span className="slot-badge booked-badge">Booked</span>}
+                  {!isAvailable && !isBooked && <span className="slot-badge unavailable-badge">Closed</span>}
                 </button>
               );
             })}
@@ -203,7 +321,6 @@ const CustomCalendar = ({
 
   const handleDayClick = (day: DayType) => {
     if (!day.isDisabled && day.date) {
-      // Add one day to fix the date selection bug
       const selectedDate = new Date(day.date);
       selectedDate.setDate(selectedDate.getDate() + 1);
       onDateSelect(selectedDate.toISOString().split('T')[0]);
@@ -296,6 +413,219 @@ const CustomCalendar = ({
   );
 };
 
+// Timezone Selector Component with Search
+const TimezoneSelector = ({ 
+  currentTimezone, 
+  onTimezoneChange 
+}: { 
+  currentTimezone: string; 
+  onTimezoneChange: (tz: string) => void 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Comprehensive list of all timezones
+  const allTimezones = [
+    // Africa
+    { value: 'Africa/Abidjan', label: 'Abidjan (GMT)', region: 'Africa' },
+    { value: 'Africa/Accra', label: 'Accra (GMT)', region: 'Africa' },
+    { value: 'Africa/Addis_Ababa', label: 'Addis Ababa (EAT)', region: 'Africa' },
+    { value: 'Africa/Algiers', label: 'Algiers (CET)', region: 'Africa' },
+    { value: 'Africa/Cairo', label: 'Cairo (EET)', region: 'Africa' },
+    { value: 'Africa/Casablanca', label: 'Casablanca (WET)', region: 'Africa' },
+    { value: 'Africa/Johannesburg', label: 'Johannesburg (SAST)', region: 'Africa' },
+    { value: 'Africa/Lagos', label: 'Lagos (WAT)', region: 'Africa' },
+    { value: 'Africa/Nairobi', label: 'Nairobi (EAT)', region: 'Africa' },
+    { value: 'Africa/Tunis', label: 'Tunis (CET)', region: 'Africa' },
+    
+    // America - North
+    { value: 'America/Anchorage', label: 'Anchorage (AKST)', region: 'America' },
+    { value: 'America/Chicago', label: 'Chicago (CST)', region: 'America' },
+    { value: 'America/Denver', label: 'Denver (MST)', region: 'America' },
+    { value: 'America/Los_Angeles', label: 'Los Angeles (PST)', region: 'America' },
+    { value: 'America/Mexico_City', label: 'Mexico City (CST)', region: 'America' },
+    { value: 'America/New_York', label: 'New York (EST)', region: 'America' },
+    { value: 'America/Phoenix', label: 'Phoenix (MST)', region: 'America' },
+    { value: 'America/Toronto', label: 'Toronto (EST)', region: 'America' },
+    { value: 'America/Vancouver', label: 'Vancouver (PST)', region: 'America' },
+    
+    // America - South
+    { value: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires (ART)', region: 'America' },
+    { value: 'America/Bogota', label: 'Bogota (COT)', region: 'America' },
+    { value: 'America/Caracas', label: 'Caracas (VET)', region: 'America' },
+    { value: 'America/Lima', label: 'Lima (PET)', region: 'America' },
+    { value: 'America/Santiago', label: 'Santiago (CLT)', region: 'America' },
+    { value: 'America/Sao_Paulo', label: 'São Paulo (BRT)', region: 'America' },
+    
+    // America - Caribbean
+    { value: 'America/Havana', label: 'Havana (CST)', region: 'America' },
+    { value: 'America/Jamaica', label: 'Jamaica (EST)', region: 'America' },
+    { value: 'America/Puerto_Rico', label: 'Puerto Rico (AST)', region: 'America' },
+    
+    // Asia
+    { value: 'Asia/Baghdad', label: 'Baghdad (AST)', region: 'Asia' },
+    { value: 'Asia/Baku', label: 'Baku (AZT)', region: 'Asia' },
+    { value: 'Asia/Bangkok', label: 'Bangkok (ICT)', region: 'Asia' },
+    { value: 'Asia/Beirut', label: 'Beirut (EET)', region: 'Asia' },
+    { value: 'Asia/Colombo', label: 'Colombo (IST)', region: 'Asia' },
+    { value: 'Asia/Damascus', label: 'Damascus (EET)', region: 'Asia' },
+    { value: 'Asia/Dhaka', label: 'Dhaka (BST)', region: 'Asia' },
+    { value: 'Asia/Dubai', label: 'Dubai (GST)', region: 'Asia' },
+    { value: 'Asia/Hong_Kong', label: 'Hong Kong (HKT)', region: 'Asia' },
+    { value: 'Asia/Jakarta', label: 'Jakarta (WIB)', region: 'Asia' },
+    { value: 'Asia/Jerusalem', label: 'Jerusalem (IST)', region: 'Asia' },
+    { value: 'Asia/Karachi', label: 'Karachi (PKT)', region: 'Asia' },
+    { value: 'Asia/Kathmandu', label: 'Kathmandu (NPT)', region: 'Asia' },
+    { value: 'Asia/Kolkata', label: 'Kolkata (IST)', region: 'Asia' },
+    { value: 'Asia/Kuala_Lumpur', label: 'Kuala Lumpur (MYT)', region: 'Asia' },
+    { value: 'Asia/Kuwait', label: 'Kuwait (AST)', region: 'Asia' },
+    { value: 'Asia/Manila', label: 'Manila (PHT)', region: 'Asia' },
+    { value: 'Asia/Riyadh', label: 'Riyadh (AST)', region: 'Asia' },
+    { value: 'Asia/Seoul', label: 'Seoul (KST)', region: 'Asia' },
+    { value: 'Asia/Shanghai', label: 'Shanghai (CST)', region: 'Asia' },
+    { value: 'Asia/Singapore', label: 'Singapore (SGT)', region: 'Asia' },
+    { value: 'Asia/Taipei', label: 'Taipei (CST)', region: 'Asia' },
+    { value: 'Asia/Tashkent', label: 'Tashkent (UZT)', region: 'Asia' },
+    { value: 'Asia/Tehran', label: 'Tehran (IRST)', region: 'Asia' },
+    { value: 'Asia/Tokyo', label: 'Tokyo (JST)', region: 'Asia' },
+    { value: 'Asia/Yangon', label: 'Yangon (MMT)', region: 'Asia' },
+    
+    // Atlantic
+    { value: 'Atlantic/Azores', label: 'Azores (AZOT)', region: 'Atlantic' },
+    { value: 'Atlantic/Bermuda', label: 'Bermuda (AST)', region: 'Atlantic' },
+    { value: 'Atlantic/Reykjavik', label: 'Reykjavik (GMT)', region: 'Atlantic' },
+    
+    // Australia
+    { value: 'Australia/Adelaide', label: 'Adelaide (ACST)', region: 'Australia' },
+    { value: 'Australia/Brisbane', label: 'Brisbane (AEST)', region: 'Australia' },
+    { value: 'Australia/Darwin', label: 'Darwin (ACST)', region: 'Australia' },
+    { value: 'Australia/Melbourne', label: 'Melbourne (AEST)', region: 'Australia' },
+    { value: 'Australia/Perth', label: 'Perth (AWST)', region: 'Australia' },
+    { value: 'Australia/Sydney', label: 'Sydney (AEST)', region: 'Australia' },
+    
+    // Europe
+    { value: 'Europe/Amsterdam', label: 'Amsterdam (CET)', region: 'Europe' },
+    { value: 'Europe/Athens', label: 'Athens (EET)', region: 'Europe' },
+    { value: 'Europe/Berlin', label: 'Berlin (CET)', region: 'Europe' },
+    { value: 'Europe/Brussels', label: 'Brussels (CET)', region: 'Europe' },
+    { value: 'Europe/Bucharest', label: 'Bucharest (EET)', region: 'Europe' },
+    { value: 'Europe/Budapest', label: 'Budapest (CET)', region: 'Europe' },
+    { value: 'Europe/Copenhagen', label: 'Copenhagen (CET)', region: 'Europe' },
+    { value: 'Europe/Dublin', label: 'Dublin (GMT)', region: 'Europe' },
+    { value: 'Europe/Helsinki', label: 'Helsinki (EET)', region: 'Europe' },
+    { value: 'Europe/Istanbul', label: 'Istanbul (TRT)', region: 'Europe' },
+    { value: 'Europe/Lisbon', label: 'Lisbon (WET)', region: 'Europe' },
+    { value: 'Europe/London', label: 'London (GMT)', region: 'Europe' },
+    { value: 'Europe/Madrid', label: 'Madrid (CET)', region: 'Europe' },
+    { value: 'Europe/Moscow', label: 'Moscow (MSK)', region: 'Europe' },
+    { value: 'Europe/Oslo', label: 'Oslo (CET)', region: 'Europe' },
+    { value: 'Europe/Paris', label: 'Paris (CET)', region: 'Europe' },
+    { value: 'Europe/Prague', label: 'Prague (CET)', region: 'Europe' },
+    { value: 'Europe/Rome', label: 'Rome (CET)', region: 'Europe' },
+    { value: 'Europe/Stockholm', label: 'Stockholm (CET)', region: 'Europe' },
+    { value: 'Europe/Vienna', label: 'Vienna (CET)', region: 'Europe' },
+    { value: 'Europe/Warsaw', label: 'Warsaw (CET)', region: 'Europe' },
+    { value: 'Europe/Zurich', label: 'Zurich (CET)', region: 'Europe' },
+    
+    // Pacific
+    { value: 'Pacific/Auckland', label: 'Auckland (NZST)', region: 'Pacific' },
+    { value: 'Pacific/Fiji', label: 'Fiji (FJT)', region: 'Pacific' },
+    { value: 'Pacific/Guam', label: 'Guam (ChST)', region: 'Pacific' },
+    { value: 'Pacific/Honolulu', label: 'Honolulu (HST)', region: 'Pacific' },
+    { value: 'Pacific/Pago_Pago', label: 'Pago Pago (SST)', region: 'Pacific' },
+    { value: 'Pacific/Tahiti', label: 'Tahiti (TAHT)', region: 'Pacific' },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && !(event.target as HTMLElement).closest('.timezone-selector')) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const getCurrentLabel = () => {
+    const tz = allTimezones.find(t => t.value === currentTimezone);
+    return tz ? tz.label : currentTimezone;
+  };
+
+  const filteredTimezones = allTimezones.filter(tz => 
+    tz.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tz.value.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tz.region.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const groupedTimezones = filteredTimezones.reduce((acc, tz) => {
+    if (!acc[tz.region]) {
+      acc[tz.region] = [];
+    }
+    acc[tz.region].push(tz);
+    return acc;
+  }, {} as Record<string, typeof allTimezones>);
+
+  return (
+    <div className="timezone-selector">
+      <button 
+        className="timezone-toggle"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+      >
+        <FiGlobe />
+        <span>{getCurrentLabel()}</span>
+        <FiChevronRight className={`dropdown-arrow ${isOpen ? 'open' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="timezone-dropdown">
+          <div className="timezone-search-header">
+            <input
+              type="text"
+              placeholder="Search timezone or city..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="timezone-search-input"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          
+          <div className="timezone-list">
+            {Object.keys(groupedTimezones).length === 0 ? (
+              <div className="no-results">No timezones found</div>
+            ) : (
+              Object.keys(groupedTimezones).sort().map((region) => (
+                <div key={region} className="timezone-region-group">
+                  <div className="timezone-region-header">{region}</div>
+                  {groupedTimezones[region].map((tz) => (
+                    <button
+                      key={tz.value}
+                      className={`timezone-option ${currentTimezone === tz.value ? 'active' : ''}`}
+                      onClick={() => {
+                        onTimezoneChange(tz.value);
+                        setIsOpen(false);
+                        setSearchQuery('');
+                      }}
+                    >
+                      {tz.label}
+                      {currentTimezone === tz.value && <FiCheckCircle />}
+                    </button>
+                  ))}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ConsultationBooking = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -313,11 +643,13 @@ const ConsultationBooking = () => {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [userTimezone, setUserTimezone] = useState('');
+  const [detectedTimezone, setDetectedTimezone] = useState('');
 
   // Detect user's timezone
   useEffect(() => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     setUserTimezone(timezone);
+    setDetectedTimezone(timezone);
   }, []);
 
   useEffect(() => {
@@ -366,11 +698,28 @@ const ConsultationBooking = () => {
     { id: 'phone', label: 'Phone Call', icon: <FiPhone />, color: '#ff6b9d' }
   ];
 
-  const timeSlots = [
-    '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
-    '01:00 PM', '02:00 PM', '03:00 PM', '04:00 PM',
-    '05:00 PM'
-  ];
+  // Generate time slots based on business hours (30-minute intervals)
+  const generateTimeSlots = () => {
+    const slots: string[] = [];
+    const startHour = BUSINESS_HOURS.start;
+    const endHour = BUSINESS_HOURS.end;
+    
+    for (let hour = startHour; hour <= endHour; hour++) {
+      // Add slots for :00 and :30
+      for (let minute = 0; minute < 60; minute += 30) {
+        // Skip if it's past 4:00 PM (last slot is 4:00 PM)
+        if (hour === endHour && minute > 0) break;
+        
+        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const minuteStr = minute.toString().padStart(2, '0');
+        slots.push(`${displayHour.toString().padStart(2, '0')}:${minuteStr} ${period}`);
+      }
+    }
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
 
   // Check availability for a specific date
   const checkAvailability = async (date: string) => {
@@ -411,6 +760,17 @@ const ConsultationBooking = () => {
   const handleTimeSelect = (time: string) => {
     setFormData((prev) => ({ ...prev, preferredTime: time }));
   };
+
+  const handleTimezoneChange = (tz: string) => {
+    setUserTimezone(tz);
+    // Clear selected time when timezone changes
+    setFormData((prev) => ({ ...prev, preferredTime: '' }));
+  };
+
+  const getBusinessTime = (userTime: string) => {
+    if (!formData.preferredDate || !userTime) return '';
+    return convertTimeToTimezone(userTime, formData.preferredDate, userTimezone, BUSINESS_TIMEZONE);
+  };
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -436,6 +796,8 @@ const ConsultationBooking = () => {
         return;
       }
 
+      const businessTime = getBusinessTime(formData.preferredTime);
+
       // Create booking in Appwrite
       const bookingData = {
         name: formData.name,
@@ -446,6 +808,7 @@ const ConsultationBooking = () => {
         booking_time: formData.preferredTime,
         message: formData.message || 'No additional message provided',
         timezone: userTimezone,
+        business_time: businessTime,
         status: 'confirmed'
       };
 
@@ -475,6 +838,9 @@ const ConsultationBooking = () => {
         contact_method: contactMethods.find(m => m.id === formData.contactMethod)?.label,
         preferred_date: formData.preferredDate,
         preferred_time: formData.preferredTime,
+        business_time: businessTime,
+        user_timezone: userTimezone,
+        business_timezone: BUSINESS_TIMEZONE,
         message: formData.message || 'No additional message provided',
         timezone: userTimezone
       };
@@ -560,11 +926,36 @@ const ConsultationBooking = () => {
             Let's discuss your project and explore how we can help bring your vision to life.
             Choose your preferred way to connect with us.
           </p>
-          {userTimezone && (
-            <p className="timezone-info">
-              <FiClock /> Your timezone: {userTimezone}
-            </p>
-          )}
+          
+          <div className="timezone-info-box">
+            <div className="tz-row">
+              <FiGlobe className="tz-icon" />
+              <div className="tz-details">
+                <span className="tz-label">Your Timezone:</span>
+                <span className="tz-value">{userTimezone}</span>
+              </div>
+            </div>
+            <div className="tz-row business-hours">
+              <FiClock className="tz-icon" />
+              <div className="tz-details">
+                <span className="tz-label">Business Hours (Lagos):</span>
+                <span className="tz-value">9:00 AM - 4:30 PM WAT</span>
+              </div>
+            </div>
+            {userTimezone !== detectedTimezone && (
+              <button 
+                className="reset-tz-btn"
+                onClick={() => setUserTimezone(detectedTimezone)}
+              >
+                <FiRefreshCw /> Reset to Detected Timezone
+              </button>
+            )}
+          </div>
+
+          <TimezoneSelector 
+            currentTimezone={userTimezone}
+            onTimezoneChange={handleTimezoneChange}
+          />
         </section>
 
         <section className="booking-section">
@@ -668,7 +1059,7 @@ const ConsultationBooking = () => {
 
                   <div className="form-group">
                     <label>
-                      Preferred Time
+                      Preferred Time (Your Timezone)
                       {isCheckingAvailability && <span className="checking-badge">Checking...</span>}
                     </label>
                     <CustomTimeSelector
@@ -676,7 +1067,19 @@ const ConsultationBooking = () => {
                       onTimeSelect={handleTimeSelect}
                       timeSlots={timeSlots}
                       bookedSlots={bookedSlots}
+                      selectedDate={formData.preferredDate}
+                      userTimezone={userTimezone}
+                      businessTimezone={BUSINESS_TIMEZONE}
                     />
+                    {formData.preferredTime && userTimezone !== BUSINESS_TIMEZONE && (
+                      <div className="time-conversion-note">
+                        <FiGlobe />
+                        <span>
+                          Your time: <strong>{formData.preferredTime}</strong> → 
+                          Lagos time: <strong>{getBusinessTime(formData.preferredTime)}</strong>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -726,8 +1129,20 @@ const ConsultationBooking = () => {
                       <FiCheckCircle />
                     </div>
                     <h3>Booking Confirmed!</h3>
-                    <p>Your consultation session has been successfully booked.</p>
-                    <p className="success-details">Check your email for confirmation details.</p>
+                    <p>Your consultation has been successfully booked.</p>
+                    <div className="success-time-details">
+                      <div className="time-detail">
+                        <FiClock />
+                        <span>Your Time: <strong>{formData.preferredTime}</strong></span>
+                      </div>
+                      {userTimezone !== BUSINESS_TIMEZONE && (
+                        <div className="time-detail">
+                          <FiGlobe />
+                          <span>Lagos Time: <strong>{getBusinessTime(formData.preferredTime)}</strong></span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="success-details">Check your email for confirmation with timezone details.</p>
                     <button 
                       className="success-btn"
                       onClick={() => setSubmitStatus(null)}
@@ -758,18 +1173,18 @@ const ConsultationBooking = () => {
 
             <div className="info-card animate-on-scroll zoom-in">
               <div className="info-icon">
-                <FiCheckCircle />
+                <FiGlobe />
               </div>
-              <h3>Real-Time Availability</h3>
-              <p>See available slots instantly with double-booking prevention</p>
+              <h3>Timezone Smart</h3>
+              <p>Automatic timezone conversion with clear time confirmations</p>
             </div>
 
             <div className="info-card animate-on-scroll slide-right">
               <div className="info-icon">
-                <FiAlertCircle />
+                <FiCheckCircle />
               </div>
               <h3>Instant Confirmation</h3>
-              <p>Receive email confirmation immediately after booking</p>
+              <p>Receive email with times in both your timezone and ours</p>
             </div>
           </div>
         </section>
@@ -906,20 +1321,236 @@ const ConsultationBooking = () => {
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.85);
           max-width: 700px;
-          margin: 0 auto 20px;
+          margin: 0 auto 30px;
         }
 
-        .timezone-info {
+        .timezone-info-box {
           display: inline-flex;
+          flex-direction: column;
+          gap: 12px;
+          padding: 20px 30px;
+          background: rgba(0, 255, 136, 0.08);
+          border: 1px solid rgba(0, 255, 136, 0.25);
+          border-radius: 16px;
+          margin: 20px 0;
+          backdrop-filter: blur(10px);
+        }
+
+        .tz-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .tz-icon {
+          font-size: 20px;
+          color: #00ff88;
+        }
+
+        .tz-details {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 4px;
+        }
+
+        .tz-label {
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.6);
+          font-weight: 500;
+        }
+
+        .tz-value {
+          font-size: 1.05rem;
+          color: #00ff88;
+          font-weight: 700;
+        }
+
+        .business-hours .tz-icon {
+          color: #ffd700;
+        }
+
+        .business-hours .tz-value {
+          color: #ffd700;
+        }
+
+        .reset-tz-btn {
+          display: flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 20px;
-          background: rgba(0, 255, 136, 0.1);
-          border: 1px solid rgba(0, 255, 136, 0.3);
-          border-radius: 20px;
-          color: #00ff88;
-          font-size: 0.95rem;
+          padding: 8px 16px;
+          background: rgba(0, 191, 255, 0.15);
+          border: 1px solid rgba(0, 191, 255, 0.3);
+          border-radius: 8px;
+          color: #00bfff;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-top: 8px;
+        }
+
+        .reset-tz-btn:hover {
+          background: rgba(0, 191, 255, 0.25);
+          border-color: #00bfff;
+          transform: translateY(-2px);
+        }
+
+        .timezone-selector {
+          position: relative;
+          display: inline-block;
           margin-top: 20px;
+        }
+
+        .timezone-toggle {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 24px;
+          background: rgba(0, 99, 244, 0.15);
+          border: 1px solid rgba(0, 99, 244, 0.3);
+          border-radius: 50px;
+          color: #fff;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .timezone-toggle:hover {
+          background: rgba(0, 99, 244, 0.25);
+          border-color: #0063f4;
+          transform: translateY(-2px);
+        }
+
+        .timezone-toggle svg:first-child {
+          font-size: 20px;
+          color: #00bfff;
+        }
+
+        .timezone-dropdown {
+          position: absolute;
+          top: calc(100% + 12px);
+          left: 50%;
+          transform: translateX(-50%);
+          min-width: 320px;
+          max-width: 400px;
+          background: rgba(20, 20, 25, 0.98);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          padding: 12px;
+          z-index: 10000;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(20px);
+          animation: fadeIn 0.3s ease;
+          max-height: 500px;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .timezone-search-header {
+          padding: 8px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          margin-bottom: 8px;
+        }
+
+        .timezone-search-input {
+          width: 100%;
+          padding: 12px 16px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-radius: 10px;
+          color: #fff;
+          font-size: 0.95rem;
+          transition: all 0.3s ease;
+        }
+
+        .timezone-search-input:focus {
+          outline: none;
+          border-color: #0063f4;
+          background: rgba(0, 99, 244, 0.08);
+          box-shadow: 0 0 0 3px rgba(0, 99, 244, 0.2);
+        }
+
+        .timezone-search-input::placeholder {
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        .timezone-list {
+          overflow-y: auto;
+          max-height: 400px;
+          padding: 4px;
+        }
+
+        .timezone-list::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .timezone-list::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+
+        .timezone-list::-webkit-scrollbar-thumb {
+          background: rgba(0, 99, 244, 0.5);
+          border-radius: 4px;
+        }
+
+        .timezone-list::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 99, 244, 0.7);
+        }
+
+        .timezone-region-group {
+          margin-bottom: 16px;
+        }
+
+        .timezone-region-header {
+          padding: 8px 12px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: #00bfff;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          border-bottom: 1px solid rgba(0, 191, 255, 0.2);
+          margin-bottom: 4px;
+        }
+
+        .no-results {
+          padding: 24px;
+          text-align: center;
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 0.95rem;
+        }
+
+        .timezone-option {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 12px 16px;
+          background: transparent;
+          border: none;
+          border-radius: 10px;
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 0.95rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          width: 100%;
+          text-align: left;
+        }
+
+        .timezone-option:hover {
+          background: rgba(0, 99, 244, 0.15);
+        }
+
+        .timezone-option.active {
+          background: rgba(0, 99, 244, 0.25);
+          color: #00bfff;
+          font-weight: 600;
+        }
+
+        .timezone-option svg {
+          color: #00ff88;
+          font-size: 18px;
         }
 
         .booking-section {
@@ -1042,17 +1673,28 @@ const ConsultationBooking = () => {
           font-family: inherit;
         }
 
-        .form-group select {
-          cursor: pointer;
+        .time-conversion-note {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 16px;
+          background: rgba(0, 255, 136, 0.1);
+          border: 1px solid rgba(0, 255, 136, 0.25);
+          border-radius: 10px;
+          font-size: 0.95rem;
+          color: rgba(255, 255, 255, 0.85);
+          margin-top: 8px;
         }
 
-        .form-group select option {
-          background: #1a1a1a;
-          color: #fff;
+        .time-conversion-note svg {
+          color: #00ff88;
+          font-size: 18px;
+          flex-shrink: 0;
         }
 
-        .availability-info {
-          display: none;
+        .time-conversion-note strong {
+          color: #00ff88;
+          font-weight: 700;
         }
 
         .success-modal {
@@ -1073,7 +1715,7 @@ const ConsultationBooking = () => {
           border-radius: 24px;
           padding: 50px 40px;
           text-align: center;
-          max-width: 500px;
+          max-width: 550px;
           width: 90%;
           position: relative;
           animation: slideUp 0.5s ease;
@@ -1127,6 +1769,35 @@ const ConsultationBooking = () => {
           font-size: 1.1rem;
           color: rgba(255, 255, 255, 0.85);
           margin-bottom: 12px;
+        }
+
+        .success-time-details {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          padding: 20px;
+          background: rgba(0, 0, 0, 0.3);
+          border-radius: 12px;
+          margin: 20px 0;
+        }
+
+        .time-detail {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .time-detail svg {
+          color: #00ff88;
+          font-size: 18px;
+        }
+
+        .time-detail strong {
+          color: #00ff88;
+          font-weight: 700;
         }
 
         .success-details {
@@ -1202,8 +1873,32 @@ const ConsultationBooking = () => {
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
           backdrop-filter: blur(20px);
           animation: fadeIn 0.3s ease;
-          max-height: 300px;
+          max-height: 400px;
           overflow-y: auto;
+        }
+
+        .timezone-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 12px 16px;
+          background: rgba(0, 255, 136, 0.1);
+          border: 1px solid rgba(0, 255, 136, 0.2);
+          border-radius: 10px;
+          margin-bottom: 16px;
+        }
+
+        .tz-info {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: #00ff88;
+        }
+
+        .tz-info svg {
+          font-size: 18px;
         }
 
         .time-dropdown::-webkit-scrollbar {
@@ -1226,12 +1921,12 @@ const ConsultationBooking = () => {
 
         .time-slots-grid {
           display: grid;
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           gap: 8px;
         }
 
         .time-slot {
-          padding: 12px 16px;
+          padding: 14px 16px;
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 10px;
@@ -1242,9 +1937,28 @@ const ConsultationBooking = () => {
           transition: all 0.3s ease;
           text-align: center;
           position: relative;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
         }
 
-        .time-slot:hover:not(.booked) {
+        .slot-time {
+          font-weight: 600;
+        }
+
+        .business-time {
+          font-size: 0.8rem;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .slot-badge {
+          display: block;
+          font-size: 0.75rem;
+          margin-top: 4px;
+          font-weight: 600;
+        }
+
+        .time-slot:hover:not(.booked):not(.unavailable) {
           background: rgba(0, 99, 244, 0.15);
           border-color: rgba(0, 99, 244, 0.5);
           transform: translateY(-2px);
@@ -1257,20 +1971,30 @@ const ConsultationBooking = () => {
           font-weight: 600;
         }
 
+        .time-slot.booked,
+        .time-slot.unavailable {
+          cursor: not-allowed;
+          opacity: 0.5;
+        }
+
         .time-slot.booked {
           background: rgba(255, 107, 157, 0.1);
           border-color: rgba(255, 107, 157, 0.3);
-          color: rgba(255, 107, 157, 0.6);
-          cursor: not-allowed;
-          opacity: 0.6;
+          color: rgba(255, 107, 157, 0.7);
+        }
+
+        .time-slot.unavailable {
+          background: rgba(128, 128, 128, 0.1);
+          border-color: rgba(128, 128, 128, 0.3);
+          color: rgba(128, 128, 128, 0.7);
         }
 
         .booked-badge {
-          display: block;
-          font-size: 0.75rem;
-          margin-top: 4px;
-          font-weight: 600;
           color: #ff6b9d;
+        }
+
+        .unavailable-badge {
+          color: #888;
         }
 
         .custom-calendar-container {
@@ -1772,6 +2496,14 @@ const ConsultationBooking = () => {
             font-size: 1.05rem;
           }
 
+          .timezone-info-box {
+            padding: 16px 20px;
+          }
+
+          .tz-details {
+            align-items: flex-start;
+          }
+
           .section-title {
             font-size: 1.5rem;
           }
@@ -1808,6 +2540,12 @@ const ConsultationBooking = () => {
           .info-cards {
             grid-template-columns: 1fr;
           }
+
+          .timezone-dropdown {
+            left: 0;
+            right: 0;
+            transform: none;
+          }
         }
 
         @media (max-width: 480px) {
@@ -1830,6 +2568,24 @@ const ConsultationBooking = () => {
 
           .hero-subtitle {
             font-size: 1rem;
+          }
+
+          .timezone-info-box {
+            padding: 14px 16px;
+            gap: 10px;
+          }
+
+          .tz-label {
+            font-size: 0.8rem;
+          }
+
+          .tz-value {
+            font-size: 0.95rem;
+          }
+
+          .timezone-toggle {
+            padding: 10px 20px;
+            font-size: 0.9rem;
           }
 
           .section-title {
@@ -1866,6 +2622,12 @@ const ConsultationBooking = () => {
             font-size: 0.95rem;
           }
 
+          .time-conversion-note {
+            flex-direction: column;
+            text-align: center;
+            font-size: 0.85rem;
+          }
+
           .submit-btn {
             padding: 16px 24px;
             font-size: 1.1rem;
@@ -1899,6 +2661,18 @@ const ConsultationBooking = () => {
 
           .calendar-day {
             font-size: 0.85rem;
+          }
+
+          .success-content {
+            padding: 40px 30px;
+          }
+
+          .success-time-details {
+            padding: 16px;
+          }
+
+          .time-detail {
+            font-size: 0.9rem;
           }
         }
       `}</style>

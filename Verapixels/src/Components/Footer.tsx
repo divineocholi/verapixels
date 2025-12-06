@@ -1,33 +1,34 @@
 import React, { useState } from 'react';
 import {
-  FiMail,
-  FiPhone,
-  FiMapPin,
-  FiSend,
-  FiArrowRight,
-  FiCheckCircle,
-  FiHeart,
-  FiAlertCircle
-} from 'react-icons/fi';
-import {
-  FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaLinkedinIn,
-  FaTiktok,
-  FaWhatsapp,
-  FaYoutube,
-  FaGithub
-} from 'react-icons/fa';
+  Mail,
+  Phone,
+  MapPin,
+  Send,
+  ArrowRight,
+  CheckCircle,
+  Heart,
+  AlertCircle
+} from 'lucide-react';
+import { Client, Databases, ID, Query } from 'appwrite';
 
 const Footer = () => {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [subscribedEmails, setSubscribedEmails] = useState<string[]>([]);
 
-  const handleNewsletterSubmit = () => {
+  // Initialize Appwrite client
+  const client = new Client()
+    .setEndpoint('https://fra.cloud.appwrite.io/v1') // Replace with your Appwrite endpoint
+    .setProject('6933f4610012182c4b1d'); // Replace with your project ID
+
+  const databases = new Databases(client);
+
+  // Replace these with your actual values
+  const DATABASE_ID = '6933f49b00278d1abf56';
+  const COLLECTION_ID = '693443360011a536a28f';
+
+  const handleNewsletterSubmit = async () => {
     setError('');
 
     if (!email || !email.includes('@')) {
@@ -35,23 +36,46 @@ const Footer = () => {
       return;
     }
 
-    if (subscribedEmails.includes(email.toLowerCase())) {
-      setError('This email is already subscribed to our newsletter');
-      return;
-    }
-
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setSubscribedEmails([...subscribedEmails, email.toLowerCase()]);
+    try {
+      // Check if email already exists in Appwrite
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [Query.equal('email', email.toLowerCase())]
+      );
+
+      if (response.documents.length > 0) {
+        setError('This email is already subscribed to our newsletter');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create new subscription document
+      await databases.createDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        ID.unique(),
+        {
+          email: email.toLowerCase(),
+          subscribedAt: new Date().toISOString(),
+        }
+      );
+
       setIsSubmitting(false);
       setIsSubscribed(true);
       setEmail('');
       setTimeout(() => setIsSubscribed(false), 5000);
-    }, 1500);
+    } catch (err) {
+      console.error('Error subscribing:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to subscribe. Please try again.';
+      setError(errorMessage);
+      setIsSubmitting(false);
+    }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleNewsletterSubmit();
     }
@@ -83,15 +107,34 @@ const Footer = () => {
   ];
 
   const socialLinks = [
-    { icon: <FaFacebookF />, url: '#', color: '#1877F2', name: 'Facebook' },
-    { icon: <FaTwitter />, url: '#', color: '#1DA1F2', name: 'Twitter' },
-    { icon: <FaInstagram />, url: '#', color: '#E4405F', name: 'Instagram' },
-    { icon: <FaLinkedinIn />, url: '#', color: '#0A66C2', name: 'LinkedIn' },
-    { icon: <FaTiktok />, url: '#', color: '#000000', name: 'TikTok' },
-    { icon: <FaWhatsapp />, url: '#', color: '#25D366', name: 'WhatsApp' },
-    { icon: <FaYoutube />, url: '#', color: '#FF0000', name: 'YouTube' },
-    { icon: <FaGithub />, url: '#', color: '#333333', name: 'GitHub' }
+    { icon: 'facebook', url: '#', color: '#1877F2', name: 'Facebook' },
+    { icon: 'twitter', url: '#', color: '#1DA1F2', name: 'Twitter' },
+    { icon: 'instagram', url: '#', color: '#E4405F', name: 'Instagram' },
+    { icon: 'linkedin', url: '#', color: '#0A66C2', name: 'LinkedIn' },
+    { icon: 'tiktok', url: '#', color: '#000000', name: 'TikTok' },
+    { icon: 'whatsapp', url: '#', color: '#25D366', name: 'WhatsApp' },
+    { icon: 'youtube', url: '#', color: '#FF0000', name: 'YouTube' },
+    { icon: 'github', url: '#', color: '#333333', name: 'GitHub' }
   ];
+
+  const renderSocialIcon = (icon: string) => {
+    const iconMap: { [key: string]: string } = {
+      facebook: 'M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z',
+      twitter: 'M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z',
+      instagram: 'M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01M6.5 6.5h11a5 5 0 015 5v11a5 5 0 01-5 5h-11a5 5 0 01-5-5v-11a5 5 0 015-5z',
+      linkedin: 'M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z M4 6a2 2 0 100-4 2 2 0 000 4z',
+      tiktok: 'M9 12a4 4 0 104 4V6a8 8 0 006 2',
+      whatsapp: 'M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z',
+      youtube: 'M22.54 6.42a2.78 2.78 0 00-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 00-1.94 2A29 29 0 001 11.75a29 29 0 00.46 5.33A2.78 2.78 0 003.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 001.94-2 29 29 0 00.46-5.25 29 29 0 00-.46-5.33z M9.75 15.02l0-6.53 5.75 3.27-5.75 3.26z',
+      github: 'M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22'
+    };
+
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d={iconMap[icon]} />
+      </svg>
+    );
+  };
 
   return (
     <footer className="vp-footer">
@@ -110,7 +153,7 @@ const Footer = () => {
           <div className="newsletter-card">
             <div className="newsletter-header">
               <div className="newsletter-badge">
-                <FiMail />
+                <Mail size={16} />
                 <span>Newsletter</span>
               </div>
               <h3>Stay Updated with Verapixels</h3>
@@ -120,7 +163,7 @@ const Footer = () => {
             <div className="newsletter-form">
               <div className="newsletter-input-group">
                 <div className="input-wrapper">
-                  <FiMail className="input-icon" />
+                  <Mail className="input-icon" size={20} />
                   <input
                     type="email"
                     value={email}
@@ -142,7 +185,7 @@ const Footer = () => {
                   ) : (
                     <>
                       <span>Subscribe</span>
-                      <FiSend />
+                      <Send size={18} />
                     </>
                   )}
                 </button>
@@ -150,14 +193,14 @@ const Footer = () => {
 
               {error && (
                 <div className="newsletter-error">
-                  <FiAlertCircle />
+                  <AlertCircle size={18} />
                   <span>{error}</span>
                 </div>
               )}
 
               {isSubscribed && (
                 <div className="newsletter-success">
-                  <FiCheckCircle />
+                  <CheckCircle size={18} />
                   <span>Successfully subscribed! Check your email for confirmation.</span>
                 </div>
               )}
@@ -165,15 +208,15 @@ const Footer = () => {
 
             <div className="newsletter-features">
               <div className="feature-item">
-                <FiCheckCircle />
+                <CheckCircle size={16} />
                 <span>Weekly tech insights</span>
               </div>
               <div className="feature-item">
-                <FiCheckCircle />
+                <CheckCircle size={16} />
                 <span>Exclusive offers</span>
               </div>
               <div className="feature-item">
-                <FiCheckCircle />
+                <CheckCircle size={16} />
                 <span>No spam, unsubscribe anytime</span>
               </div>
             </div>
@@ -197,15 +240,15 @@ const Footer = () => {
               
               <div className="contact-info">
                 <a href="tel:+15551234567" className="contact-item">
-                  <FiPhone />
+                  <Phone size={20} />
                   <span>+1 (555) 123-4567</span>
                 </a>
                 <a href="mailto:hello@verapixels.com" className="contact-item">
-                  <FiMail />
+                  <Mail size={20} />
                   <span>hello@verapixels.com</span>
                 </a>
                 <div className="contact-item">
-                  <FiMapPin />
+                  <MapPin size={20} />
                   <span>Lagos, Nigeria</span>
                 </div>
               </div>
@@ -221,7 +264,7 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     aria-label={social.name}
                   >
-                    {social.icon}
+                    {renderSocialIcon(social.icon)}
                   </a>
                 ))}
               </div>
@@ -234,7 +277,7 @@ const Footer = () => {
                 {aboutLinks.map((link, idx) => (
                   <li key={idx}>
                     <a href={link.path}>
-                      <FiArrowRight className="link-icon" />
+                      <ArrowRight className="link-icon" size={14} />
                       {link.name}
                     </a>
                   </li>
@@ -249,7 +292,7 @@ const Footer = () => {
                 {serviceLinks.map((link, idx) => (
                   <li key={idx}>
                     <a href={link.path}>
-                      <FiArrowRight className="link-icon" />
+                      <ArrowRight className="link-icon" size={14} />
                       {link.name}
                     </a>
                   </li>
@@ -264,7 +307,7 @@ const Footer = () => {
                 {portfolioLinks.map((link, idx) => (
                   <li key={idx}>
                     <a href={link.path}>
-                      <FiArrowRight className="link-icon" />
+                      <ArrowRight className="link-icon" size={14} />
                       {link.name}
                     </a>
                   </li>
@@ -279,7 +322,7 @@ const Footer = () => {
                 {quickLinks.map((link, idx) => (
                   <li key={idx}>
                     <a href={link.path}>
-                      <FiArrowRight className="link-icon" />
+                      <ArrowRight className="link-icon" size={14} />
                       {link.name}
                     </a>
                   </li>
@@ -298,15 +341,20 @@ const Footer = () => {
               © {new Date().getFullYear()} Verapixels. All rights reserved.
             </p>
             <p className="made-with">
-              Made with <FiHeart className="heart-icon" /> by Verapixels Team
+              Made with <Heart className="heart-icon" size={16} /> by Verapixels Team
             </p>
           </div>
         </div>
       </div>
 
-      <style>
-        {`
-         .vp-footer {
+      <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        .vp-footer {
           background: linear-gradient(180deg, #0a0a0a 0%, #000000 100%);
           color: #ffffff;
           position: relative;
@@ -430,10 +478,6 @@ const Footer = () => {
           margin-bottom: 16px;
         }
 
-        .newsletter-badge svg {
-          font-size: 16px;
-        }
-
         .newsletter-header h3 {
           font-size: 2rem;
           font-weight: 800;
@@ -474,7 +518,6 @@ const Footer = () => {
         .input-icon {
           position: absolute;
           left: 18px;
-          font-size: 20px;
           color: rgba(255, 255, 255, 0.4);
           pointer-events: none;
           z-index: 1;
@@ -561,11 +604,6 @@ const Footer = () => {
           animation: slideInUp 0.3s ease-out;
         }
 
-        .newsletter-error svg {
-          font-size: 18px;
-          flex-shrink: 0;
-        }
-
         .newsletter-success {
           display: flex;
           align-items: center;
@@ -578,11 +616,6 @@ const Footer = () => {
           font-size: 0.875rem;
           font-weight: 500;
           animation: slideInUp 0.3s ease-out;
-        }
-
-        .newsletter-success svg {
-          font-size: 18px;
-          flex-shrink: 0;
         }
 
         @keyframes slideInUp {
@@ -614,7 +647,6 @@ const Footer = () => {
         }
 
         .feature-item svg {
-          font-size: 16px;
           color: #86efac;
         }
 
@@ -691,7 +723,6 @@ const Footer = () => {
         }
 
         .contact-item svg {
-          font-size: 20px;
           color: #667eea;
         }
 
@@ -711,7 +742,6 @@ const Footer = () => {
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 12px;
           color: white;
-          font-size: 20px;
           text-decoration: none;
           transition: all 0.3s ease;
           position: relative;
@@ -785,7 +815,6 @@ const Footer = () => {
         }
 
         .link-icon {
-          font-size: 14px;
           opacity: 0;
           transition: opacity 0.3s ease;
         }
@@ -942,7 +971,6 @@ const Footer = () => {
           .social-link {
             width: 44px;
             height: 44px;
-            font-size: 18px;
           }
 
           .footer-title {
