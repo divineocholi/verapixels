@@ -40,40 +40,46 @@ const VeraAISection = () => {
 
   const features = [
     {
-      icon: Brain,
-      title: 'Neural Learning',
-      description: 'Advanced machine learning algorithms that adapt to your needs',
-      color: '#6a00ff'
-    },
-    {
       icon: MessageSquare,
-      title: 'Natural Conversations',
-      description: 'Human-like interactions powered by cutting-edge NLP',
-      color: '#00d4ff'
-    },
-    {
-      icon: Shield,
-      title: 'Secure & Private',
-      description: 'Enterprise-grade security with end-to-end encryption',
-      color: '#6a00ff'
-    },
-    {
-      icon: Zap,
-      title: 'Lightning Fast',
-      description: 'Real-time responses with millisecond processing speed',
-      color: '#00d4ff'
+      title: 'Talk Like Friends',
+      description: 'Chat naturally in English, Pidgin, Yoruba, Igbo, Hausa and more—VERA gets you',
+      color: '#6a00ff',
+      animation: 'fade-left'
     },
     {
       icon: Code,
-      title: 'Smart Automation',
-      description: 'Automate complex workflows with intelligent decision-making',
-      color: '#6a00ff'
+      title: 'Code Wizard',
+      description: 'Write, debug and explain code in any programming language instantly',
+      color: '#00d4ff',
+      animation: 'fade-right'
+    },
+    {
+      icon: Brain,
+      title: 'Naija Smart',
+      description: 'Understands Nigerian systems, culture, and local context perfectly',
+      color: '#6a00ff',
+      animation: 'fade-up'
+    },
+    {
+      icon: Zap,
+      title: 'Multi-Language Pro',
+      description: 'Speaks 100+ foreign languages fluently while keeping it real',
+      color: '#00d4ff',
+      animation: 'fade-down'
+    },
+    {
+      icon: Shield,
+      title: 'Your Privacy Matters',
+      description: 'Your conversations stay private with top-level security',
+      color: '#6a00ff',
+      animation: 'zoom-in'
     },
     {
       icon: Database,
-      title: 'Data Intelligence',
-      description: 'Extract insights from massive datasets effortlessly',
-      color: '#00d4ff'
+      title: 'Always Learning',
+      description: 'Gets smarter with every chat, adapting to how you communicate',
+      color: '#00d4ff',
+      animation: 'zoom-in'
     }
   ];
 
@@ -101,10 +107,10 @@ const VeraAISection = () => {
           </p>
           
           <p className="vera-ai-description">
-            VERA (Virtual Enhanced Reasoning Assistant) is our revolutionary AI system 
-            currently in development. Designed to transform how businesses operate, 
-            VERA combines cutting-edge artificial intelligence with intuitive design 
-            to deliver unprecedented automation and insights.
+            VERA (Virtual Enhanced Reasoning Assistant) is your revolutionary AI companion 
+            that feels like talking to a real friend. Whether you need help with coding, 
+            conversations in Nigerian Pidgin, understanding local systems, or speaking 
+            multiple foreign languages, VERA is here for you—smart, relatable, and truly Nigerian.
           </p>
         </div>
 
@@ -145,7 +151,7 @@ const VeraAISection = () => {
                   <span>2:30 Demo Video</span>
                 </div>
                 <h3>See VERA in Action</h3>
-                <p>Watch how VERA revolutionizes business automation</p>
+                <p>Watch how VERA revolutionizes everyday conversations</p>
               </div>
             </div>
           </div>
@@ -158,8 +164,8 @@ const VeraAISection = () => {
                 return (
                   <div 
                     key={index} 
-                    className="vera-feature-card"
-                    style={{ animationDelay: `${index * 0.1}s` }}
+                    className={`vera-feature-card vera-${feature.animation}`}
+                    style={{ animationDelay: `${index * 0.15}s` }}
                   >
                     <div className="vera-feature-icon" style={{ 
                       background: `linear-gradient(135deg, ${feature.color}, ${feature.color}dd)` 
@@ -177,12 +183,12 @@ const VeraAISection = () => {
 
         {/* CTA Section */}
         <div className={`vera-cta-section ${isInView ? 'vera-animate-in' : ''}`}>
-          <div className="vera-cta-content">
-            <h2>Ready to Experience the Future?</h2>
-            <p>Discover everything VERA can do for your business</p>
+          <div className="vera-cta-content vera-slide-right">
+            <h2>Ready to Meet Your New AI Friend?</h2>
+            <p>Experience conversations that feel real, in the language you love</p>
           </div>
-          <button className="vera-cta-button">
-            <span>Explore VERA</span>
+          <button className="vera-cta-button vera-slide-left">
+            <span>Start Chatting with VERA</span>
             <ArrowRight size={20} />
           </button>
         </div>
@@ -212,12 +218,17 @@ const VeraAISection = () => {
       </div>
 
       <style>{`
+        * {
+          box-sizing: border-box;
+        }
+
         .vera-ai-root {
           background: #000;
           color: #fff;
           padding: 120px 20px;
           position: relative;
           overflow: hidden;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
 
         /* Animated Background */
@@ -317,6 +328,7 @@ const VeraAISection = () => {
           background: linear-gradient(90deg, #6a00ff 0%, #00d4ff 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          background-clip: text;
           position: relative;
         }
 
@@ -498,27 +510,92 @@ const VeraAISection = () => {
           border: 1px solid rgba(255, 255, 255, 0.05);
           border-radius: 16px;
           padding: 24px;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
           opacity: 0;
-          animation: veraFadeInUp 0.6s ease forwards;
         }
 
-        @keyframes veraFadeInUp {
+        /* Scroll Animation Classes */
+        .vera-fade-left {
+          animation: veraFadeLeft 0.8s ease forwards;
+        }
+
+        .vera-fade-right {
+          animation: veraFadeRight 0.8s ease forwards;
+        }
+
+        .vera-fade-up {
+          animation: veraFadeUp 0.8s ease forwards;
+        }
+
+        .vera-fade-down {
+          animation: veraFadeDown 0.8s ease forwards;
+        }
+
+        .vera-zoom-in {
+          animation: veraZoomIn 0.8s ease forwards;
+        }
+
+        @keyframes veraFadeLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-60px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes veraFadeRight {
+          from {
+            opacity: 0;
+            transform: translateX(60px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes veraFadeUp {
+          from {
+            opacity: 0;
+            transform: translateY(60px);
+          }
           to {
             opacity: 1;
             transform: translateY(0);
           }
         }
 
-        .vera-feature-card {
-          transform: translateY(20px);
+        @keyframes veraFadeDown {
+          from {
+            opacity: 0;
+            transform: translateY(-60px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes veraZoomIn {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
         .vera-feature-card:hover {
-          transform: translateY(-10px);
+          transform: translateY(-15px) scale(1.03);
           border-color: #6a00ff;
-          box-shadow: 0 20px 60px rgba(106, 0, 255, 0.3);
+          box-shadow: 0 25px 70px rgba(106, 0, 255, 0.4);
+          background: rgba(255, 255, 255, 0.05);
         }
 
         .vera-feature-icon {
@@ -559,12 +636,69 @@ const VeraAISection = () => {
           opacity: 0;
           transform: translateY(30px);
           transition: all 0.8s ease;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .vera-cta-section::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+          animation: veraCtaShine 6s ease-in-out infinite;
+        }
+
+        @keyframes veraCtaShine {
+          0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+          50% { transform: translate(-30%, -30%) rotate(180deg); }
         }
 
         .vera-cta-section.vera-animate-in {
           opacity: 1;
           transform: translateY(0);
           transition-delay: 0.6s;
+        }
+
+        .vera-slide-right {
+          animation: veraSlideRight 0.8s ease forwards;
+          animation-delay: 0.7s;
+          opacity: 0;
+        }
+
+        .vera-slide-left {
+          animation: veraSlideLeft 0.8s ease forwards;
+          animation-delay: 0.9s;
+          opacity: 0;
+        }
+
+        @keyframes veraSlideRight {
+          from {
+            opacity: 0;
+            transform: translateX(-40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes veraSlideLeft {
+          from {
+            opacity: 0;
+            transform: translateX(40px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .vera-cta-content {
+          position: relative;
+          z-index: 1;
         }
 
         .vera-cta-content h2 {
@@ -591,14 +725,50 @@ const VeraAISection = () => {
           display: flex;
           align-items: center;
           gap: 12px;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           white-space: nowrap;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+          position: relative;
+          z-index: 1;
+          overflow: hidden;
+        }
+
+        .vera-cta-button::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(106, 0, 255, 0.1);
+          transform: translate(-50%, -50%);
+          transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .vera-cta-button:hover::before {
+          width: 300px;
+          height: 300px;
         }
 
         .vera-cta-button:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+          transform: translateY(-5px) scale(1.05);
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .vera-cta-button span {
+          position: relative;
+          z-index: 1;
+        }
+
+        .vera-cta-button svg {
+          position: relative;
+          z-index: 1;
+          transition: transform 0.3s ease;
+        }
+
+        .vera-cta-button:hover svg {
+          transform: translateX(5px);
         }
 
         /* Stats Bar */
@@ -632,6 +802,7 @@ const VeraAISection = () => {
           background: linear-gradient(90deg, #6a00ff 0%, #00d4ff 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          background-clip: text;
           line-height: 1;
           margin-bottom: 10px;
         }
@@ -686,6 +857,16 @@ const VeraAISection = () => {
 
           .vera-features-grid {
             grid-template-columns: 1fr;
+          }
+          
+          .vera-ai-indicator {
+            font-size: 0.75rem;
+            padding: 8px 12px;
+          }
+          
+          .vera-ai-indicator svg {
+            width: 16px;
+            height: 16px;
           }
         }
       `}</style>

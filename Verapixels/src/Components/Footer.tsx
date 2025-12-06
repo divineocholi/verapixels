@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import logo from "../assets/verapixels_logo_icon.jpg";
 import {
   FiMail,
   FiPhone,
@@ -8,7 +6,8 @@ import {
   FiSend,
   FiArrowRight,
   FiCheckCircle,
-  FiHeart
+  FiHeart,
+  FiAlertCircle
 } from 'react-icons/fi';
 import {
   FaFacebookF,
@@ -25,56 +24,62 @@ const Footer = () => {
   const [email, setEmail] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [subscribedEmails, setSubscribedEmails] = useState<string[]>([]);
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleNewsletterSubmit = () => {
+    setError('');
+
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    if (subscribedEmails.includes(email.toLowerCase())) {
+      setError('This email is already subscribed to our newsletter');
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Replace with your actual newsletter API
     setTimeout(() => {
+      setSubscribedEmails([...subscribedEmails, email.toLowerCase()]);
       setIsSubmitting(false);
       setIsSubscribed(true);
       setEmail('');
-      setTimeout(() => setIsSubscribed(false), 4000);
+      setTimeout(() => setIsSubscribed(false), 5000);
     }, 1500);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleNewsletterSubmit();
+    }
   };
 
   const aboutLinks = [
     { name: 'About Verapixels', path: '/aboutverapixels' },
     { name: 'Our Core Team', path: '/ourcoreteam' },
-    { name: 'How We Work', path: '/howweworkandfunction' },
-    { name: 'Client Portfolio', path: '/clientportfolio' },
-    { name: 'Testimonials', path: '/clienttestimonials' },
-    { name: 'CSR', path: '/corporatesocialresponsibility' },
-    { name: 'Careers', path: '/startyourcareerwithus' }
+    { name: 'How We Work', path: '/howweworkandfunction' }
   ];
 
   const serviceLinks = [
     { name: 'Web Development', path: '/webdevelopment' },
     { name: 'Mobile App Development', path: '/mobileappdevelopment' },
     { name: 'UI/UX Design', path: '/uiuxdesign' },
-    { name: 'Cloud Solutions', path: '/cloudsolutions' },
-    { name: 'DevOps Services', path: '/devopsservices' },
-    { name: 'Cybersecurity', path: '/cybersecurity' },
-    { name: 'Digital Marketing', path: '/digitalmarketing' }
+    { name: 'Graphic Design', path: '/graphicsdesign' }
   ];
 
   const portfolioLinks = [
     { name: 'All Projects', path: '/allprojects' },
-    { name: 'Web Applications', path: '/webapplications' },
-    { name: 'Mobile Apps', path: '/mobileapps' },
-    { name: 'E-commerce Solutions', path: '/ecommercesolutions' },
-    { name: 'Enterprise Software', path: '/enterprisesoftware' },
     { name: 'Case Studies', path: '/casestudies' }
   ];
 
   const quickLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Contact', path: '/contact' },
-    { name: 'Privacy Policy', path: '/privacy' },
-    { name: 'Terms of Service', path: '/terms' },
     { name: 'Blog', path: '/blog' },
-    { name: 'FAQ', path: '/faq' }
+    { name: 'Career', path: '/career' },
+    { name: 'Contact', path: '/contact' }
   ];
 
   const socialLinks = [
@@ -90,7 +95,6 @@ const Footer = () => {
 
   return (
     <footer className="vp-footer">
-      {/* Animated Background */}
       <div className="footer-bg">
         <div className="footer-orbs">
           <div className="footer-orb orb-1"></div>
@@ -103,45 +107,75 @@ const Footer = () => {
       {/* Newsletter Section */}
       <div className="newsletter-section">
         <div className="container">
-          <div className="newsletter-wrapper">
-            <div className="newsletter-content">
-              <div className="newsletter-icon">
+          <div className="newsletter-card">
+            <div className="newsletter-header">
+              <div className="newsletter-badge">
                 <FiMail />
+                <span>Newsletter</span>
               </div>
-              <div className="newsletter-text">
-                <h3>Subscribe to Our Newsletter</h3>
-                <p>Get the latest updates, insights, and exclusive offers delivered to your inbox</p>
-              </div>
+              <h3>Stay Updated with Verapixels</h3>
+              <p>Get exclusive insights, tech trends, and project updates delivered straight to your inbox</p>
             </div>
-            <div className="newsletter-form-wrapper">
-              <div className="newsletter-input-wrapper">
-                <FiMail className="input-icon" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email address"
-                  required
-                  disabled={isSubmitting}
-                  onKeyPress={(e) => e.key === 'Enter' && handleNewsletterSubmit(e)}
-                />
-                <button onClick={handleNewsletterSubmit} disabled={isSubmitting}>
+            
+            <div className="newsletter-form">
+              <div className="newsletter-input-group">
+                <div className="input-wrapper">
+                  <FiMail className="input-icon" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setError('');
+                    }}
+                    onKeyPress={handleKeyPress}
+                    placeholder="your.email@example.com"
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <button onClick={handleNewsletterSubmit} disabled={isSubmitting} className="subscribe-btn">
                   {isSubmitting ? (
-                    <div className="spinner"></div>
+                    <>
+                      <span className="spinner"></span>
+                      <span>Subscribing...</span>
+                    </>
                   ) : (
                     <>
                       <span>Subscribe</span>
-                      <FiArrowRight />
+                      <FiSend />
                     </>
                   )}
                 </button>
               </div>
+
+              {error && (
+                <div className="newsletter-error">
+                  <FiAlertCircle />
+                  <span>{error}</span>
+                </div>
+              )}
+
               {isSubscribed && (
                 <div className="newsletter-success">
                   <FiCheckCircle />
                   <span>Successfully subscribed! Check your email for confirmation.</span>
                 </div>
               )}
+            </div>
+
+            <div className="newsletter-features">
+              <div className="feature-item">
+                <FiCheckCircle />
+                <span>Weekly tech insights</span>
+              </div>
+              <div className="feature-item">
+                <FiCheckCircle />
+                <span>Exclusive offers</span>
+              </div>
+              <div className="feature-item">
+                <FiCheckCircle />
+                <span>No spam, unsubscribe anytime</span>
+              </div>
             </div>
           </div>
         </div>
@@ -154,7 +188,7 @@ const Footer = () => {
             {/* Company Info */}
             <div className="footer-col footer-brand">
               <div className="brand-logo">
-                <img src={logo} alt="Verapixels" />
+                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%23667eea'/%3E%3Ctext x='24' y='32' text-anchor='middle' fill='white' font-size='24' font-weight='bold' font-family='Arial'%3EV%3C/text%3E%3C/svg%3E" alt="Verapixels" />
                 <span>Verapixels</span>
               </div>
               <p className="brand-description">
@@ -176,7 +210,6 @@ const Footer = () => {
                 </div>
               </div>
 
-              {/* Social Links */}
               <div className="social-links">
                 {socialLinks.map((social, idx) => (
                   <a
@@ -200,10 +233,10 @@ const Footer = () => {
               <ul className="footer-links">
                 {aboutLinks.map((link, idx) => (
                   <li key={idx}>
-                    <Link to={link.path}>
+                    <a href={link.path}>
                       <FiArrowRight className="link-icon" />
                       {link.name}
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -215,10 +248,10 @@ const Footer = () => {
               <ul className="footer-links">
                 {serviceLinks.map((link, idx) => (
                   <li key={idx}>
-                    <Link to={link.path}>
+                    <a href={link.path}>
                       <FiArrowRight className="link-icon" />
                       {link.name}
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -230,10 +263,10 @@ const Footer = () => {
               <ul className="footer-links">
                 {portfolioLinks.map((link, idx) => (
                   <li key={idx}>
-                    <Link to={link.path}>
+                    <a href={link.path}>
                       <FiArrowRight className="link-icon" />
                       {link.name}
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -245,10 +278,10 @@ const Footer = () => {
               <ul className="footer-links">
                 {quickLinks.map((link, idx) => (
                   <li key={idx}>
-                    <Link to={link.path}>
+                    <a href={link.path}>
                       <FiArrowRight className="link-icon" />
                       {link.name}
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -267,13 +300,6 @@ const Footer = () => {
             <p className="made-with">
               Made with <FiHeart className="heart-icon" /> by Verapixels Team
             </p>
-            <div className="footer-bottom-links">
-              <Link to="/privacy">Privacy</Link>
-              <span className="separator">•</span>
-              <Link to="/terms">Terms</Link>
-              <span className="separator">•</span>
-              <Link to="/cookies">Cookies</Link>
-            </div>
           </div>
         </div>
       </div>
@@ -281,7 +307,7 @@ const Footer = () => {
       <style>
         {`
          .vp-footer {
-          background: #000000;
+          background: linear-gradient(180deg, #0a0a0a 0%, #000000 100%);
           color: #ffffff;
           position: relative;
           overflow: hidden;
@@ -303,49 +329,51 @@ const Footer = () => {
         .footer-orb {
           position: absolute;
           border-radius: 50%;
-          filter: blur(120px);
-          opacity: 0.2;
-          animation: orbPulse 20s ease-in-out infinite;
+          filter: blur(100px);
+          opacity: 0.15;
+          animation: orbFloat 25s ease-in-out infinite;
         }
 
         .orb-1 {
-          width: 600px;
-          height: 600px;
-          background: #007AFF;
-          top: -300px;
-          left: -300px;
+          width: 500px;
+          height: 500px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          top: -250px;
+          left: -250px;
         }
 
         .orb-2 {
-          width: 500px;
-          height: 500px;
-          background: #FF6B9D;
-          bottom: -250px;
-          right: -250px;
-          animation-delay: -7s;
+          width: 450px;
+          height: 450px;
+          background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+          bottom: -200px;
+          right: -200px;
+          animation-delay: -10s;
         }
 
         .orb-3 {
-          width: 550px;
-          height: 550px;
-          background: #8B5CF6;
-          top: 50%;
+          width: 400px;
+          height: 400px;
+          background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          top: 40%;
           left: 50%;
           transform: translate(-50%, -50%);
-          animation-delay: -14s;
+          animation-delay: -15s;
         }
 
-        @keyframes orbPulse {
-          0%, 100% { transform: scale(1); opacity: 0.2; }
-          50% { transform: scale(1.2); opacity: 0.3; }
+        @keyframes orbFloat {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(30px, -30px) scale(1.1); }
+          66% { transform: translate(-30px, 30px) scale(0.9); }
         }
 
         .footer-grid-pattern {
           position: absolute;
           inset: 0;
           background-image: 
-            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0px, transparent 1px, transparent 50px, rgba(255, 255, 255, 0.02) 51px),
-            repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0px, transparent 1px, transparent 50px, rgba(255, 255, 255, 0.02) 51px);
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+          background-size: 50px 50px;
         }
 
         .container {
@@ -358,128 +386,133 @@ const Footer = () => {
 
         /* Newsletter Section */
         .newsletter-section {
-          padding: 80px 0;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 100px 0 80px;
         }
 
-        .newsletter-wrapper {
-          max-width: 1200px;
+        .newsletter-card {
+          max-width: 900px;
           margin: 0 auto;
-          padding: 60px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 32px;
-          backdrop-filter: blur(20px);
+          background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          padding: 48px;
+          backdrop-filter: blur(10px);
           position: relative;
           overflow: hidden;
         }
 
-        .newsletter-wrapper::before {
+        .newsletter-card::before {
           content: '';
           position: absolute;
           top: 0;
           left: 0;
           right: 0;
-          height: 2px;
-          background: linear-gradient(90deg, transparent, #007AFF, #FF6B9D, transparent);
-          animation: shimmer 3s infinite;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
         }
 
-        @keyframes shimmer {
-          0%, 100% { transform: translateX(-100%); }
-          50% { transform: translateX(100%); }
-        }
-
-        .newsletter-content {
-          display: flex;
-          align-items: center;
-          gap: 24px;
+        .newsletter-header {
+          text-align: center;
           margin-bottom: 32px;
         }
 
-        .newsletter-icon {
-          width: 80px;
-          height: 80px;
-          display: flex;
+        .newsletter-badge {
+          display: inline-flex;
           align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #007AFF, #5AC8FA);
-          border-radius: 20px;
-          font-size: 36px;
-          flex-shrink: 0;
-          box-shadow: 0 10px 40px rgba(0, 122, 255, 0.4);
-          animation: iconBounce 3s ease-in-out infinite;
+          gap: 8px;
+          padding: 8px 16px;
+          background: rgba(102, 126, 234, 0.2);
+          border: 1px solid rgba(102, 126, 234, 0.3);
+          border-radius: 50px;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #a5b4fc;
+          margin-bottom: 16px;
         }
 
-        @keyframes iconBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+        .newsletter-badge svg {
+          font-size: 16px;
         }
 
-        .newsletter-text h3 {
+        .newsletter-header h3 {
           font-size: 2rem;
-          font-weight: 900;
-          margin-bottom: 8px;
-          background: linear-gradient(135deg, #007AFF, #FF6B9D);
+          font-weight: 800;
+          margin-bottom: 12px;
+          background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
         }
 
-        .newsletter-text p {
-          font-size: 1.05rem;
+        .newsletter-header p {
+          font-size: 1rem;
           color: rgba(255, 255, 255, 0.7);
           line-height: 1.6;
+          max-width: 600px;
+          margin: 0 auto;
         }
 
-        .newsletter-form-wrapper {
+        .newsletter-form {
           display: flex;
           flex-direction: column;
           gap: 16px;
         }
 
-        .newsletter-input-wrapper {
+        .newsletter-input-group {
           display: flex;
-          align-items: center;
           gap: 12px;
-          padding: 8px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          transition: all 0.3s ease;
+          align-items: stretch;
         }
 
-        .newsletter-input-wrapper:focus-within {
-          border-color: #007AFF;
-          box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        .input-wrapper {
+          flex: 1;
+          position: relative;
+          display: flex;
+          align-items: center;
         }
 
         .input-icon {
-          font-size: 24px;
-          color: rgba(255, 255, 255, 0.5);
-          margin-left: 16px;
+          position: absolute;
+          left: 18px;
+          font-size: 20px;
+          color: rgba(255, 255, 255, 0.4);
+          pointer-events: none;
+          z-index: 1;
         }
 
-        .newsletter-input-wrapper input {
-          flex: 1;
-          padding: 16px;
-          background: transparent;
-          border: none;
+        .input-wrapper input {
+          width: 100%;
+          padding: 16px 20px 16px 52px;
+          background: rgba(0, 0, 0, 0.3);
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
           color: white;
           font-size: 1rem;
           outline: none;
+          transition: all 0.3s ease;
         }
 
-        .newsletter-input-wrapper input::placeholder {
-          color: rgba(255, 255, 255, 0.5);
+        .input-wrapper input:focus {
+          border-color: #667eea;
+          box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+          background: rgba(0, 0, 0, 0.4);
         }
 
-        .newsletter-input-wrapper button {
+        .input-wrapper input::placeholder {
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        .input-wrapper input:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .subscribe-btn {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
           padding: 16px 32px;
-          background: linear-gradient(135deg, #007AFF, #5AC8FA);
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           border: none;
           border-radius: 12px;
           color: white;
@@ -488,57 +521,101 @@ const Footer = () => {
           cursor: pointer;
           transition: all 0.3s ease;
           white-space: nowrap;
+          box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .newsletter-input-wrapper button:hover:not(:disabled) {
-          transform: translateX(5px);
-          box-shadow: 0 10px 30px rgba(0, 122, 255, 0.5);
+        .subscribe-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
         }
 
-        .newsletter-input-wrapper button:disabled {
+        .subscribe-btn:disabled {
           opacity: 0.7;
           cursor: not-allowed;
         }
 
         .spinner {
-          width: 20px;
-          height: 20px;
-          border: 3px solid rgba(255, 255, 255, 0.3);
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
           border-top-color: white;
           border-radius: 50%;
-          animation: spin 0.8s linear infinite;
+          animation: spin 0.6s linear infinite;
         }
 
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
 
+        .newsletter-error {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 16px;
+          background: rgba(239, 68, 68, 0.1);
+          border: 1px solid rgba(239, 68, 68, 0.3);
+          border-radius: 10px;
+          color: #fca5a5;
+          font-size: 0.875rem;
+          font-weight: 500;
+          animation: slideInUp 0.3s ease-out;
+        }
+
+        .newsletter-error svg {
+          font-size: 18px;
+          flex-shrink: 0;
+        }
+
         .newsletter-success {
           display: flex;
           align-items: center;
-          gap: 12px;
-          padding: 16px 20px;
-          background: rgba(61, 220, 132, 0.1);
-          border: 1px solid rgba(61, 220, 132, 0.3);
-          border-radius: 12px;
-          color: #3DDC84;
-          font-weight: 600;
-          animation: slideInUp 0.4s ease-out;
+          gap: 10px;
+          padding: 12px 16px;
+          background: rgba(34, 197, 94, 0.1);
+          border: 1px solid rgba(34, 197, 94, 0.3);
+          border-radius: 10px;
+          color: #86efac;
+          font-size: 0.875rem;
+          font-weight: 500;
+          animation: slideInUp 0.3s ease-out;
         }
 
         .newsletter-success svg {
-          font-size: 24px;
+          font-size: 18px;
+          flex-shrink: 0;
         }
 
         @keyframes slideInUp {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(10px);
           }
           to {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+
+        .newsletter-features {
+          display: flex;
+          justify-content: center;
+          gap: 24px;
+          margin-top: 24px;
+          padding-top: 24px;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.875rem;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .feature-item svg {
+          font-size: 16px;
+          color: #86efac;
         }
 
         /* Main Footer */
@@ -558,7 +635,6 @@ const Footer = () => {
           gap: 24px;
         }
 
-        /* Brand Column */
         .footer-brand {
           padding-right: 40px;
         }
@@ -580,7 +656,7 @@ const Footer = () => {
         .brand-logo span {
           font-size: 1.5rem;
           font-weight: 900;
-          background: linear-gradient(135deg, #007AFF, #FF6B9D);
+          background: linear-gradient(135deg, #667eea, #764ba2);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -610,13 +686,13 @@ const Footer = () => {
         }
 
         .contact-item:hover {
-          color: #007AFF;
+          color: #667eea;
           transform: translateX(5px);
         }
 
         .contact-item svg {
           font-size: 20px;
-          color: #007AFF;
+          color: #667eea;
         }
 
         .social-links {
@@ -654,7 +730,7 @@ const Footer = () => {
         .social-link:hover {
           transform: translateY(-5px) scale(1.1);
           border-color: var(--social-color);
-          box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3);
+          box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
         }
 
         .social-link:hover::before {
@@ -666,7 +742,6 @@ const Footer = () => {
           z-index: 1;
         }
 
-        /* Footer Links */
         .footer-title {
           font-size: 1.25rem;
           font-weight: 900;
@@ -683,7 +758,7 @@ const Footer = () => {
           left: 0;
           width: 40px;
           height: 3px;
-          background: linear-gradient(90deg, #007AFF, #FF6B9D);
+          background: linear-gradient(90deg, #667eea, #764ba2);
           border-radius: 2px;
         }
 
@@ -705,7 +780,7 @@ const Footer = () => {
         }
 
         .footer-links li a:hover {
-          color: #007AFF;
+          color: #667eea;
           transform: translateX(5px);
         }
 
@@ -719,7 +794,6 @@ const Footer = () => {
           opacity: 1;
         }
 
-        /* Footer Bottom */
         .footer-bottom {
           padding: 32px 0;
           border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -746,7 +820,7 @@ const Footer = () => {
         }
 
         .heart-icon {
-          color: #FF6B9D;
+          color: #f5576c;
           animation: heartbeat 1.5s ease-in-out infinite;
         }
 
@@ -756,28 +830,6 @@ const Footer = () => {
           50% { transform: scale(1); }
         }
 
-        .footer-bottom-links {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .footer-bottom-links a {
-          color: rgba(255, 255, 255, 0.6);
-          text-decoration: none;
-          font-size: 0.95rem;
-          transition: color 0.3s ease;
-        }
-
-        .footer-bottom-links a:hover {
-          color: #007AFF;
-        }
-
-        .separator {
-          color: rgba(255, 255, 255, 0.3);
-        }
-
-        /* Responsive Design */
         @media (max-width: 1200px) {
           .footer-grid {
             grid-template-columns: 2fr 1fr 1fr;
@@ -800,32 +852,32 @@ const Footer = () => {
             grid-column: span 2;
             padding-right: 0;
           }
+
+          .newsletter-features {
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+          }
         }
 
         @media (max-width: 768px) {
           .newsletter-section {
-            padding: 60px 0;
+            padding: 80px 0 60px;
           }
 
-          .newsletter-wrapper {
-            padding: 40px 24px;
+          .newsletter-card {
+            padding: 32px 24px;
           }
 
-          .newsletter-content {
-            flex-direction: column;
-            text-align: center;
-          }
-
-          .newsletter-text h3 {
+          .newsletter-header h3 {
             font-size: 1.5rem;
           }
 
-          .newsletter-input-wrapper {
+          .newsletter-input-group {
             flex-direction: column;
-            align-items: stretch;
           }
 
-          .newsletter-input-wrapper button {
+          .subscribe-btn {
             width: 100%;
             justify-content: center;
           }
@@ -855,18 +907,27 @@ const Footer = () => {
         }
 
         @media (max-width: 480px) {
-          .newsletter-icon {
-            width: 64px;
-            height: 64px;
-            font-size: 28px;
+          .newsletter-badge {
+            font-size: 0.75rem;
+            padding: 6px 12px;
           }
 
-          .newsletter-text h3 {
+          .newsletter-header h3 {
             font-size: 1.25rem;
           }
 
-          .newsletter-text p {
-            font-size: 0.95rem;
+          .newsletter-header p {
+            font-size: 0.9rem;
+          }
+
+          .input-wrapper input {
+            font-size: 0.9rem;
+            padding: 14px 18px 14px 48px;
+          }
+
+          .subscribe-btn {
+            font-size: 0.9rem;
+            padding: 14px 24px;
           }
 
           .brand-logo img {
@@ -890,15 +951,6 @@ const Footer = () => {
 
           .footer-links li a {
             font-size: 0.9rem;
-          }
-
-          .footer-bottom-links {
-            flex-direction: column;
-            gap: 8px;
-          }
-
-          .separator {
-            display: none;
           }
         }
       `}</style>

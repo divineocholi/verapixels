@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import VeeAIChatbot from "./VeeAIChatbot";
-import "./FAQ.css";
 
 type FaqItem = {
   question: string;
   answer: string;
   category?: string;
 };
+
 const faqData: FaqItem[] = [
   // About Verapixels
   {
@@ -20,7 +18,6 @@ const faqData: FaqItem[] = [
     answer: "Founded by Ocholi Divine and team, our mission is creating beautiful, performant digital products that solve business problems.",
     category: "About"
   },
-
   // Services
   {
     question: "What services does Verapixels offer?",
@@ -42,7 +39,6 @@ const faqData: FaqItem[] = [
     answer: "Yes. We offer maintenance plans for updates, security patches, and ongoing improvements.",
     category: "Services"
   },
-
   // Technical
   {
     question: "What technology stack does Verapixels use?",
@@ -64,7 +60,6 @@ const faqData: FaqItem[] = [
     answer: "Yes. We integrate headless CMS or WordPress for easy content updates.",
     category: "Technical"
   },
-
   // Process & Pricing
   {
     question: "What's your typical project timeline?",
@@ -91,11 +86,10 @@ const faqData: FaqItem[] = [
     answer: "We use semantic markup, keyboard navigation, ARIA labels, and WCAG-compliant contrast ratios.",
     category: "Process & Pricing"
   },
-
   // Payment
   {
     question: "What is your payment policy?",
-    answer: "We require full payment upfront to dedicate our full resources and deliver premium quality work without compromise.",
+    answer: "We require an upfront payment to begin the project, followed by the remaining balance at completion. This helps us dedicate our resources and deliver high-quality work.",
     category: "Payment"
   },
   {
@@ -110,149 +104,463 @@ const faqData: FaqItem[] = [
   }
 ];
 
-
-
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const categories = ["All", ...Array.from(new Set(faqData.map(item => item.category)))].filter(Boolean) as string[];
 
-  const filteredFaqs = selectedCategory === "All" 
-    ? faqData 
-    : faqData.filter(item => item.category === selectedCategory);
+  const filteredFaqs = faqData.filter(item => {
+    const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
+    const matchesSearch = item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.answer.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
-  const toggleFaq = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
+  const toggleFaq = (question: string) => {
+    setOpenIndex(openIndex === question ? null : question);
   };
 
   return (
-    <section className="faq-container">
-      {/* Animated Background */}
-      <div className="faq-background">
-        <div className="faq-background-circle circle-1"></div>
-        <div className="faq-background-circle circle-2"></div>
-        <div className="faq-background-circle circle-3"></div>
-        <div className="faq-grid-overlay"></div>
-      </div>
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2d1b4e 100%)",
+      color: "#fff",
+      padding: "6rem 1.5rem 4rem",
+      position: "relative",
+      overflow: "hidden",
+      fontFamily: "'Inter', system-ui, sans-serif"
+    }}>
+      {/* Animated Background Elements */}
+      <div style={{
+        position: "absolute",
+        top: "-20%",
+        right: "-10%",
+        width: "600px",
+        height: "600px",
+        background: "radial-gradient(circle, rgba(0,99,244,0.15) 0%, transparent 70%)",
+        borderRadius: "50%",
+        filter: "blur(100px)",
+        animation: "float 8s ease-in-out infinite",
+        pointerEvents: "none"
+      }} />
+      <div style={{
+        position: "absolute",
+        bottom: "-15%",
+        left: "-10%",
+        width: "700px",
+        height: "700px",
+        background: "radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)",
+        borderRadius: "50%",
+        filter: "blur(100px)",
+        animation: "float 10s ease-in-out infinite 2s",
+        pointerEvents: "none"
+      }} />
 
-      {/* Header */}
-      <motion.div 
-        className="faq-header"
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <h2 className="faq-title">Frequently Asked Questions</h2>
-        <p className="faq-subtitle">Get answers about our services, process, and payment policies</p>
-      </motion.div>
+      {/* Container */}
+      <div style={{ maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 1 }}>
+        
+        {/* Header Section */}
+        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <div style={{
+            display: "inline-block",
+            padding: "0.5rem 1.25rem",
+            background: "rgba(0,99,244,0.1)",
+            border: "1px solid rgba(0,99,244,0.3)",
+            borderRadius: "50px",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            color: "#00d4ff",
+            marginBottom: "1.5rem",
+            letterSpacing: "0.05em"
+          }}>
+            SUPPORT CENTER
+          </div>
+          
+          <h1 style={{
+            fontSize: "clamp(2.5rem, 5vw, 4rem)",
+            fontWeight: 800,
+            background: "linear-gradient(135deg, #fff 0%, #00d4ff 50%, #8b5cf6 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+            marginBottom: "1rem",
+            lineHeight: 1.1,
+            letterSpacing: "-0.02em"
+          }}>
+            Frequently Asked Questions
+          </h1>
+          
+          <p style={{
+            fontSize: "1.125rem",
+            color: "#94a3b8",
+            maxWidth: "600px",
+            margin: "0 auto 2rem",
+            lineHeight: 1.6
+          }}>
+            Everything you need to know about our services, process, and policies
+          </p>
 
-      {/* Category Filter */}
-      <motion.div 
-        className="faq-categories"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-      >
-        {categories.map(category => (
-          <button
-            key={category}
-            className={`faq-category ${selectedCategory === category ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(category)}
-          >
-            {category}
-          </button>
-        ))}
-      </motion.div>
+          {/* Search Bar */}
+          <div style={{
+            maxWidth: "600px",
+            margin: "0 auto",
+            position: "relative"
+          }}>
+            <input
+              type="text"
+              placeholder="Search questions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "1rem 1.5rem 1rem 3.5rem",
+                background: "rgba(15,23,42,0.6)",
+                backdropFilter: "blur(20px)",
+                border: "1px solid rgba(99,102,241,0.2)",
+                borderRadius: "16px",
+                color: "#fff",
+                fontSize: "1rem",
+                outline: "none",
+                transition: "all 0.3s ease"
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "rgba(0,212,255,0.5)";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(0,212,255,0.1)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(99,102,241,0.2)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+            <svg
+              style={{
+                position: "absolute",
+                left: "1.25rem",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "20px",
+                height: "20px",
+                color: "#64748b"
+              }}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
 
-      {/* FAQ List */}
-      <div className="faq-list">
-        {filteredFaqs.map((item: FaqItem, index: number) => (
-          <motion.div
-            key={index}
-            className="faq-item"
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ 
-              delay: index * 0.1,
-              duration: 0.5,
-              type: "spring",
-              stiffness: 100
-            }}
-            whileHover={{ 
-              scale: 1.02,
-              transition: { duration: 0.2 }
-            }}
-          >
-            <div className="faq-card">
-              <div className="faq-card-inner">
-                <div className="faq-header-content">
-                  <h3 className="faq-question">{item.question}</h3>
-                  <motion.button
-                    className="toggle-btn"
-                    onClick={() => toggleFaq(index)}
-                    whileHover={{ scale: 1.1, rotate: 90 }}
-                    whileTap={{ scale: 0.9 }}
+        {/* Category Tabs */}
+        <div style={{
+          display: "flex",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          gap: "0.75rem",
+          marginBottom: "3rem"
+        }}>
+          {categories.map(category => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              style={{
+                padding: "0.75rem 1.5rem",
+                background: selectedCategory === category 
+                  ? "linear-gradient(135deg, #0063f4, #8b5cf6)" 
+                  : "rgba(15,23,42,0.6)",
+                backdropFilter: "blur(20px)",
+                border: selectedCategory === category 
+                  ? "1px solid transparent" 
+                  : "1px solid rgba(99,102,241,0.2)",
+                borderRadius: "50px",
+                color: "#fff",
+                fontSize: "0.95rem",
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.3s ease",
+                boxShadow: selectedCategory === category 
+                  ? "0 8px 24px rgba(99,102,241,0.3)" 
+                  : "none"
+              }}
+              onMouseEnter={(e) => {
+                if (selectedCategory !== category) {
+                  e.currentTarget.style.borderColor = "rgba(99,102,241,0.5)";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedCategory !== category) {
+                  e.currentTarget.style.borderColor = "rgba(99,102,241,0.2)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }
+              }}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
+        {/* FAQ Grid */}
+        <div style={{
+          columnCount: window.innerWidth >= 1024 ? 2 : 1,
+          columnGap: "1.5rem",
+          marginBottom: "4rem"
+        }}>
+          {filteredFaqs.length === 0 ? (
+            <div style={{
+              breakInside: "avoid",
+              textAlign: "center",
+              padding: "3rem",
+              background: "rgba(15,23,42,0.6)",
+              backdropFilter: "blur(20px)",
+              border: "1px solid rgba(99,102,241,0.1)",
+              borderRadius: "20px"
+            }}>
+              <p style={{ fontSize: "1.125rem", color: "#94a3b8" }}>
+                No questions found. Try a different search or category.
+              </p>
+            </div>
+          ) : (
+            filteredFaqs.map((item) => (
+              <div
+                key={item.question}
+                style={{
+                  background: "rgba(15,23,42,0.7)",
+                  backdropFilter: "blur(20px)",
+                  border: "1px solid rgba(99,102,241,0.15)",
+                  borderRadius: "20px",
+                  overflow: "hidden",
+                  transition: "all 0.3s ease",
+                  cursor: "pointer",
+                  breakInside: "avoid",
+                  marginBottom: "1.5rem",
+                  display: "inline-block",
+                  width: "100%"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3)";
+                  e.currentTarget.style.borderColor = "rgba(0,212,255,0.3)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                  e.currentTarget.style.borderColor = "rgba(99,102,241,0.15)";
+                }}
+              >
+                <div
+                  onClick={() => toggleFaq(item.question)}
+                  style={{
+                    padding: "1.75rem",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    gap: "1rem"
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      display: "inline-block",
+                      padding: "0.25rem 0.75rem",
+                      background: "rgba(99,102,241,0.15)",
+                      border: "1px solid rgba(99,102,241,0.3)",
+                      borderRadius: "6px",
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      color: "#a78bfa",
+                      marginBottom: "0.75rem",
+                      letterSpacing: "0.05em"
+                    }}>
+                      {item.category}
+                    </div>
+                    <h3 style={{
+                      fontSize: "1.125rem",
+                      fontWeight: 600,
+                      color: "#f1f5f9",
+                      lineHeight: 1.5,
+                      margin: 0
+                    }}>
+                      {item.question}
+                    </h3>
+                  </div>
+                  
+                  <button
+                    style={{
+                      width: "2.5rem",
+                      height: "2.5rem",
+                      borderRadius: "10px",
+                      border: "1px solid rgba(99,102,241,0.3)",
+                      background: "rgba(15,23,42,0.8)",
+                      color: "#00d4ff",
+                      fontSize: "1.5rem",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      cursor: "pointer",
+                      transition: "all 0.3s ease",
+                      transform: openIndex === item.question ? "rotate(45deg)" : "rotate(0deg)"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "#00d4ff";
+                      e.currentTarget.style.background = "rgba(0,212,255,0.1)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "rgba(99,102,241,0.3)";
+                      e.currentTarget.style.background = "rgba(15,23,42,0.8)";
+                    }}
                   >
-                    <motion.span
-                      animate={{ rotate: openIndex === index ? 45 : 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      +
-                    </motion.span>
-                  </motion.button>
+                    +
+                  </button>
                 </div>
 
-                <AnimatePresence>
-                  {openIndex === index && (
-                    <motion.div
-                      className="faq-answer-container"
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.4, ease: "easeInOut" }}
-                    >
-                      <motion.div
-                        className="faq-answer"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        {item.answer}
-                      </motion.div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {/* Answer */}
+                <div style={{
+                  maxHeight: openIndex === item.question ? "500px" : "0",
+                  overflow: "hidden",
+                  transition: "max-height 0.4s ease, opacity 0.3s ease",
+                  opacity: openIndex === item.question ? 1 : 0
+                }}>
+                  <div style={{
+                    padding: "0 1.75rem 1.75rem",
+                    borderTop: openIndex === item.question ? "1px solid rgba(99,102,241,0.1)" : "none",
+                    paddingTop: openIndex === item.question ? "1.5rem" : "0"
+                  }}>
+                    <p style={{
+                      color: "#cbd5e1",
+                      lineHeight: 1.7,
+                      fontSize: "1rem",
+                      margin: 0
+                    }}>
+                      {item.answer}
+                    </p>
+                  </div>
+                </div>
               </div>
+            ))
+          )}
+        </div>
+
+        {/* CTA Section */}
+        <div style={{
+          textAlign: "center",
+          padding: "3rem 2rem",
+          background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(0,212,255,0.05))",
+          border: "1px solid rgba(99,102,241,0.2)",
+          borderRadius: "24px",
+          backdropFilter: "blur(20px)",
+          position: "relative",
+          overflow: "hidden"
+        }}>
+          <div style={{
+            position: "absolute",
+            top: "-50%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: "200%",
+            height: "200%",
+            background: "radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%)",
+            pointerEvents: "none"
+          }} />
+          
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <h2 style={{
+              fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
+              fontWeight: 700,
+              background: "linear-gradient(135deg, #00d4ff, #8b5cf6)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              marginBottom: "1rem"
+            }}>
+              Still have questions?
+            </h2>
+            <p style={{
+              fontSize: "1.125rem",
+              color: "#94a3b8",
+              marginBottom: "2rem",
+              maxWidth: "500px",
+              marginLeft: "auto",
+              marginRight: "auto"
+            }}>
+              Can't find the answer you're looking for? Our team is here to help you get started.
+            </p>
+            <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
+              <a
+                href="/contact"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  padding: "1rem 2rem",
+                  background: "linear-gradient(135deg, #0063f4, #8b5cf6)",
+                  border: "none",
+                  borderRadius: "14px",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-3px)";
+                  e.currentTarget.style.boxShadow = "0 20px 40px rgba(99,102,241,0.4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              >
+                <span>Contact Us</span>
+                <span>→</span>
+              </a>
+              
+              <button
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  padding: "1rem 2rem",
+                  background: "rgba(15,23,42,0.6)",
+                  backdropFilter: "blur(20px)",
+                  border: "1px solid rgba(99,102,241,0.3)",
+                  borderRadius: "14px",
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                  cursor: "pointer",
+                  transition: "all 0.3s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(0,212,255,0.5)";
+                  e.currentTarget.style.transform = "translateY(-3px)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(99,102,241,0.3)";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                <span>View All Services</span>
+              </button>
             </div>
-          </motion.div>
-        ))}
+          </div>
+        </div>
       </div>
 
-      {/* CTA Section */}
-      <motion.div 
-        className="faq-cta"
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-      >
-        <div className="cta-content">
-          <h3>Ready to get started?</h3>
-          <p>Begin your project with Verapixels - full payment ensures our dedicated premium service</p>
-          <motion.button
-            className="cta-button"
-            onClick={() => window.location.href = '/#contact'}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span>Start Your Project</span>
-            <span className="cta-arrow">→</span>
-          </motion.button>
-        </div>
-      </motion.div>
-
-      {/* Vee AI Chatbot */}
-      <VeeAIChatbot />
-    </section>
+      {/* Keyframe Animations */}
+      <style>{`
+        @keyframes float {
+          0%, 100% { 
+            transform: translateY(0px) scale(1);
+          }
+          50% { 
+            transform: translateY(-30px) scale(1.05);
+          }
+        }
+      `}</style>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { 
+import {
   FiArrowLeft,
   FiCheckCircle,
   FiCode,
@@ -20,7 +20,7 @@ import {
   FiClock,
   FiDollarSign,
   FiMonitor,
-  FiPackage
+  FiPackage,
 } from "react-icons/fi";
 
 type CategoryType = "ios" | "android" | "cross-platform" | "enterprise";
@@ -29,14 +29,22 @@ const WebApplearnMore = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get("category") as CategoryType;
-  
-  const [category, setCategory] = useState<CategoryType>(categoryParam || "ios");
+
+  const [category, setCategory] = useState<CategoryType>(
+    categoryParam || "ios"
+  );
   const [scrollY, setScrollY] = useState(0);
   const [activeFeature, setActiveFeature] = useState(0);
 
   // Update category when URL parameter changes
   useEffect(() => {
-    if (categoryParam && (categoryParam === "ios" || categoryParam === "android" || categoryParam === "cross-platform" || categoryParam === "enterprise")) {
+    if (
+      categoryParam &&
+      (categoryParam === "ios" ||
+        categoryParam === "android" ||
+        categoryParam === "cross-platform" ||
+        categoryParam === "enterprise")
+    ) {
       setCategory(categoryParam);
     }
   }, [categoryParam]);
@@ -50,7 +58,9 @@ const WebApplearnMore = () => {
   useEffect(() => {
     // Auto-rotate features
     const interval = setInterval(() => {
-      setActiveFeature((prev) => (prev + 1) % contentData[category].features.length);
+      setActiveFeature(
+        (prev) => (prev + 1) % contentData[category].features.length
+      );
     }, 4000);
     return () => clearInterval(interval);
   }, [category]);
@@ -59,7 +69,8 @@ const WebApplearnMore = () => {
     ios: {
       title: "Native iOS Development",
       subtitle: "Build powerful apps for iPhone, iPad, and Apple Watch",
-      description: "Create stunning iOS applications using Swift and SwiftUI with the latest Apple technologies. Our expert team delivers premium experiences that Apple users love.",
+      description:
+        "Create stunning iOS applications using Swift and SwiftUI with the latest Apple technologies. Our expert team delivers premium experiences that Apple users love.",
       icon: <FiSmartphone />,
       color: "#007AFF",
       gradient: "linear-gradient(135deg, #007AFF, #5AC8FA)",
@@ -67,53 +78,83 @@ const WebApplearnMore = () => {
         {
           icon: <FiCode />,
           title: "Swift & SwiftUI",
-          desc: "Modern Swift language with declarative SwiftUI framework for beautiful, performant apps"
+          desc: "Modern Swift language with declarative SwiftUI framework for beautiful, performant apps",
         },
         {
           icon: <FiLayers />,
           title: "iOS Ecosystem",
-          desc: "Full integration with iCloud, Apple Pay, HealthKit, ARKit, and Core ML"
+          desc: "Full integration with iCloud, Apple Pay, HealthKit, ARKit, and Core ML",
         },
         {
           icon: <FiShield />,
           title: "App Store Ready",
-          desc: "Complete App Store optimization and compliance with Apple guidelines"
+          desc: "Complete App Store optimization and compliance with Apple guidelines",
         },
         {
           icon: <FiCpu />,
           title: "Performance",
-          desc: "Metal graphics, Core Animation, and optimized code for smooth 60fps experiences"
-        }
+          desc: "Metal graphics, Core Animation, and optimized code for smooth 60fps experiences",
+        },
       ],
       technologies: [
-        { name: "Swift", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/swift/swift-original.svg" },
-        { name: "Xcode", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/xcode/xcode-original.svg" },
-        { name: "Objective-C", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/objectivec/objectivec-plain.svg" }
+        {
+          name: "Swift",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/swift/swift-original.svg",
+        },
+        {
+          name: "Xcode",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/xcode/xcode-original.svg",
+        },
+        {
+          name: "Objective-C",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/objectivec/objectivec-plain.svg",
+        },
       ],
       benefits: [
         "Premium user experience with native iOS design",
         "Access to latest iOS features and APIs",
         "Superior performance and battery efficiency",
         "Seamless Apple ecosystem integration",
-        "High-quality App Store presence"
+        "High-quality App Store presence",
       ],
       process: [
-        { step: "01", title: "Requirements", desc: "Define iOS-specific features and Apple guidelines" },
-        { step: "02", title: "UI/UX Design", desc: "Create beautiful interfaces following Apple HIG" },
-        { step: "03", title: "Development", desc: "Build with Swift and latest iOS frameworks" },
-        { step: "04", title: "Testing", desc: "Rigorous testing on all iOS devices" },
-        { step: "05", title: "Deployment", desc: "App Store submission and launch" }
+        {
+          step: "01",
+          title: "Requirements",
+          desc: "Define iOS-specific features and Apple guidelines",
+        },
+        {
+          step: "02",
+          title: "UI/UX Design",
+          desc: "Create beautiful interfaces following Apple HIG",
+        },
+        {
+          step: "03",
+          title: "Development",
+          desc: "Build with Swift and latest iOS frameworks",
+        },
+        {
+          step: "04",
+          title: "Testing",
+          desc: "Rigorous testing on all iOS devices",
+        },
+        {
+          step: "05",
+          title: "Deployment",
+          desc: "App Store submission and launch",
+        },
       ],
       stats: [
         { icon: <FiUsers />, value: "1.5B+", label: "iOS Users Worldwide" },
         { icon: <FiDollarSign />, value: "$85B", label: "App Store Revenue" },
-        { icon: <FiAward />, value: "4.7★", label: "Average App Rating" }
-      ]
+        { icon: <FiAward />, value: "4.7★", label: "Average App Rating" },
+      ],
     },
     android: {
       title: "Native Android Development",
       subtitle: "Reach billions with powerful Android applications",
-      description: "Build feature-rich Android apps using Kotlin and Jetpack Compose. Leverage Google's powerful ecosystem and reach the world's largest mobile platform.",
+      description:
+        "Build feature-rich Android apps using Kotlin and Jetpack Compose. Leverage Google's powerful ecosystem and reach the world's largest mobile platform.",
       icon: <FiSmartphone />,
       color: "#3DDC84",
       gradient: "linear-gradient(135deg, #3DDC84, #07C160)",
@@ -121,53 +162,83 @@ const WebApplearnMore = () => {
         {
           icon: <FiCode />,
           title: "Kotlin & Jetpack",
-          desc: "Modern Kotlin with Jetpack Compose for efficient, maintainable Android apps"
+          desc: "Modern Kotlin with Jetpack Compose for efficient, maintainable Android apps",
         },
         {
           icon: <FiLayers />,
           title: "Material Design",
-          desc: "Beautiful Material Design 3 with dynamic theming and modern components"
+          desc: "Beautiful Material Design 3 with dynamic theming and modern components",
         },
         {
           icon: <FiGlobe />,
           title: "Google Services",
-          desc: "Integration with Google Play, Maps, Firebase, ML Kit, and Android Auto"
+          desc: "Integration with Google Play, Maps, Firebase, ML Kit, and Android Auto",
         },
         {
           icon: <FiPackage />,
           title: "Multi-Device",
-          desc: "Support for phones, tablets, foldables, Wear OS, and Android TV"
-        }
+          desc: "Support for phones, tablets, foldables, Wear OS, and Android TV",
+        },
       ],
       technologies: [
-        { name: "Kotlin", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kotlin/kotlin-original.svg" },
-        { name: "Android Studio", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/androidstudio/androidstudio-original.svg" },
-        { name: "Java", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" }
+        {
+          name: "Kotlin",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kotlin/kotlin-original.svg",
+        },
+        {
+          name: "Android Studio",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/androidstudio/androidstudio-original.svg",
+        },
+        {
+          name: "Java",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg",
+        },
       ],
       benefits: [
         "Largest mobile market with 3+ billion devices",
         "Flexible customization and device support",
         "Google Play services integration",
         "Open-source platform advantages",
-        "Extensive hardware compatibility"
+        "Extensive hardware compatibility",
       ],
       process: [
-        { step: "01", title: "Planning", desc: "Define Android features and target devices" },
-        { step: "02", title: "Design", desc: "Material Design implementation and prototyping" },
-        { step: "03", title: "Development", desc: "Build with Kotlin and Android Jetpack" },
-        { step: "04", title: "QA Testing", desc: "Test across multiple devices and OS versions" },
-        { step: "05", title: "Launch", desc: "Google Play Store optimization and release" }
+        {
+          step: "01",
+          title: "Planning",
+          desc: "Define Android features and target devices",
+        },
+        {
+          step: "02",
+          title: "Design",
+          desc: "Material Design implementation and prototyping",
+        },
+        {
+          step: "03",
+          title: "Development",
+          desc: "Build with Kotlin and Android Jetpack",
+        },
+        {
+          step: "04",
+          title: "QA Testing",
+          desc: "Test across multiple devices and OS versions",
+        },
+        {
+          step: "05",
+          title: "Launch",
+          desc: "Google Play Store optimization and release",
+        },
       ],
       stats: [
         { icon: <FiUsers />, value: "3B+", label: "Android Devices" },
         { icon: <FiGlobe />, value: "190+", label: "Countries Reached" },
-        { icon: <FiTrendingUp />, value: "72%", label: "Market Share" }
-      ]
+        { icon: <FiTrendingUp />, value: "72%", label: "Market Share" },
+      ],
     },
     "cross-platform": {
       title: "Cross-Platform Development",
       subtitle: "Build once, deploy everywhere with modern frameworks",
-      description: "Develop powerful apps with React Native and Flutter. Single codebase for iOS and Android with near-native performance and reduced development time.",
+      description:
+        "Develop powerful apps with React Native and Flutter. Single codebase for iOS and Android with near-native performance and reduced development time.",
       icon: <FiLayers />,
       color: "#FF6B9D",
       gradient: "linear-gradient(135deg, #FF6B9D, #C084FC)",
@@ -175,53 +246,83 @@ const WebApplearnMore = () => {
         {
           icon: <FiZap />,
           title: "Single Codebase",
-          desc: "Write once, deploy to iOS and Android from one shared codebase"
+          desc: "Write once, deploy to iOS and Android from one shared codebase",
         },
         {
           icon: <FiClock />,
           title: "Faster Development",
-          desc: "Reduce development time by 50% with hot reload and shared logic"
+          desc: "Reduce development time by 50% with hot reload and shared logic",
         },
         {
           icon: <FiDollarSign />,
           title: "Cost Effective",
-          desc: "Lower development and maintenance costs with unified codebase"
+          desc: "Lower development and maintenance costs with unified codebase",
         },
         {
           icon: <FiCpu />,
           title: "Native Performance",
-          desc: "Near-native performance with platform-specific optimizations"
-        }
+          desc: "Near-native performance with platform-specific optimizations",
+        },
       ],
       technologies: [
-        { name: "React Native", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" },
-        { name: "Flutter", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flutter/flutter-original.svg" },
-        { name: "Ionic", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ionic/ionic-original.svg" }
+        {
+          name: "React Native",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
+        },
+        {
+          name: "Flutter",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/flutter/flutter-original.svg",
+        },
+        {
+          name: "Ionic",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/ionic/ionic-original.svg",
+        },
       ],
       benefits: [
         "Single codebase for multiple platforms",
         "Faster time to market for both iOS and Android",
         "Reduced development and maintenance costs",
         "Easy updates across all platforms",
-        "Large developer community and libraries"
+        "Large developer community and libraries",
       ],
       process: [
-        { step: "01", title: "Strategy", desc: "Choose framework and define shared architecture" },
-        { step: "02", title: "Design", desc: "Create unified UI that works across platforms" },
-        { step: "03", title: "Build", desc: "Develop with React Native or Flutter" },
-        { step: "04", title: "Test", desc: "Comprehensive testing on iOS and Android" },
-        { step: "05", title: "Deploy", desc: "Simultaneous launch on both app stores" }
+        {
+          step: "01",
+          title: "Strategy",
+          desc: "Choose framework and define shared architecture",
+        },
+        {
+          step: "02",
+          title: "Design",
+          desc: "Create unified UI that works across platforms",
+        },
+        {
+          step: "03",
+          title: "Build",
+          desc: "Develop with React Native or Flutter",
+        },
+        {
+          step: "04",
+          title: "Test",
+          desc: "Comprehensive testing on iOS and Android",
+        },
+        {
+          step: "05",
+          title: "Deploy",
+          desc: "Simultaneous launch on both app stores",
+        },
       ],
       stats: [
         { icon: <FiClock />, value: "50%", label: "Faster Development" },
         { icon: <FiDollarSign />, value: "40%", label: "Cost Reduction" },
-        { icon: <FiUsers />, value: "2x", label: "Market Reach" }
-      ]
+        { icon: <FiUsers />, value: "2x", label: "Market Reach" },
+      ],
     },
     enterprise: {
       title: "Enterprise Mobile Solutions",
       subtitle: "Secure, scalable apps for large organizations",
-      description: "Build enterprise-grade mobile applications with advanced security, custom integrations, and scalable architecture. Perfect for large teams and complex workflows.",
+      description:
+        "Build enterprise-grade mobile applications with advanced security, custom integrations, and scalable architecture. Perfect for large teams and complex workflows.",
       icon: <FiBox />,
       color: "#8B5CF6",
       gradient: "linear-gradient(135deg, #8B5CF6, #6366F1)",
@@ -229,49 +330,78 @@ const WebApplearnMore = () => {
         {
           icon: <FiShield />,
           title: "Enterprise Security",
-          desc: "Bank-level encryption, MDM support, and compliance with SOC 2, HIPAA"
+          desc: "Bank-level encryption, MDM support, and compliance with SOC 2, HIPAA",
         },
         {
           icon: <FiServer />,
           title: "Backend Integration",
-          desc: "Seamless integration with SAP, Salesforce, Oracle, and custom systems"
+          desc: "Seamless integration with SAP, Salesforce, Oracle, and custom systems",
         },
         {
           icon: <FiDatabase />,
           title: "Data Management",
-          desc: "Offline sync, real-time data, and secure cloud storage solutions"
+          desc: "Offline sync, real-time data, and secure cloud storage solutions",
         },
         {
           icon: <FiCloud />,
           title: "Scalability",
-          desc: "Architecture that handles thousands of users and massive data loads"
-        }
+          desc: "Architecture that handles thousands of users and massive data loads",
+        },
       ],
       technologies: [
-        { name: "Node.js", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" },
-        { name: "Docker", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" },
-        { name: "Kubernetes", icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kubernetes/kubernetes-plain.svg" }
+        {
+          name: "Node.js",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg",
+        },
+        {
+          name: "Docker",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
+        },
+        {
+          name: "Kubernetes",
+          icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/kubernetes/kubernetes-plain.svg",
+        },
       ],
       benefits: [
         "Enterprise-grade security and compliance",
         "Custom workflow automation",
         "Legacy system integration",
         "Advanced analytics and reporting",
-        "24/7 support and maintenance"
+        "24/7 support and maintenance",
       ],
       process: [
-        { step: "01", title: "Discovery", desc: "Understand enterprise requirements and systems" },
-        { step: "02", title: "Architecture", desc: "Design scalable, secure enterprise architecture" },
-        { step: "03", title: "Development", desc: "Build with enterprise frameworks and security" },
-        { step: "04", title: "Integration", desc: "Connect with existing enterprise systems" },
-        { step: "05", title: "Support", desc: "Ongoing maintenance and 24/7 support" }
+        {
+          step: "01",
+          title: "Discovery",
+          desc: "Understand enterprise requirements and systems",
+        },
+        {
+          step: "02",
+          title: "Architecture",
+          desc: "Design scalable, secure enterprise architecture",
+        },
+        {
+          step: "03",
+          title: "Development",
+          desc: "Build with enterprise frameworks and security",
+        },
+        {
+          step: "04",
+          title: "Integration",
+          desc: "Connect with existing enterprise systems",
+        },
+        {
+          step: "05",
+          title: "Support",
+          desc: "Ongoing maintenance and 24/7 support",
+        },
       ],
       stats: [
         { icon: <FiUsers />, value: "10K+", label: "Enterprise Users" },
         { icon: <FiShield />, value: "99.9%", label: "Uptime SLA" },
-        { icon: <FiServer />, value: "100+", label: "System Integrations" }
-      ]
-    }
+        { icon: <FiServer />, value: "100+", label: "System Integrations" },
+      ],
+    },
   };
 
   const currentContent = contentData[category];
@@ -287,14 +417,14 @@ const WebApplearnMore = () => {
         <div className="hexagon-pattern"></div>
         <div className="particle-field">
           {[...Array(30)].map((_, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="particle"
               style={{
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
                 animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${5 + Math.random() * 10}s`
+                animationDuration: `${5 + Math.random() * 10}s`,
               }}
             ></div>
           ))}
@@ -314,15 +444,14 @@ const WebApplearnMore = () => {
       <section className="detail-hero">
         <div className="container">
           <div className="hero-content-center">
-            <div className="hero-icon-large" style={{ background: currentContent.gradient }}>
+            <div
+              className="hero-icon-large"
+              style={{ background: currentContent.gradient }}
+            >
               {currentContent.icon}
             </div>
-            <h1 className="hero-title-large">
-              {currentContent.title}
-            </h1>
-            <p className="hero-subtitle-large">
-              {currentContent.subtitle}
-            </p>
+            <h1 className="hero-title-large">{currentContent.title}</h1>
+            <p className="hero-subtitle-large">{currentContent.subtitle}</p>
             <p className="hero-description-large">
               {currentContent.description}
             </p>
@@ -331,7 +460,10 @@ const WebApplearnMore = () => {
             <div className="hero-stats-grid">
               {currentContent.stats.map((stat, i) => (
                 <div key={i} className="stat-card">
-                  <div className="stat-icon" style={{ color: currentContent.color }}>
+                  <div
+                    className="stat-icon"
+                    style={{ color: currentContent.color }}
+                  >
                     {stat.icon}
                   </div>
                   <div className="stat-value">{stat.value}</div>
@@ -355,11 +487,24 @@ const WebApplearnMore = () => {
               {currentContent.features.map((feature, idx) => (
                 <button
                   key={idx}
-                  className={`feature-nav-btn ${activeFeature === idx ? 'active' : ''}`}
+                  className={`feature-nav-btn ${
+                    activeFeature === idx ? "active" : ""
+                  }`}
                   onClick={() => setActiveFeature(idx)}
-                  style={activeFeature === idx ? { borderColor: currentContent.color } : {}}
+                  style={
+                    activeFeature === idx
+                      ? { borderColor: currentContent.color }
+                      : {}
+                  }
                 >
-                  <div className="feature-nav-icon" style={activeFeature === idx ? { color: currentContent.color } : {}}>
+                  <div
+                    className="feature-nav-icon"
+                    style={
+                      activeFeature === idx
+                        ? { color: currentContent.color }
+                        : {}
+                    }
+                  >
                     {feature.icon}
                   </div>
                   <span>{feature.title}</span>
@@ -368,19 +513,41 @@ const WebApplearnMore = () => {
             </div>
 
             <div className="feature-display-card">
-              <div className="feature-icon-3d" style={{ background: currentContent.gradient }}>
+              <div
+                className="feature-icon-3d"
+                style={{ background: currentContent.gradient }}
+              >
                 {currentContent.features[activeFeature].icon}
               </div>
-              <h3 className="feature-title-large">{currentContent.features[activeFeature].title}</h3>
-              <p className="feature-desc-large">{currentContent.features[activeFeature].desc}</p>
-              
+              <h3 className="feature-title-large">
+                {currentContent.features[activeFeature].title}
+              </h3>
+              <p className="feature-desc-large">
+                {currentContent.features[activeFeature].desc}
+              </p>
+
               <div className="feature-animation">
                 <div className="code-block">
-                  <div className="code-line" style={{ animationDelay: '0s' }}></div>
-                  <div className="code-line" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="code-line short" style={{ animationDelay: '0.2s' }}></div>
-                  <div className="code-line" style={{ animationDelay: '0.3s' }}></div>
-                  <div className="code-line short" style={{ animationDelay: '0.4s' }}></div>
+                  <div
+                    className="code-line"
+                    style={{ animationDelay: "0s" }}
+                  ></div>
+                  <div
+                    className="code-line"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="code-line short"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                  <div
+                    className="code-line"
+                    style={{ animationDelay: "0.3s" }}
+                  ></div>
+                  <div
+                    className="code-line short"
+                    style={{ animationDelay: "0.4s" }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -392,7 +559,8 @@ const WebApplearnMore = () => {
       <section className="tech-showcase">
         <div className="container">
           <h2 className="section-title-center">
-            Core <span style={{ color: currentContent.color }}>Technologies</span>
+            Core{" "}
+            <span style={{ color: currentContent.color }}>Technologies</span>
           </h2>
 
           <div className="tech-cards-3d">
@@ -403,7 +571,10 @@ const WebApplearnMore = () => {
                     <img src={tech.icon} alt={tech.name} />
                     <h4>{tech.name}</h4>
                   </div>
-                  <div className="tech-card-back" style={{ background: currentContent.gradient }}>
+                  <div
+                    className="tech-card-back"
+                    style={{ background: currentContent.gradient }}
+                  >
                     <FiCheckCircle />
                     <p>Expert Level</p>
                   </div>
@@ -418,17 +589,21 @@ const WebApplearnMore = () => {
       <section className="benefits-section-detail">
         <div className="container">
           <h2 className="section-title-center">
-            Why Choose <span style={{ color: currentContent.color }}>This Approach</span>
+            Why Choose{" "}
+            <span style={{ color: currentContent.color }}>This Approach</span>
           </h2>
 
           <div className="benefits-grid-detail">
             {currentContent.benefits.map((benefit, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className="benefit-item-detail"
                 style={{ animationDelay: `${idx * 0.1}s` }}
               >
-                <div className="benefit-check" style={{ background: currentContent.gradient }}>
+                <div
+                  className="benefit-check"
+                  style={{ background: currentContent.gradient }}
+                >
                   <FiCheckCircle />
                 </div>
                 <p>{benefit}</p>
@@ -442,13 +617,17 @@ const WebApplearnMore = () => {
       <section className="process-section-detail">
         <div className="container">
           <h2 className="section-title-center">
-            Development <span style={{ color: currentContent.color }}>Process</span>
+            Development{" "}
+            <span style={{ color: currentContent.color }}>Process</span>
           </h2>
 
           <div className="process-flow">
             {currentContent.process.map((step, idx) => (
               <div key={idx} className="process-node">
-                <div className="process-circle" style={{ background: currentContent.gradient }}>
+                <div
+                  className="process-circle"
+                  style={{ background: currentContent.gradient }}
+                >
                   {step.step}
                 </div>
                 <div className="process-content-node">
@@ -456,7 +635,10 @@ const WebApplearnMore = () => {
                   <p>{step.desc}</p>
                 </div>
                 {idx < currentContent.process.length - 1 && (
-                  <div className="process-line" style={{ background: currentContent.gradient }}></div>
+                  <div
+                    className="process-line"
+                    style={{ background: currentContent.gradient }}
+                  ></div>
                 )}
               </div>
             ))}
@@ -467,16 +649,37 @@ const WebApplearnMore = () => {
       {/* CTA */}
       <section className="cta-section-detail">
         <div className="container">
-          <div className="cta-box-3d" style={{ borderColor: currentContent.color }}>
-            <div className="cta-glow" style={{ background: currentContent.gradient }}></div>
-            <FiMonitor className="cta-icon-large" style={{ color: currentContent.color }} />
+          <div
+            className="cta-box-3d"
+            style={{ borderColor: currentContent.color }}
+          >
+            <div
+              className="cta-glow"
+              style={{ background: currentContent.gradient }}
+            ></div>
+            <FiMonitor
+              className="cta-icon-large"
+              style={{ color: currentContent.color }}
+            />
             <h2>Ready to Get Started?</h2>
-            <p>Let's build something amazing together. Contact us for a free consultation.</p>
+            <p>
+              Let's build something amazing together. Contact us for a free
+              consultation.
+            </p>
             <div className="cta-buttons-row">
-              <button className="cta-btn-solid" style={{ background: currentContent.gradient }}>
+              <button
+                className="cta-btn-solid"
+                style={{ background: currentContent.gradient }}
+              >
                 Start Project
               </button>
-              <button className="cta-btn-outline" style={{ borderColor: currentContent.color, color: currentContent.color }}>
+              <button
+                className="cta-btn-outline"
+                style={{
+                  borderColor: currentContent.color,
+                  color: currentContent.color,
+                }}
+              >
                 Schedule Call
               </button>
             </div>
@@ -659,37 +862,60 @@ const WebApplearnMore = () => {
         }
 
         .stat-card {
-          padding: 32px 24px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 20px;
-          backdrop-filter: blur(10px);
-          transition: all 0.4s ease;
-        }
+  padding: 32px 24px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  transition: all 0.4s ease;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-        .stat-card:hover {
+.stat-card:hover {
           transform: translateY(-10px);
           background: rgba(255, 255, 255, 0.05);
           box-shadow: 0 20px 50px rgba(88, 101, 242, 0.3);
         }
 
-        .stat-icon {
-          font-size: 32px;
-          margin-bottom: 16px;
-        }
 
-        .stat-value {
-          font-size: 2.5rem;
-          font-weight: 900;
-          margin-bottom: 8px;
-        }
+.stat-icon {
+  font-size: 32px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
 
-        .stat-label {
-          font-size: 0.9rem;
-          color: rgba(255, 255, 255, 0.6);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+  width: 100%;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: 100%;
+  text-align: center;
+}
+
+
+
+
+
+
+
+
+
+        
 
         .features-showcase {
           padding: 100px 0;
@@ -1019,76 +1245,87 @@ const WebApplearnMore = () => {
           height: 80px;
           opacity: 0.5;
         }
+.cta-section-detail {
+  padding: 100px 0 120px;
+}
 
-        .cta-section-detail {
-          padding: 100px 0 120px;
-        }
+.cta-box-3d {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 80px 60px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid;
+  border-radius: 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-        .cta-box-3d {
-          max-width: 900px;
-          margin: 0 auto;
-          padding: 80px 60px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 2px solid;
-          border-radius: 32px;
-          text-align: center;
-          position: relative;
-          overflow: hidden;
-          backdrop-filter: blur(20px);
-        }
+.cta-glow {
+  position: absolute;
+  inset: -50%;
+  opacity: 0.1;
+  filter: blur(100px);
+  animation: glowRotate 10s linear infinite;
+}
 
-        .cta-glow {
-          position: absolute;
-          inset: -50%;
-          opacity: 0.1;
-          filter: blur(100px);
-          animation: glowRotate 10s linear infinite;
-        }
+@keyframes glowRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
-        @keyframes glowRotate {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
+.cta-icon-large {
+  font-size: 64px;
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 1;
+  animation: iconBounce 2s ease-in-out infinite;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
 
-        .cta-icon-large {
-          font-size: 64px;
-          margin-bottom: 32px;
-          position: relative;
-          z-index: 1;
-          animation: iconBounce 2s ease-in-out infinite;
-        }
+@keyframes iconBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
 
-        @keyframes iconBounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-15px); }
-        }
+.cta-box-3d h2 {
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 900;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  text-align: center;
+}
 
-        .cta-box-3d h2 {
-          font-size: clamp(28px, 5vw, 48px);
-          font-weight: 900;
-          margin-bottom: 20px;
-          position: relative;
-          z-index: 1;
-        }
+.cta-box-3d p {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 48px;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  text-align: center;
+}
 
-        .cta-box-3d p {
-          font-size: 1.2rem;
-          line-height: 1.8;
-          color: rgba(255, 255, 255, 0.75);
-          margin-bottom: 48px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .cta-buttons-row {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-          flex-wrap: wrap;
-          position: relative;
-          z-index: 1;
-        }
-
+.cta-buttons-row {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
         .cta-btn-solid,
         .cta-btn-outline {
           padding: 18px 40px;

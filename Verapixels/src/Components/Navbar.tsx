@@ -97,6 +97,9 @@ const Navbar: React.FC = () => {
                 </div>
               )}
             </div>
+
+            <Link to="/blog" className="vp-mobile-link" onClick={closeMobileMenu}>Blog</Link>
+
         
             <Link to="/career">Career</Link>
           </nav>
@@ -185,6 +188,8 @@ const Navbar: React.FC = () => {
                   </div>
                 )}
               </div>
+
+               <Link to="/blog" className="vp-mobile-link" onClick={closeMobileMenu}>Blog</Link>
 
               <Link to="/career" className="vp-mobile-link" onClick={closeMobileMenu}>Career</Link>
 

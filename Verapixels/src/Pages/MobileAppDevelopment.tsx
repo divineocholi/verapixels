@@ -1227,7 +1227,7 @@ const MobileAppDevelopment = () => {
           transform: translateY(-3px);
         }
 
-        @media (max-width: 1024px) {
+      @media (max-width: 1024px) {
           .hero-grid {
             grid-template-columns: 1fr;
             gap: 60px;
@@ -1251,26 +1251,46 @@ const MobileAppDevelopment = () => {
             flex-direction: row;
             overflow-x: auto;
             padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+          }
+
+          .services-nav::-webkit-scrollbar {
+            height: 6px;
+          }
+
+          .services-nav::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+          }
+
+          .services-nav::-webkit-scrollbar-thumb {
+            background: rgba(88, 101, 242, 0.5);
+            border-radius: 3px;
           }
 
           .service-nav-item {
             min-width: 200px;
+            flex-shrink: 0;
           }
 
-          .process-step {
-            grid-template-columns: 80px 1fr;
-            gap: 24px;
-            padding: 32px;
+          .service-display {
+            text-align: center;
+            align-items: center;
           }
 
-          .step-number {
-            font-size: 3rem;
+          .service-icon-large {
+            margin: 0 auto;
           }
 
-          .step-connector {
-            left: 60px;
+          .service-features-list {
+            max-width: 500px;
+            margin: 20px auto;
           }
-        }
+
+          .service-learn-more {
+            align-self: center;
+          }
 
         @media (max-width: 768px) {
           .hero-title {

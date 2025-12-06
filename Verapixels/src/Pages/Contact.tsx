@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import ConsultationBooking from './ConsultationBooking';
 import { 
   FiMail, 
   FiPhone, 
@@ -8,24 +10,13 @@ import {
   FiMessageSquare,
   FiCheckCircle,
   FiClock,
-  FiGlobe,
-  FiHeadphones,
-  FiZap,
-  FiShield,
-  FiTrendingUp,
-  FiUsers
+  FiCalendar,
+  FiVideo
 } from 'react-icons/fi';
-import { 
-  FaFacebookF, 
-  FaTwitter, 
-  FaInstagram, 
-  FaLinkedinIn, 
-  FaTiktok,
-  FaWhatsapp
-} from 'react-icons/fa';
-import VeeAIChatbot from '../Components/VeeAIChatbot';
 
 const Contact = () => {
+  const navigate = useNavigate(); // Add this line
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,919 +25,606 @@ const Contact = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
-  const [activeTab, setActiveTab] = useState('general');
 
   useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    document.querySelectorAll('.animate').forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Get the inquiry type label from activeTab
-    const inquiryType = contactTabs.find(tab => tab.id === activeTab)?.label || 'General Inquiry';
-
-    // Formspree integration
     const formDataToSend = new FormData();
-    formDataToSend.append('name', formData.name);
-    formDataToSend.append('email', formData.email);
-    formDataToSend.append('subject', formData.subject);
-    formDataToSend.append('message', formData.message);
-    formDataToSend.append('inquiry_type', inquiryType);
-    formDataToSend.append('_subject', `New ${inquiryType} - Contact Form Submission`);
+    Object.entries(formData).forEach(([key, value]) => {
+      formDataToSend.append(key, value);
+    });
     
     try {
       const response = await fetch('https://formspree.io/f/mldylrwj', {
         method: 'POST',
         body: formDataToSend,
-        headers: {
-          'Accept': 'application/json'
-        }
+        headers: { 'Accept': 'application/json' }
       });
 
       if (response.ok) {
-        setIsSubmitting(false);
         setShowSuccess(true);
         setFormData({ name: '', email: '', subject: '', message: '' });
-        setActiveTab('general'); // Reset to default tab
         setTimeout(() => setShowSuccess(false), 5000);
-      } else {
-        throw new Error('Form submission failed');
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error:', error);
+    } finally {
       setIsSubmitting(false);
-      // You can add error handling here, like showing an error message
     }
   };
 
-  const socialLinks = [
-    { icon: <FaFacebookF />, name: 'Facebook', url: '#', color: '#5918f2ff' },
-    { icon: <FaTwitter />, name: 'Twitter/X', url: '#', color: '#1DA1F2' },
-    { icon: <FaInstagram />, name: 'Instagram', url: '#', color: '#E4405F' },
-    { icon: <FaLinkedinIn />, name: 'LinkedIn', url: '#', color: '#0A66C2' },
-    { icon: <FaTiktok />, name: 'TikTok', url: '#', color: '#3a0808ff' },
-    { icon: <FaWhatsapp />, name: 'WhatsApp', url: '#', color: '#25D366' }
-  ];
-
   const contactInfo = [
-    { icon: <FiMail />, title: 'Email', value: 'hello@yourcompany.com', link: 'mailto:hello@yourcompany.com', color: '#007AFF' },
-    { icon: <FiPhone />, title: 'Phone', value: '+1 (555) 123-4567', link: 'tel:+15551234567', color: '#FF6B9D' },
-    { icon: <FiMapPin />, title: 'Location', value: 'Lagos, Nigeria', link: '#map', color: '#3DDC84' }
-  ];
-
-  const workingHours = [
-    { day: 'Monday - Friday', time: '9:00 AM - 6:00 PM' },
-    { day: 'Saturday', time: '10:00 AM - 4:00 PM' },
-    { day: 'Sunday', time: 'Closed' }
-  ];
-
-  const whyChooseUs = [
-    { icon: <FiZap />, title: 'Fast Response', desc: '24-hour response guarantee', color: '#FF6B9D' },
-    { icon: <FiShield />, title: 'Secure & Private', desc: 'Your data is always protected', color: '#007AFF' },
-    { icon: <FiTrendingUp />, title: 'Proven Results', desc: '500+ successful projects', color: '#3DDC84' },
-    { icon: <FiUsers />, title: 'Expert Team', desc: '50+ professionals ready to help', color: '#8B5CF6' }
-  ];
-
-  const contactTabs = [
-    { id: 'general', label: 'General Inquiry', icon: <FiMessageSquare /> },
-    { id: 'support', label: 'Technical Support', icon: <FiHeadphones /> },
-    { id: 'sales', label: 'Sales & Pricing', icon: <FiTrendingUp /> },
-    { id: 'partnership', label: 'Partnership', icon: <FiUsers /> }
-  ];
-
-  const testimonials = [
-    {
-      name: 'Sarah Johnson',
-      role: 'CEO, TechStart Inc.',
-      image: 'https://i.pravatar.cc/150?img=1',
-      text: 'Working with this team was an absolute pleasure. They delivered our mobile app ahead of schedule and exceeded all expectations!'
-    },
-    {
-      name: 'Michael Chen',
-      role: 'Founder, AppVenture',
-      image: 'https://i.pravatar.cc/150?img=2',
-      text: 'Outstanding communication and technical expertise. Our app now has over 100K downloads thanks to their brilliant development work.'
-    },
-    {
-      name: 'Emily Rodriguez',
-      role: 'CTO, Digital Dreams',
-      image: 'https://i.pravatar.cc/150?img=3',
-      text: 'The best development team we\'ve worked with. Professional, responsive, and truly committed to our success.'
-    }
+    { icon: <FiMail />, title: 'Email Us', value: 'info@verapixels.com', link: 'mailto:info@verapixels.com', color: '#007AFF', delay: '0s' },
+    { icon: <FiPhone />, title: 'Call Us', value: '+234 707 1333 709 ', link: 'tel:+2347071333709', color: '#FF6B9D', delay: '0.2s' },
+    { icon: <FiMapPin />, title: 'Visit Us', value: 'Lagos, Nigeria', link: '#map', color: '#3DDC84', delay: '0.4s' }
   ];
 
   return (
     <div className="contact-page">
-      {/* Animated Background */}
-      <div className="bg-container">
-        <div className="hexagon-pattern"></div>
-        <div className="particle-field">
-          {[...Array(40)].map((_, i) => (
-            <div 
-              key={i} 
-              className="particle"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${5 + Math.random() * 10}s`
-              }}
-            ></div>
-          ))}
-        </div>
-        <div className="gradient-orbs">
-          <div className="orb orb-1"></div>
-          <div className="orb orb-2"></div>
-          <div className="orb orb-3"></div>
-        </div>
+      <div className="bg-effects">
+        <div className="orb orb-1"></div>
+        <div className="orb orb-2"></div>
+        <div className="orb orb-3"></div>
+        <div className="grid-pattern"></div>
       </div>
 
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="container">
-          <div className="hero-content">
-            <div className="contact-badge">
-              <FiMail className="badge-icon" />
-              <span>Get in Touch</span>
+      <div className="container">
+        {/* Hero */}
+        <section className="hero animate fade-up">
+          <div className="hero-badge">
+            <FiMail />
+            <span>Get in Touch</span>
+          </div>
+          <h1>
+            Let's Build Something
+            <span className="gradient-text"> Amazing Together</span>
+          </h1>
+          <p>Have a project in mind? We'd love to hear about it. Get in touch and let's make it happen.</p>
+        </section>
+
+        {/* Book Consultation CTA */}
+        <section className="consultation-cta animate zoom-in">
+          <div className="cta-glow"></div>
+          <div className="cta-icon">
+            <FiCalendar />
+          </div>
+          <h2>Ready to Start Your Project?</h2>
+          <p>Book a free 30-minute consultation with our experts. No commitment required.</p>
+          <div className="cta-features">
+            <div className="feature">
+              <FiVideo />
+              <span>Video/Phone</span>
+            </div>
+            <div className="feature">
+              <FiClock />
+              <span>30 Min Free</span>
+            </div>
+            <div className="feature">
+              <FiCheckCircle />
+              <span>Expert Advice</span>
+            </div>
+          </div>
+          <button 
+            className="cta-btn" 
+            onClick={() => navigate('/consultationbooking')}
+          >
+            <FiCalendar />
+            <span>Book Free Consultation</span>
+            <div className="btn-glow"></div>
+          </button>
+        </section>
+
+        {/* Contact Info */}
+        <section className="contact-info">
+          {contactInfo.map((info, idx) => (
+            <a 
+              key={idx} 
+              href={info.link} 
+              className="info-card animate slide-up"
+              style={{ 
+                animationDelay: info.delay,
+                '--card-color': info.color
+              } as React.CSSProperties}
+            >
+              <div className="card-shine"></div>
+              <div className="icon-wrapper">
+                <div className="icon">{info.icon}</div>
+              </div>
+              <h3>{info.title}</h3>
+              <p>{info.value}</p>
+              <div className="card-glow"></div>
+            </a>
+          ))}
+        </section>
+
+        {/* Contact Form */}
+        <section className="form-section">
+          <div className="form-card animate zoom-in">
+            <div className="form-glow"></div>
+            <div className="form-header">
+              <div className="icon-pulse">
+                <FiMessageSquare className="form-icon" />
+              </div>
+              <h2>Send us a Message</h2>
+              <p>Fill out the form and we'll get back to you within 24 hours</p>
             </div>
             
-            <h1 className="hero-title">
-              <span className="title-line" data-text="Contact">Contact</span>
-              <span className="title-line gradient-text" data-text="Us">Us</span>
-            </h1>
-            
-            <p className="hero-subtitle">
-              Let's turn your ideas into reality. We're here to help you build something amazing.
-            </p>
-
-            {/* Social Media Links */}
-            <div className="social-grid">
-              {socialLinks.map((social, idx) => (
-                <a 
-                  key={idx}
-                  href={social.url}
-                  className="social-card"
-                  style={{ '--hover-color': social.color } as React.CSSProperties}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <div className="social-icon">{social.icon}</div>
-                  <span className="social-name">{social.name}</span>
-                  <div className="social-glow" style={{ background: social.color }}></div>
-                </a>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Choose Us */}
-      <section className="why-section">
-        <div className="container">
-          <h2 className="section-title">Why Choose Us</h2>
-          <div className="why-grid">
-            {whyChooseUs.map((item, idx) => (
-              <div key={idx} className="why-card" style={{ animationDelay: `${idx * 0.1}s` }}>
-                <div className="why-icon" style={{ background: `linear-gradient(135deg, ${item.color}, ${item.color}dd)` }}>
-                  {item.icon}
-                </div>
-                <h3>{item.title}</h3>
-                <p>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Info Cards */}
-      <section className="info-section">
-        <div className="container">
-          <div className="info-grid">
-            {contactInfo.map((info, idx) => (
-              <a 
-                key={idx} 
-                href={info.link}
-                className="info-card"
-                style={{ animationDelay: `${idx * 0.1}s` }}
-              >
-                <div className="info-icon" style={{ background: `linear-gradient(135deg, ${info.color}, ${info.color}dd)` }}>
-                  {info.icon}
-                </div>
-                <h3 className="info-title">{info.title}</h3>
-                <p className="info-value">{info.value}</p>
-                <div className="card-shine"></div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Working Hours */}
-      <section className="hours-section">
-        <div className="container">
-          <div className="hours-wrapper">
-            <div className="hours-header">
-              <div className="hours-icon-container">
-                <FiClock className="hours-icon" />
-              </div>
-              <h2>Business Hours</h2>
-              <p>We're here when you need us</p>
-            </div>
-            <div className="hours-list">
-              {workingHours.map((schedule, idx) => (
-                <div key={idx} className="hours-item">
-                  <span className="hours-day">{schedule.day}</span>
-                  <span className="hours-dots"></span>
-                  <span className="hours-time">{schedule.time}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contact Form with Tabs */}
-      <section className="form-section">
-        <div className="container">
-          <div className="form-wrapper">
-            <div className="form-container">
-              <div className="form-header">
-                <div className="form-header-icon-container">
-                  <FiMessageSquare className="form-header-icon" />
-                </div>
-                <h2>Send us a Message</h2>
-                <p>Choose your inquiry type and we'll route it to the right team</p>
-              </div>
-
-              {/* Tabs */}
-              <div className="contact-tabs">
-                {contactTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                    onClick={() => setActiveTab(tab.id)}
-                  >
-                    {tab.icon}
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Display selected inquiry type */}
-              <div className="selected-inquiry">
-                <span className="inquiry-badge">
-                  Selected: {contactTabs.find(tab => tab.id === activeTab)?.label}
-                </span>
-              </div>
-
-              <form 
-                onSubmit={handleSubmit} 
-                className="contact-form"
-                action="https://formspree.io/f/your-form-id"
-                method="POST"
-              >
-                {/* Hidden input for inquiry type */}
-                <input 
-                  type="hidden" 
-                  name="inquiry_type" 
-                  value={contactTabs.find(tab => tab.id === activeTab)?.label || 'General Inquiry'} 
-                />
-                <input 
-                  type="hidden" 
-                  name="_subject" 
-                  value={`New ${contactTabs.find(tab => tab.id === activeTab)?.label || 'General Inquiry'} - Contact Form Submission`} 
-                />
-                
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label htmlFor="name">
-                      <FiUser />
-                      <span>Your Name</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder="John Doe"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="email">
-                      <FiMail />
-                      <span>Email Address</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder="john@example.com"
-                      required
-                    />
-                  </div>
-                </div>
-
+            <form onSubmit={handleSubmit}>
+              <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="subject">
-                    <FiMessageSquare />
-                    <span>Subject</span>
+                  <label>
+                    <FiUser />
+                    <span>Full Name</span>
                   </label>
                   <input
                     type="text"
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
-                    placeholder="How can we help you?"
+                    placeholder="John Doe"
                     required
                   />
                 </div>
-
                 <div className="form-group">
-                  <label htmlFor="message">
-                    <FiMessageSquare />
-                    <span>Message</span>
+                  <label>
+                    <FiMail />
+                    <span>Email Address</span>
                   </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
                     onChange={handleChange}
-                    placeholder="Tell us more about your project..."
-                    rows={6}
+                    placeholder="john@example.com"
                     required
-                  ></textarea>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="submit-btn"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="spinner"></div>
-                      <span>Sending...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FiSend />
-                      <span>Send Message</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            <div className="form-decoration">
-              <div className="deco-circle deco-1"></div>
-              <div className="deco-circle deco-2"></div>
-              <div className="deco-circle deco-3"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="testimonials-section">
-        <div className="container">
-          <h2 className="section-title">What Our Clients Say</h2>
-          <div className="testimonials-grid">
-            {testimonials.map((testimonial, idx) => (
-              <div key={idx} className="testimonial-card" style={{ animationDelay: `${idx * 0.15}s` }}>
-                <div className="testimonial-content">
-                  <p>"{testimonial.text}"</p>
-                </div>
-                <div className="testimonial-author">
-                  <img src={testimonial.image} alt={testimonial.name} />
-                  <div>
-                    <h4>{testimonial.name}</h4>
-                    <p>{testimonial.role}</p>
-                  </div>
+                  />
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Map Section */}
-      <section className="map-section" id="map">
-        <div className="container">
-          <div className="map-wrapper">
-            <div className="map-overlay">
-              <div className="map-info">
-                <FiMapPin className="map-pin-icon" />
-                <h3>Visit Our Office</h3>
-                <p>123 Tech Boulevard, Victoria Island</p>
-                <p>Lagos, Nigeria</p>
-                <button className="map-btn">Get Directions</button>
+              
+              <div className="form-group">
+                <label>
+                  <FiMessageSquare />
+                  <span>Subject</span>
+                </label>
+                <input
+                  type="text"
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  placeholder="How can we help you?"
+                  required
+                />
               </div>
+              
+              <div className="form-group">
+                <label>
+                  <FiMessageSquare />
+                  <span>Your Message</span>
+                </label>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  placeholder="Tell us about your project, goals, and timeline..."
+                  rows={6}
+                  required
+                />
+              </div>
+
+              <button type="submit" className="submit-btn" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <div className="spinner"></div>
+                    <span>Sending Message...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiSend />
+                    <span>Send Message</span>
+                    <div className="btn-shine"></div>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </section>
+
+        {/* Map */}
+        <section className="map-section animate fade-up" id="map">
+          <div className="map-info">
+            <div className="map-icon">
+              <FiMapPin />
             </div>
+            <h3>Visit Our Office</h3>
+            <p>123 Tech Boulevard<br/>Victoria Island<br/>Lagos, Nigeria</p>
+            <button className="map-btn">Get Directions</button>
+          </div>
+          <div className="map-container">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d253682.62022494493!2d3.2406440682923!3d6.524378999999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b8b2ae68280c1%3A0xdc9e87a367c3d9cb!2sLagos!5e0!3m2!1sen!2sng!4v1699999999999!5m2!1sen!2sng"
               width="100%"
-              height="450"
-              style={{ border: 0, borderRadius: '20px' }}
+              height="500"
+              style={{ border: 0 }}
               allowFullScreen
               loading="lazy"
-            ></iframe>
+            />
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      {/* Success Modal */}
       {showSuccess && (
-        <div className="success-modal">
-          <div className="success-content">
-            <div className="success-icon">
-              <FiCheckCircle />
+        <div className="modal">
+          <div className="modal-backdrop" onClick={() => setShowSuccess(false)}></div>
+          <div className="modal-content">
+            <div className="success-icon-wrapper">
+              <FiCheckCircle className="success-icon" />
             </div>
             <h3>Message Sent Successfully!</h3>
-            <p>Thank you for reaching out. We'll get back to you soon!</p>
-            <button onClick={() => setShowSuccess(false)} className="success-close">
-              Got it!
-            </button>
+            <p>Thank you for reaching out. We'll get back to you within 24 hours.</p>
+            <button onClick={() => setShowSuccess(false)}>Got it!</button>
           </div>
         </div>
       )}
 
-      <VeeAIChatbot />
-
       <style>{`
-        /* Add this new CSS for the selected inquiry display */
-        .selected-inquiry {
-          text-align: center;
-          margin-bottom: 24px;
-        }
-
-        .inquiry-badge {
-          display: inline-block;
-          padding: 8px 16px;
-          background: linear-gradient(135deg, #007AFF, #5AC8FA);
-          color: white;
-          border-radius: 20px;
-          font-size: 0.9rem;
-          font-weight: 600;
-          box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-        }
-
-        /* Rest of your existing CSS remains the same */
-        * {
-          scroll-behavior: smooth;
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         .contact-page {
-          background: #000000;
-          color: #ffffff;
+          background: #000;
+          color: #fff;
           min-height: 100vh;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           position: relative;
+          padding: 100px 0 60px;
           overflow-x: hidden;
         }
 
-        .bg-container {
+        /* Background Effects */
+        .bg-effects {
           position: fixed;
           inset: 0;
           pointer-events: none;
           z-index: 0;
         }
 
-        .hexagon-pattern {
-          position: absolute;
-          inset: 0;
-          background-image: 
-            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0px, transparent 1px, transparent 40px, rgba(255, 255, 255, 0.02) 41px),
-            repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0px, transparent 1px, transparent 40px, rgba(255, 255, 255, 0.02) 41px);
-          animation: hexMove 20s linear infinite;
-        }
-
-        @keyframes hexMove {
-          0% { transform: translate(0, 0); }
-          100% { transform: translate(40px, 40px); }
-        }
-
-        .particle-field {
-          position: absolute;
-          inset: 0;
-          overflow: hidden;
-        }
-
-        .particle {
-          position: absolute;
-          width: 3px;
-          height: 3px;
-          background: rgba(255, 255, 255, 0.3);
-          border-radius: 50%;
-          animation: particleFloat linear infinite;
-        }
-
-        @keyframes particleFloat {
-          0% {
-            transform: translateY(0) translateX(0);
-            opacity: 0;
-          }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% {
-            transform: translateY(-100vh) translateX(50px);
-            opacity: 0;
-          }
-        }
-
-        .gradient-orbs {
-          position: absolute;
-          inset: 0;
-        }
-
         .orb {
           position: absolute;
           border-radius: 50%;
-          filter: blur(100px);
-          opacity: 0.3;
-          animation: orbFloat 20s ease-in-out infinite;
+          filter: blur(120px);
+          opacity: 0.25;
+          animation: float 25s ease-in-out infinite;
         }
 
         .orb-1 {
-          width: 500px;
-          height: 500px;
-          background: #007AFF;
-          top: -250px;
-          left: -250px;
+          width: 600px;
+          height: 600px;
+          background: radial-gradient(circle, #007AFF, #0051cc);
+          top: -300px;
+          left: -300px;
         }
 
         .orb-2 {
-          width: 400px;
-          height: 400px;
-          background: #FF6B9D;
-          bottom: -200px;
-          right: -200px;
-          animation-delay: -5s;
+          width: 500px;
+          height: 500px;
+          background: radial-gradient(circle, #FF6B9D, #cc5580);
+          bottom: -250px;
+          right: -250px;
+          animation-delay: -12s;
         }
 
         .orb-3 {
-          width: 450px;
-          height: 450px;
-          background: #8B5CF6;
-          top: 50%;
+          width: 550px;
+          height: 550px;
+          background: radial-gradient(circle, #8B5CF6, #6b47c4);
+          top: 40%;
           left: 50%;
-          transform: translate(-50%, -50%);
-          animation-delay: -10s;
+          animation-delay: -7s;
         }
 
-        @keyframes orbFloat {
+        @keyframes float {
           0%, 100% { transform: translate(0, 0) scale(1); }
-          33% { transform: translate(50px, -50px) scale(1.1); }
-          66% { transform: translate(-50px, 50px) scale(0.9); }
+          33% { transform: translate(80px, -80px) scale(1.1); }
+          66% { transform: translate(-60px, 60px) scale(0.9); }
+        }
+
+        .grid-pattern {
+          position: absolute;
+          inset: 0;
+          background-image: 
+            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+          background-size: 50px 50px;
+          animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(50px, 50px); }
         }
 
         .container {
-          max-width: 1400px;
+          max-width: 1200px;
           margin: 0 auto;
           padding: 0 24px;
           position: relative;
           z-index: 1;
         }
 
-        .section-title {
+        /* Animation Classes */
+        .animate {
+          opacity: 0;
+          transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animate.visible {
+          opacity: 1;
+        }
+
+        .fade-up {
+          transform: translateY(60px);
+        }
+
+        .fade-up.visible {
+          transform: translateY(0);
+        }
+
+        .slide-up {
+          transform: translateY(80px);
+        }
+
+        .slide-up.visible {
+          transform: translateY(0);
+        }
+
+        .zoom-in {
+          transform: scale(0.85);
+        }
+
+        .zoom-in.visible {
+          transform: scale(1);
+        }
+
+        /* Hero */
+        .hero {
           text-align: center;
-          font-size: clamp(32px, 5vw, 48px);
-          font-weight: 900;
-          margin-bottom: 60px;
-          background: linear-gradient(135deg, #007AFF, #FF6B9D);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          margin-bottom: 100px;
         }
 
-        /* Hero Section */
-        .hero-section {
-          padding: 120px 0 80px;
-          position: relative;
-        }
-
-        .hero-content {
-          max-width: 900px;
-          margin: 0 auto;
-          text-align: center;
-        }
-
-        .contact-badge {
+        .hero-badge {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 12px 24px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          gap: 10px;
+          padding: 12px 28px;
+          background: rgba(0, 122, 255, 0.1);
+          border: 1px solid rgba(0, 122, 255, 0.3);
           border-radius: 50px;
           margin-bottom: 32px;
           backdrop-filter: blur(10px);
-          animation: fadeInUp 0.6s ease-out;
+          font-weight: 600;
+          animation: badgeFloat 3s ease-in-out infinite;
         }
 
-        .badge-icon {
-          font-size: 20px;
+        @keyframes badgeFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+
+        .hero-badge svg {
           color: #007AFF;
+          font-size: 20px;
         }
 
-        .hero-title {
-          font-size: clamp(48px, 8vw, 96px);
+        .hero h1 {
+          font-size: clamp(40px, 7vw, 80px);
           font-weight: 900;
-          margin-bottom: 24px;
           line-height: 1.1;
-        }
-
-        .title-line {
-          display: block;
-          position: relative;
-          animation: fadeInUp 0.8s ease-out backwards;
-        }
-
-        .title-line:nth-child(1) {
-          animation-delay: 0.2s;
-        }
-
-        .title-line:nth-child(2) {
-          animation-delay: 0.4s;
-        }
-
-        .title-line::before {
-          content: attr(data-text);
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          text-shadow: 
-            2px 2px 0 rgba(255, 107, 157, 0.5),
-            -2px -2px 0 rgba(0, 122, 255, 0.5);
-          z-index: -1;
-          animation: glitch 3s infinite;
-        }
-
-        @keyframes glitch {
-          0%, 100% { clip-path: inset(0 0 0 0); }
-          10% { clip-path: inset(20% 0 60% 0); transform: translateX(2px); }
-          20% { clip-path: inset(60% 0 20% 0); transform: translateX(-2px); }
-          30% { clip-path: inset(40% 0 40% 0); }
+          margin-bottom: 28px;
+          letter-spacing: -0.02em;
         }
 
         .gradient-text {
-          background: linear-gradient(135deg, #007AFF, #FF6B9D, #8B5CF6);
-          background-size: 200% 200%;
+          background: linear-gradient(135deg, #007AFF 0%, #5AC8FA 25%, #FF6B9D 50%, #8B5CF6 75%, #007AFF 100%);
+          background-size: 200% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
-          animation: gradientShift 3s ease infinite;
+          animation: gradientFlow 5s ease infinite;
         }
 
-        @keyframes gradientShift {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
+        @keyframes gradientFlow {
+          0%, 100% { background-position: 0% center; }
+          50% { background-position: 100% center; }
         }
 
-        .hero-subtitle {
-          font-size: 1.25rem;
-          line-height: 1.8;
+        .hero p {
+          font-size: 1.3rem;
           color: rgba(255, 255, 255, 0.7);
-          margin-bottom: 60px;
-          animation: fadeInUp 1s ease-out backwards;
-          animation-delay: 0.6s;
-        }
-
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        /* Social Links - Fixed Icon Centering */
-        .social-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-          gap: 20px;
-          max-width: 800px;
+          max-width: 700px;
           margin: 0 auto;
+          line-height: 1.7;
         }
 
-        .social-card {
+        /* Consultation CTA */
+        .consultation-cta {
           position: relative;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          padding: 28px 20px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 20px;
-          text-decoration: none;
-          color: white;
-          transition: all 0.4s ease;
-          overflow: hidden;
-          backdrop-filter: blur(10px);
-          min-height: 120px;
-        }
-
-        .social-card:hover {
-          transform: translateY(-10px) scale(1.05);
-          border-color: var(--hover-color);
-          box-shadow: 0 20px 60px rgba(0, 122, 255, 0.3);
-        }
-
-        .social-icon {
-          font-size: 32px;
-          transition: all 0.4s ease;
-          position: relative;
-          z-index: 2;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .social-card:hover .social-icon {
-          transform: rotateY(360deg) scale(1.2);
-          color: var(--hover-color);
-        }
-
-        .social-name {
-          font-size: 0.95rem;
-          font-weight: 600;
-          position: relative;
-          z-index: 2;
+          background: linear-gradient(135deg, rgba(0, 122, 255, 0.12), rgba(139, 92, 246, 0.12));
+          border: 2px solid rgba(0, 122, 255, 0.4);
+          border-radius: 40px;
+          padding: 70px 50px;
           text-align: center;
+          margin-bottom: 100px;
+          backdrop-filter: blur(30px);
+          overflow: hidden;
         }
 
-        .social-glow {
+        .cta-glow {
           position: absolute;
           inset: -100%;
+          background: radial-gradient(circle, rgba(0, 122, 255, 0.3), transparent 70%);
           opacity: 0;
-          filter: blur(40px);
+          transition: opacity 0.5s ease;
+        }
+
+        .consultation-cta:hover .cta-glow {
+          opacity: 1;
+        }
+
+        .cta-icon {
+          width: 100px;
+          height: 100px;
+          background: linear-gradient(135deg, #007AFF, #5AC8FA);
+          border-radius: 50%;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 48px;
+          margin-bottom: 32px;
+          box-shadow: 0 20px 60px rgba(0, 122, 255, 0.5);
+          animation: iconPulse 3s ease-in-out infinite;
+          position: relative;
+          z-index: 1;
+        }
+
+        @keyframes iconPulse {
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          50% { transform: scale(1.08) rotate(5deg); }
+        }
+
+        .consultation-cta h2 {
+          font-size: clamp(28px, 5vw, 42px);
+          font-weight: 900;
+          margin-bottom: 16px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .consultation-cta p {
+          font-size: 1.2rem;
+          color: rgba(255, 255, 255, 0.85);
+          margin-bottom: 36px;
+          max-width: 650px;
+          margin-left: auto;
+          margin-right: auto;
+          position: relative;
+          z-index: 1;
+        }
+
+        .cta-features {
+          display: flex;
+          justify-content: center;
+          gap: 40px;
+          margin-bottom: 40px;
+          flex-wrap: wrap;
+          position: relative;
+          z-index: 1;
+        }
+
+        .feature {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-weight: 700;
+          font-size: 1.05rem;
+          padding: 12px 24px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 50px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease;
+        }
+
+        .feature:hover {
+          transform: translateY(-5px);
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .feature svg {
+          color: #007AFF;
+          font-size: 24px;
+        }
+
+        .cta-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          padding: 22px 50px;
+          background: linear-gradient(135deg, #007AFF, #5AC8FA);
+          border: none;
+          border-radius: 50px;
+          color: white;
+          font-size: 1.2rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 15px 50px rgba(0, 122, 255, 0.5);
+          position: relative;
+          overflow: hidden;
+          z-index: 1;
+        }
+
+        .btn-glow {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, #5AC8FA, #007AFF);
+          opacity: 0;
           transition: opacity 0.4s ease;
         }
 
-        .social-card:hover .social-glow {
-          opacity: 0.3;
+        .cta-btn:hover .btn-glow {
+          opacity: 1;
         }
 
-        /* Why Choose Us - Fixed Icon Centering */
-        .why-section {
-          padding: 80px 0;
+        .cta-btn:hover {
+          transform: translateY(-5px) scale(1.02);
+          box-shadow: 0 20px 70px rgba(0, 122, 255, 0.7);
         }
 
-        .why-grid {
+        .cta-btn svg,
+        .cta-btn span {
+          position: relative;
+          z-index: 1;
+        }
+
+        /* Contact Info */
+        .contact-info {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
           gap: 32px;
-        }
-
-        .why-card {
-          padding: 40px 32px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 24px;
-          text-align: center;
-          backdrop-filter: blur(10px);
-          animation: slideInUp 0.6s ease-out backwards;
-          transition: all 0.4s ease;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .why-card:hover {
-          transform: translateY(-10px);
-          background: rgba(255, 255, 255, 0.05);
-          box-shadow: 0 20px 60px rgba(0, 122, 255, 0.2);
-        }
-
-        .why-icon {
-          width: 80px;
-          height: 80px;
-          margin: 0 auto 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 20px;
-          font-size: 36px;
-          color: white;
-          box-shadow: 0 10px 40px rgba(0, 122, 255, 0.4);
-          animation: iconFloat 3s ease-in-out infinite;
-        }
-
-        .why-card h3 {
-          font-size: 1.3rem;
-          margin-bottom: 12px;
-        }
-
-        .why-card p {
-          color: rgba(255, 255, 255, 0.7);
-          line-height: 1.6;
-        }
-
-        @keyframes slideInUp {
-          from {
-            opacity: 0;
-            transform: translateY(50px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes iconFloat {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(5deg); }
-        }
-
-        /* Contact Info - Fixed Icon Centering */
-        .info-section {
-          padding: 60px 0;
-        }
-
-        .info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 32px;
-          max-width: 1200px;
-          margin: 0 auto;
+          margin-bottom: 100px;
         }
 
         .info-card {
           position: relative;
-          padding: 40px 32px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 24px;
+          padding: 50px 40px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 28px;
           text-align: center;
-          overflow: hidden;
-          backdrop-filter: blur(10px);
-          animation: slideInUp 0.6s ease-out backwards;
-          transition: all 0.4s ease;
           text-decoration: none;
           color: white;
-          display: block;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-
-        .info-card:hover {
-          transform: translateY(-10px);
-          background: rgba(255, 255, 255, 0.05);
-          box-shadow: 0 20px 60px rgba(0, 122, 255, 0.2);
-        }
-
-        .info-icon {
-          width: 80px;
-          height: 80px;
-          margin: 0 auto 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 20px;
-          font-size: 36px;
-          color: white;
-          box-shadow: 0 10px 40px rgba(0, 122, 255, 0.4);
-          animation: iconFloat 3s ease-in-out infinite;
-        }
-
-        .info-title {
-          font-size: 1.25rem;
-          font-weight: 700;
-          margin-bottom: 8px;
-        }
-
-        .info-value {
-          font-size: 1rem;
-          color: rgba(255, 255, 255, 0.7);
+          transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          backdrop-filter: blur(20px);
+          overflow: hidden;
         }
 
         .card-shine {
@@ -955,199 +633,144 @@ const Contact = () => {
           left: -50%;
           width: 200%;
           height: 200%;
-          background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+          background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.08), transparent);
           transform: rotate(45deg);
-          animation: shine 3s infinite;
+          transition: all 0.6s ease;
         }
 
-        @keyframes shine {
-          0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-          100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        .info-card:hover .card-shine {
+          transform: rotate(45deg) translate(50%, 50%);
         }
 
-        /* Working Hours - Fixed Icon Centering */
-        .hours-section {
-          padding: 80px 0;
-          background: rgba(255, 255, 255, 0.01);
+        .info-card:hover {
+          transform: translateY(-15px) scale(1.02);
+          border-color: var(--card-color);
+          background: rgba(255, 255, 255, 0.06);
+          box-shadow: 0 25px 80px rgba(0, 122, 255, 0.3);
         }
 
-        .hours-wrapper {
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 60px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 32px;
-          backdrop-filter: blur(20px);
+        .icon-wrapper {
+          margin-bottom: 28px;
+          display: inline-block;
+          position: relative;
         }
 
-        .hours-header {
-          text-align: center;
-          margin-bottom: 40px;
-        }
-
-        .hours-icon-container {
+        .info-card .icon {
+          width: 90px;
+          height: 90px;
           display: flex;
+          align-items: center;
           justify-content: center;
-          align-items: center;
-          margin-bottom: 20px;
+          background: var(--card-color);
+          border-radius: 24px;
+          font-size: 40px;
+          color: white;
+          box-shadow: 0 15px 50px rgba(0, 122, 255, 0.4);
+          transition: all 0.4s ease;
+          position: relative;
+          z-index: 1;
         }
 
-        .hours-icon {
-          font-size: 56px;
-          color: #007AFF;
-          animation: iconPulse 2s ease-in-out infinite;
+        .info-card:hover .icon {
+          transform: scale(1.1) rotate(10deg);
+          box-shadow: 0 20px 70px var(--card-color);
         }
 
-        @keyframes iconPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
+        .card-glow {
+          position: absolute;
+          inset: -50%;
+          background: radial-gradient(circle, var(--card-color), transparent 70%);
+          opacity: 0;
+          transition: opacity 0.5s ease;
         }
 
-        .hours-header h2 {
-          font-size: 2rem;
-          font-weight: 900;
+        .info-card:hover .card-glow {
+          opacity: 0.3;
+        }
+
+        .info-card h3 {
+          font-size: 1.5rem;
+          font-weight: 800;
           margin-bottom: 12px;
+          position: relative;
+          z-index: 1;
         }
 
-        .hours-header p {
-          color: rgba(255, 255, 255, 0.7);
+        .info-card p {
+          font-size: 1.1rem;
+          color: rgba(255, 255, 255, 0.8);
+          position: relative;
+          z-index: 1;
         }
 
-        .hours-list {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-
-        .hours-item {
-          display: flex;
-          align-items: center;
-          padding: 20px;
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 16px;
-          transition: all 0.3s ease;
-        }
-
-        .hours-item:hover {
-          background: rgba(255, 255, 255, 0.05);
-          transform: translateX(10px);
-        }
-
-        .hours-day {
-          font-weight: 700;
-          min-width: 150px;
-        }
-
-        .hours-dots {
-          flex: 1;
-          height: 2px;
-          background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0, rgba(255, 255, 255, 0.3) 4px, transparent 4px, transparent 8px);
-          margin: 0 16px;
-        }
-
-        .hours-time {
-          color: rgba(255, 255, 255, 0.7);
-          font-weight: 600;
-        }
-
-        /* Form Section - Fixed Icon Centering */
+        /* Form */
         .form-section {
-          padding: 80px 0 120px;
+          margin-bottom: 100px;
         }
 
-        .form-wrapper {
+        .form-card {
           max-width: 900px;
           margin: 0 auto;
+          padding: 70px;
+          background: rgba(255, 255, 255, 0.04);
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 40px;
+          backdrop-filter: blur(30px);
           position: relative;
+          overflow: hidden;
         }
 
-        .form-container {
-          position: relative;
-          padding: 60px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 32px;
-          backdrop-filter: blur(20px);
-          box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
-          z-index: 2;
+        .form-glow {
+          position: absolute;
+          inset: -100%;
+          background: radial-gradient(circle at 50% 50%, rgba(0, 122, 255, 0.1), transparent 70%);
+          animation: glowPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.1); }
         }
 
         .form-header {
           text-align: center;
-          margin-bottom: 48px;
+          margin-bottom: 50px;
+          position: relative;
+          z-index: 1;
         }
 
-        .form-header-icon-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          margin-bottom: 20px;
+        .icon-pulse {
+          display: inline-block;
+          animation: iconPulse 3s ease-in-out infinite;
         }
 
-        .form-header-icon {
-          font-size: 56px;
+        .form-icon {
+          font-size: 64px;
           color: #007AFF;
-          animation: iconPulse 2s ease-in-out infinite;
+          margin-bottom: 24px;
+          filter: drop-shadow(0 10px 30px rgba(0, 122, 255, 0.5));
         }
 
-        .form-header h2 {
+        .form-card h2 {
           font-size: 2.5rem;
           font-weight: 900;
-          margin-bottom: 12px;
+          margin-bottom: 16px;
         }
 
-        .form-header p {
-          font-size: 1.05rem;
-          color: rgba(255, 255, 255, 0.7);
+        .form-card > .form-header > p {
+          font-size: 1.15rem;
+          color: rgba(255, 255, 255, 0.75);
         }
 
-        /* Tabs */
-        .contact-tabs {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-          gap: 12px;
-          margin-bottom: 24px;
-        }
-
-        .tab-btn {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          padding: 16px 20px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 2px solid rgba(255, 255, 255, 0.08);
-          border-radius: 12px;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 0.9rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .tab-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .tab-btn.active {
-          background: linear-gradient(135deg, #007AFF, #5AC8FA);
-          border-color: #007AFF;
-          color: white;
-        }
-
-        .tab-btn svg {
-          font-size: 18px;
-        }
-
-        .contact-form {
+        form {
           display: flex;
           flex-direction: column;
           gap: 24px;
+          position: relative;
+          z-index: 1;
         }
 
-        .form-grid {
+        .form-row {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
           gap: 24px;
@@ -1162,41 +785,45 @@ const Contact = () => {
         .form-group label {
           display: flex;
           align-items: center;
-          gap: 8px;
-          font-size: 0.95rem;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.9);
+          gap: 10px;
+          font-weight: 700;
+          font-size: 1.05rem;
+          color: rgba(255, 255, 255, 0.95);
         }
 
         .form-group label svg {
-          font-size: 18px;
           color: #007AFF;
+          font-size: 20px;
         }
 
-        .form-group input,
-        .form-group textarea {
-          padding: 16px 20px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.1);
-          border-radius: 12px;
+        input, textarea {
+          padding: 18px 24px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 2px solid rgba(255, 255, 255, 0.12);
+          border-radius: 16px;
           color: white;
-          font-size: 1rem;
+          font-size: 1.05rem;
           font-family: inherit;
-          transition: all 0.3s ease;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           backdrop-filter: blur(10px);
         }
 
-        .form-group input:focus,
-        .form-group textarea:focus {
-          outline: none;
-          border-color: #007AFF;
-          background: rgba(255, 255, 255, 0.08);
-          box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+        input::placeholder,
+        textarea::placeholder {
+          color: rgba(255, 255, 255, 0.4);
         }
 
-        .form-group textarea {
+        input:focus, textarea:focus {
+          outline: none;
+          border-color: #007AFF;
+          background: rgba(255, 255, 255, 0.1);
+          box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15), 0 10px 30px rgba(0, 122, 255, 0.2);
+          transform: translateY(-2px);
+        }
+
+        textarea {
           resize: vertical;
-          min-height: 120px;
+          min-height: 150px;
         }
 
         .submit-btn {
@@ -1204,41 +831,51 @@ const Contact = () => {
           align-items: center;
           justify-content: center;
           gap: 12px;
-          padding: 18px 40px;
+          padding: 20px 50px;
           background: linear-gradient(135deg, #007AFF, #5AC8FA);
           border: none;
-          border-radius: 12px;
+          border-radius: 16px;
           color: white;
-          font-size: 1.1rem;
+          font-size: 1.2rem;
           font-weight: 700;
           cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 10px 40px rgba(0, 122, 255, 0.4);
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          margin-top: 12px;
           position: relative;
           overflow: hidden;
+          box-shadow: 0 15px 50px rgba(0, 122, 255, 0.4);
+        }
+
+        .btn-shine {
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+          transform: rotate(45deg) translateX(-100%);
+          transition: transform 0.6s ease;
+        }
+
+        .submit-btn:hover .btn-shine {
+          transform: rotate(45deg) translateX(100%);
         }
 
         .submit-btn:hover:not(:disabled) {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 50px rgba(0, 122, 255, 0.6);
+          transform: translateY(-4px) scale(1.02);
+          box-shadow: 0 20px 70px rgba(0, 122, 255, 0.6);
         }
 
         .submit-btn:disabled {
           opacity: 0.7;
           cursor: not-allowed;
+          transform: none;
         }
 
-        .submit-btn::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-          transform: translateX(-100%);
-          transition: transform 0.6s;
-        }
-
-        .submit-btn:hover::before {
-          transform: translateX(100%);
+        .submit-btn svg,
+        .submit-btn span {
+          position: relative;
+          z-index: 1;
         }
 
         .spinner {
@@ -1254,232 +891,149 @@ const Contact = () => {
           to { transform: rotate(360deg); }
         }
 
-        .form-decoration {
-          position: absolute;
-          inset: -100px;
-          pointer-events: none;
-          z-index: 1;
-        }
-
-        .deco-circle {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(80px);
-          opacity: 0.2;
-          animation: decoFloat 15s ease-in-out infinite;
-        }
-
-        .deco-1 {
-          width: 300px;
-          height: 300px;
-          background: #007AFF;
-          top: -150px;
-          right: -150px;
-        }
-
-        .deco-2 {
-          width: 250px;
-          height: 250px;
-          background: #FF6B9D;
-          bottom: -125px;
-          left: -125px;
-          animation-delay: -5s;
-        }
-
-        .deco-3 {
-          width: 200px;
-          height: 200px;
-          background: #8B5CF6;
-          top: 50%;
-          right: -100px;
-          animation-delay: -10s;
-        }
-
-        @keyframes decoFloat {
-          0%, 100% { transform: translate(0, 0); }
-          33% { transform: translate(30px, -30px); }
-          66% { transform: translate(-30px, 30px); }
-        }
-
-        /* Testimonials */
-        .testimonials-section {
-          padding: 80px 0;
-        }
-
-        .testimonials-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 32px;
-        }
-
-        .testimonial-card {
-          padding: 40px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 24px;
-          backdrop-filter: blur(10px);
-          animation: slideInUp 0.6s ease-out backwards;
-          transition: all 0.4s ease;
-        }
-
-        .testimonial-card:hover {
-          transform: translateY(-10px);
-          background: rgba(255, 255, 255, 0.05);
-          box-shadow: 0 20px 60px rgba(0, 122, 255, 0.2);
-        }
-
-        .testimonial-content {
-          margin-bottom: 24px;
-        }
-
-        .testimonial-content p {
-          font-size: 1.05rem;
-          line-height: 1.8;
-          color: rgba(255, 255, 255, 0.8);
-          font-style: italic;
-        }
-
-        .testimonial-author {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-
-        .testimonial-author img {
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
-          border: 2px solid #007AFF;
-        }
-
-        .testimonial-author h4 {
-          font-size: 1.1rem;
-          margin-bottom: 4px;
-        }
-
-        .testimonial-author p {
-          font-size: 0.9rem;
-          color: rgba(255, 255, 255, 0.6);
-        }
-
-        /* Map Section */
+        /* Map */
         .map-section {
-          padding: 80px 0;
-          background: rgba(255, 255, 255, 0.01);
-        }
-
-        .map-wrapper {
           position: relative;
-          border-radius: 20px;
+          border-radius: 32px;
           overflow: hidden;
-          box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
         }
 
-        .map-overlay {
-          position: absolute;
-          top: 24px;
-          left: 24px;
-          z-index: 10;
+        .map-container {
+          position: relative;
+          filter: grayscale(0.3) brightness(0.9);
+          transition: all 0.5s ease;
+        }
+
+        .map-section:hover .map-container {
+          filter: grayscale(0) brightness(1);
         }
 
         .map-info {
-          padding: 32px;
-          background: rgba(0, 0, 0, 0.8);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 20px;
-          backdrop-filter: blur(20px);
-          max-width: 320px;
+          position: absolute;
+          top: 40px;
+          left: 40px;
+          padding: 40px;
+          background: rgba(0, 0, 0, 0.9);
+          border: 2px solid rgba(255, 255, 255, 0.15);
+          border-radius: 28px;
+          backdrop-filter: blur(30px);
+          z-index: 10;
+          max-width: 350px;
+          transition: all 0.5s ease;
         }
 
-        .map-pin-icon {
-          font-size: 40px;
-          color: #FF6B9D;
-          margin-bottom: 16px;
+        .map-info:hover {
+          transform: translateY(-10px);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .map-icon {
+          width: 70px;
+          height: 70px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #FF6B9D, #FF3366);
+          border-radius: 20px;
+          margin-bottom: 20px;
+          animation: iconPulse 3s ease-in-out infinite;
+        }
+
+        .map-icon svg {
+          font-size: 36px;
+          color: white;
         }
 
         .map-info h3 {
-          font-size: 1.5rem;
+          font-size: 1.7rem;
           font-weight: 900;
           margin-bottom: 16px;
         }
 
         .map-info p {
-          color: rgba(255, 255, 255, 0.7);
-          margin-bottom: 8px;
-          line-height: 1.6;
+          color: rgba(255, 255, 255, 0.85);
+          line-height: 1.8;
+          font-size: 1.05rem;
+          margin-bottom: 24px;
         }
 
         .map-btn {
-          margin-top: 20px;
-          padding: 12px 24px;
+          padding: 14px 32px;
           background: linear-gradient(135deg, #007AFF, #5AC8FA);
           border: none;
-          border-radius: 10px;
+          border-radius: 12px;
           color: white;
           font-weight: 700;
+          font-size: 1rem;
           cursor: pointer;
           transition: all 0.3s ease;
           width: 100%;
         }
 
         .map-btn:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(0, 122, 255, 0.5);
+          transform: translateY(-3px);
+          box-shadow: 0 10px 40px rgba(0, 122, 255, 0.5);
         }
 
-        /* Success Modal */
-        .success-modal {
+        /* Modal */
+        .modal {
           position: fixed;
           inset: 0;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(10px);
           z-index: 1000;
-          animation: fadeIn 0.3s ease-out;
+          animation: modalFadeIn 0.3s ease;
         }
 
-        @keyframes fadeIn {
+        @keyframes modalFadeIn {
           from { opacity: 0; }
           to { opacity: 1; }
         }
 
-        .success-content {
-          max-width: 500px;
-          padding: 60px 40px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 32px;
-          text-align: center;
-          backdrop-filter: blur(20px);
-          animation: scaleIn 0.4s ease-out;
+        .modal-backdrop {
+          position: absolute;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.85);
+          backdrop-filter: blur(15px);
         }
 
-        @keyframes scaleIn {
+        .modal-content {
+          max-width: 450px;
+          padding: 60px 50px;
+          background: rgba(255, 255, 255, 0.06);
+          border: 2px solid rgba(255, 255, 255, 0.15);
+          border-radius: 36px;
+          text-align: center;
+          backdrop-filter: blur(30px);
+          position: relative;
+          z-index: 1;
+          animation: modalSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalSlideUp {
           from {
             opacity: 0;
-            transform: scale(0.8);
+            transform: translateY(50px) scale(0.9);
           }
           to {
             opacity: 1;
-            transform: scale(1);
+            transform: translateY(0) scale(1);
           }
         }
 
-        .success-icon {
-          width: 100px;
-          height: 100px;
-          margin: 0 auto 24px;
+        .success-icon-wrapper {
+          width: 120px;
+          height: 120px;
+          margin: 0 auto 28px;
+          background: linear-gradient(135deg, #3DDC84, #07C160);
+          border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #3DDC84, #07C160);
-          border-radius: 50%;
-          font-size: 56px;
-          color: white;
-          box-shadow: 0 20px 60px rgba(61, 220, 132, 0.5);
           animation: successPulse 2s ease-in-out infinite;
+          box-shadow: 0 20px 60px rgba(61, 220, 132, 0.5);
         }
 
         @keyframes successPulse {
@@ -1487,207 +1041,86 @@ const Contact = () => {
           50% { transform: scale(1.05); }
         }
 
-        .success-content h3 {
+        .success-icon {
+          font-size: 72px;
+          color: white;
+        }
+
+        .modal-content h3 {
           font-size: 2rem;
           font-weight: 900;
           margin-bottom: 16px;
         }
 
-        .success-content p {
+        .modal-content p {
           font-size: 1.1rem;
-          color: rgba(255, 255, 255, 0.7);
+          color: rgba(255, 255, 255, 0.75);
           margin-bottom: 32px;
-          line-height: 1.6;
+          line-height: 1.7;
         }
 
-        .success-close {
+        .modal-content button {
           padding: 16px 48px;
           background: linear-gradient(135deg, #007AFF, #5AC8FA);
           border: none;
-          border-radius: 12px;
+          border-radius: 16px;
           color: white;
-          font-size: 1.05rem;
           font-weight: 700;
+          font-size: 1.1rem;
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 10px 40px rgba(0, 122, 255, 0.4);
         }
 
-        .success-close:hover {
+        .modal-content button:hover {
           transform: translateY(-3px);
           box-shadow: 0 15px 50px rgba(0, 122, 255, 0.6);
         }
 
         /* Responsive */
-        @media (max-width: 1024px) {
-          .contact-tabs {
-            grid-template-columns: repeat(2, 1fr);
-          }
-        }
-
         @media (max-width: 768px) {
-          .hero-section {
-            padding: 80px 0 60px;
-          }
-
-          .hero-title {
-            font-size: clamp(36px, 10vw, 64px);
-          }
-
-          .hero-subtitle {
-            font-size: 1.1rem;
-            margin-bottom: 40px;
-          }
-
-          .social-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-          }
-
-          .why-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .info-grid {
-            grid-template-columns: 1fr;
-            gap: 20px;
-          }
-
-          .hours-wrapper {
-            padding: 40px 24px;
-          }
-
-          .hours-day {
-            min-width: 120px;
-          }
-
-          .form-container {
-            padding: 40px 24px;
-          }
-
-          .form-header-icon {
-            font-size: 48px;
-          }
-
-          .form-header h2 {
-            font-size: 2rem;
-          }
-
-          .contact-tabs {
-            grid-template-columns: 1fr;
-          }
-
-          .form-grid {
-            grid-template-columns: 1fr;
-            gap: 20px;
-          }
-
-          .submit-btn {
-            padding: 16px 32px;
-            font-size: 1rem;
-          }
-
-          .testimonials-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .map-overlay {
-            position: static;
-            padding: 24px;
-          }
-
-          .map-info {
+          .contact-page { padding: 80px 0 40px; }
+          .hero { margin-bottom: 60px; }
+          .hero h1 { font-size: 40px; }
+          .hero p { font-size: 1.1rem; }
+          .consultation-cta { padding: 50px 30px; margin-bottom: 60px; }
+          .cta-icon { width: 80px; height: 80px; font-size: 40px; }
+          .cta-features { gap: 20px; }
+          .contact-info { gap: 24px; margin-bottom: 60px; }
+          .form-card { padding: 50px 30px; }
+          .form-row { grid-template-columns: 1fr; }
+          .map-info { 
+            position: static; 
+            margin-bottom: 24px; 
             max-width: 100%;
-          }
-
-          .success-content {
-            margin: 0 20px;
-            padding: 40px 24px;
-          }
-
-          .success-icon {
-            width: 80px;
-            height: 80px;
-            font-size: 48px;
-          }
-
-          .success-content h3 {
-            font-size: 1.5rem;
+            border-radius: 20px;
           }
         }
 
         @media (max-width: 480px) {
-          .contact-badge {
-            padding: 10px 20px;
-            font-size: 0.9rem;
-          }
-
-          .badge-icon {
-            font-size: 18px;
-          }
-
-          .hero-title {
-            margin-bottom: 20px;
-          }
-
-          .social-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .social-card {
-            padding: 20px 16px;
-          }
-
-          .social-icon {
-            font-size: 28px;
-          }
-
-          .info-card {
-            padding: 32px 24px;
-          }
-
-          .info-icon {
-            width: 70px;
-            height: 70px;
-            font-size: 32px;
-          }
-
-          .hours-item {
-            flex-direction: column;
-            text-align: center;
-            gap: 12px;
-          }
-
-          .hours-dots {
-            display: none;
-          }
-
-          .form-container {
-            padding: 32px 20px;
-          }
-
-          .form-header h2 {
-            font-size: 1.75rem;
-          }
-
-          .form-header p {
-            font-size: 0.95rem;
-          }
-
-          .form-group input,
-          .form-group textarea {
-            padding: 14px 16px;
-            font-size: 0.95rem;
-          }
-
-          .tab-btn {
-            font-size: 0.85rem;
-            padding: 14px 16px;
-          }
-
-          .testimonial-card {
-            padding: 28px 24px;
-          }
+          .contact-page { padding: 60px 0 30px; }
+          .container { padding: 0 20px; }
+          .hero-badge { padding: 10px 20px; font-size: 0.9rem; }
+          .hero h1 { font-size: 32px; }
+          .hero p { font-size: 1rem; }
+          .consultation-cta { padding: 40px 24px; border-radius: 28px; }
+          .cta-icon { width: 70px; height: 70px; font-size: 36px; margin-bottom: 24px; }
+          .consultation-cta h2 { font-size: 24px; }
+          .consultation-cta p { font-size: 1rem; }
+          .cta-features { flex-direction: column; gap: 12px; }
+          .feature { width: 100%; justify-content: center; }
+          .cta-btn { padding: 18px 36px; font-size: 1.1rem; }
+          .contact-info { grid-template-columns: 1fr; }
+          .info-card { padding: 40px 30px; }
+          .form-card { padding: 40px 24px; border-radius: 28px; }
+          .form-card h2 { font-size: 2rem; }
+          .form-card > .form-header > p { font-size: 1rem; }
+          input, textarea { padding: 16px 20px; font-size: 1rem; }
+          .submit-btn { padding: 18px 40px; font-size: 1.1rem; }
+          .map-info { padding: 32px 24px; }
+          .modal-content { margin: 0 20px; padding: 50px 30px; }
+          .success-icon-wrapper { width: 100px; height: 100px; }
+          .success-icon { font-size: 60px; }
         }
       `}</style>
     </div>

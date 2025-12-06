@@ -3,6 +3,9 @@ import { Routes, Route } from 'react-router-dom'
 import Navbar from './Components/Navbar'
 import ScrollToTop from './Components/ScrollToTop'
 import Landingpage from './Components/Index'
+import VeeAIChatbot from './Components/VeeAIChatbot'        
+import ConsultationBooking from './Pages/ConsultationBooking'
+import BacktoTop from './Components/BacktoTop'
 
 // About Pages
 import AboutPage from './Pages/AboutPage'
@@ -11,7 +14,7 @@ import ClientPortfolio from './Pages/ClientPortfolio'
 import OurCoreTeam from './Pages/OurCoreTeam'
 import ClientTestimonials from './Pages/ClientTestimonials'
 import CorporateSocialResponsibility from './Pages/CorporateSocialResponsibility'
-import StartYourCareerwithUs from './Pages/StartYourCareerwithUs'
+import StartYourCareerwithUs from './Pages/Blog'
 
 // Services Pages
 import WebDevelopment from './Pages/WebDevelopment'
@@ -73,9 +76,12 @@ const App = () => {
         <Route path="/casestudies" element={<CaseStudies />} />
         
         {/* Contact Route */}
+         <Route path="/consultationbooking" element={<ConsultationBooking />} />
         <Route path="//career" element={<CareersPage />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>
+      <BacktoTop />
+      <VeeAIChatbot />
       <Footer />                                
     </div>
   )

@@ -1,7 +1,42 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Cpu, TrendingUp, Users, CheckCircle, ArrowRight } from 'lucide-react';
 
 const TechSolutionBanner = () => {
+  const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.target instanceof HTMLElement) {
+            const animateId = entry.target.dataset.animateId;
+            if (animateId) {
+              setIsVisible((prev) => ({
+                ...prev,
+                [animateId]: true,
+              }));
+            }
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -100px 0px' }
+    );
+
+    const elements = document.querySelectorAll('[data-animate-id]');
+    elements.forEach((el) => {
+      if (observerRef.current) {
+        observerRef.current.observe(el);
+      }
+    });
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
+
   const reasons = [
     {
       icon: Cpu,
@@ -20,22 +55,23 @@ const TechSolutionBanner = () => {
     }
   ];
 
-  const companies = [
-    'MICROSOFT', 'GOOGLE', 'AMAZON', 'APPLE', 'META', 'NETFLIX', 
-    'TESLA', 'NVIDIA', 'ADOBE', 'SPOTIFY'
-  ];
-
   return (
     <div className="tech-banner-root">
       <div className="tech-banner-container">
         {/* Left Content */}
         <div className="tech-content-section">
           <div className="tech-content-header">
-            <div className="tech-header-badge">
+            <div 
+              className={`tech-header-badge ${isVisible['badge'] ? 'animate-zoom-in' : ''}`}
+              data-animate-id="badge"
+            >
               <CheckCircle size={20} />
               <span>TRUSTED BY 1000+ BUSINESSES</span>
             </div>
-            <h2 className="tech-main-title">
+            <h2 
+              className={`tech-main-title ${isVisible['title'] ? 'animate-text-split' : ''}`}
+              data-animate-id="title"
+            >
               Why Our Technology Solutions
               <br />
               <span className="tech-gradient-text">Company Stands Out?</span>
@@ -45,8 +81,15 @@ const TechSolutionBanner = () => {
           <div className="tech-reasons-list">
             {reasons.map((reason, index) => {
               const IconComponent = reason.icon;
+              const animateId = `reason-${index}`;
+              const direction = index % 2 === 0 ? 'left' : 'right';
               return (
-                <div key={index} className="tech-reason-item">
+                <div 
+                  key={index} 
+                  className={`tech-reason-item ${isVisible[animateId] ? `animate-fade-${direction}` : ''}`}
+                  data-animate-id={animateId}
+                  style={{ animationDelay: `${index * 0.2}s` }}
+                >
                   <div className="tech-reason-icon">
                     <IconComponent size={28} strokeWidth={2} />
                   </div>
@@ -62,13 +105,19 @@ const TechSolutionBanner = () => {
             })}
           </div>
 
-          <div className="tech-website-link">
+          <div 
+            className={`tech-website-link ${isVisible['website'] ? 'animate-zoom-in' : ''}`}
+            data-animate-id="website"
+          >
             <span className="tech-link-icon">🌐</span>
             <span className="tech-link-text">www.YourTechCompany.com</span>
           </div>
 
           {/* CTA Section */}
-          <div className="tech-cta-section">
+          <div 
+            className={`tech-cta-section ${isVisible['cta'] ? 'animate-zoom-in' : ''}`}
+            data-animate-id="cta"
+          >
             <div className="tech-cta-content">
               <h3>Get The Best Source for IT Solutions and Service</h3>
               <p>Transform your business with cutting-edge technology solutions</p>
@@ -82,7 +131,10 @@ const TechSolutionBanner = () => {
 
         {/* Right Image Section */}
         <div className="tech-image-section">
-          <div className="tech-image-wrapper">
+          <div 
+            className={`tech-image-wrapper ${isVisible['image'] ? 'animate-zoom-in' : ''}`}
+            data-animate-id="image"
+          >
             <img 
               src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=900&fit=crop" 
               alt="Tech team collaboration"
@@ -91,7 +143,11 @@ const TechSolutionBanner = () => {
             <div className="tech-image-overlay"></div>
             
             {/* Floating Stats */}
-            <div className="tech-floating-stat tech-stat-1">
+            <div 
+              className={`tech-floating-stat tech-stat-1 ${isVisible['stat1'] ? 'animate-fade-left' : ''}`}
+              data-animate-id="stat1"
+              style={{ animationDelay: '0.5s' }}
+            >
               <div className="tech-stat-icon">💼</div>
               <div className="tech-stat-content">
                 <div className="tech-stat-number">500K+</div>
@@ -99,7 +155,11 @@ const TechSolutionBanner = () => {
               </div>
             </div>
             
-            <div className="tech-floating-stat tech-stat-2">
+            <div 
+              className={`tech-floating-stat tech-stat-2 ${isVisible['stat2'] ? 'animate-fade-right' : ''}`}
+              data-animate-id="stat2"
+              style={{ animationDelay: '0.7s' }}
+            >
               <div className="tech-stat-icon">⚡</div>
               <div className="tech-stat-content">
                 <div className="tech-stat-number">99%</div>
@@ -381,6 +441,85 @@ const TechSolutionBanner = () => {
           font-size: 0.85rem;
           color: rgba(255, 255, 255, 0.7);
           margin-top: 5px;
+        }
+
+        /* Scroll Animations */
+        [data-animate-id] {
+          opacity: 0;
+        }
+
+        /* Fade from Left */
+        @keyframes fadeLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-80px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .animate-fade-left {
+          animation: fadeLeft 0.8s ease-out forwards;
+        }
+
+        /* Fade from Right */
+        @keyframes fadeRight {
+          from {
+            opacity: 0;
+            transform: translateX(80px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .animate-fade-right {
+          animation: fadeRight 0.8s ease-out forwards;
+        }
+
+        /* Zoom In Effect */
+        @keyframes zoomIn {
+          from {
+            opacity: 0;
+            transform: scale(0.5);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-zoom-in {
+          animation: zoomIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        /* Text Split Effect - Letters spreading from center */
+        @keyframes textSplit {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+            letter-spacing: -0.5em;
+            filter: blur(10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+            letter-spacing: normal;
+            filter: blur(0);
+          }
+        }
+
+        .animate-text-split {
+          animation: textSplit 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .animate-text-split span {
+          display: inline-block;
+          animation: textSplit 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          animation-delay: 0.3s;
         }
 
         /* Responsive */

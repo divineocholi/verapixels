@@ -1,16 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Maximize, Volume2, VolumeX, Zap, Cpu, Shield, Bot, Settings, Lightbulb, Rocket, Briefcase, Smile, Users, Trophy } from 'lucide-react';
-
-import { FiPlay, FiPause, FiMaximize, FiVolume2 } from 'react-icons/fi';
+import { 
+  Zap, 
+  Cpu, 
+  Shield, 
+  Bot, 
+  Settings, 
+  Briefcase, 
+  Smile, 
+  Users, 
+  Trophy,
+  ChevronRight,
+  ArrowRight,
+  Sparkles
+} from 'lucide-react';
 
 const ServicesSection = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-    const [isMuted, setIsMuted] = useState(false);
   const [titleInView, setTitleInView] = useState(false);
   const [statsInView, setStatsInView] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null); // ✅ FIXED
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+  const [servicesInView, setServicesInView] = useState(false);
+  const [caseStudiesInView, setCaseStudiesInView] = useState(false);
+  const [clickedCase, setClickedCase] = useState<number | null>(null);
+  
   const titleRef = useRef<HTMLHeadingElement | null>(null);
   const statsRef = useRef<HTMLDivElement | null>(null);
+  const servicesRef = useRef<HTMLDivElement | null>(null);
+  const caseStudiesRef = useRef<HTMLDivElement | null>(null);
 
   // Counter animation
   const [counts, setCounts] = useState({
@@ -33,6 +48,53 @@ const ServicesSection = () => {
     'TESLA', 'NVIDIA', 'ADOBE', 'SPOTIFY'
   ];
 
+  const caseStudies = [
+    {
+      id: 1,
+      industry: 'FinTech',
+      client: 'PayFlow Pro',
+      image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=80',
+      challenge: 'Legacy system slowing transaction processing by 40%',
+      solution: 'Built custom API infrastructure with real-time fraud detection',
+      results: '300% faster processing • 99.9% uptime • $50M+ annual transactions',
+      color: '#6a00ff',
+      gradient: 'linear-gradient(135deg, #6a00ff 0%, #a855f7 100%)'
+    },
+    {
+      id: 2,
+      industry: 'Healthcare',
+      client: 'MediCare Hub',
+      image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80',
+      challenge: 'HIPAA compliance issues with patient data management',
+      solution: 'Secure cloud migration with encrypted data storage',
+      results: '90% faster data access • 100% compliance • 50K+ patient records',
+      color: '#00d4ff',
+      gradient: 'linear-gradient(135deg, #00d4ff 0%, #06d6a0 100%)'
+    },
+    {
+      id: 3,
+      industry: 'E-commerce',
+      client: 'StyleHub Fashion',
+      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
+      challenge: 'Poor mobile conversion rates (15% below industry average)',
+      solution: 'Progressive Web App with AR try-on features',
+      results: '300% mobile revenue increase • 40% higher conversion • 5-star rating',
+      color: '#ff6b9d',
+      gradient: 'linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%)'
+    },
+    {
+      id: 4,
+      industry: 'Manufacturing',
+      client: 'AutoParts Pro',
+      image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80',
+      challenge: 'Inefficient inventory management causing 25% stockouts',
+      solution: 'IoT-powered smart inventory system with predictive analytics',
+      results: '99% inventory accuracy • 60% reduction in stockouts • $2M savings',
+      color: '#3ddc84',
+      gradient: 'linear-gradient(135deg, #3ddc84 0%, #06d6a0 100%)'
+    }
+  ];
+
   // Intersection Observer for title
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -46,6 +108,42 @@ const ServicesSection = () => {
 
     if (titleRef.current) {
       observer.observe(titleRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Intersection Observer for services
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setServicesInView(true);
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    if (servicesRef.current) {
+      observer.observe(servicesRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Intersection Observer for case studies
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setCaseStudiesInView(true);
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    if (caseStudiesRef.current) {
+      observer.observe(caseStudiesRef.current);
     }
 
     return () => observer.disconnect();
@@ -95,33 +193,18 @@ const ServicesSection = () => {
     }, interval);
   };
 
-  const toggleVideo = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
+  const handleCaseClick = (id: number) => {
+    setClickedCase(id);
+    setTimeout(() => {
+      // Navigate to CaseStudyDetails page
+      alert(`Navigating to CaseStudyDetails for case #${id}`);
+      // In real app: window.location.href = `/CaseStudyDetails?id=${id}`;
+    }, 600);
   };
 
-  const toggleMute = () => {
-    if (videoRef.current) {
-      const newMutedState = !isMuted;
-      videoRef.current.muted = newMutedState;
-      setIsMuted(newMutedState);
-    }
-  };
-
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (!document.fullscreenElement) {
-        videoRef.current.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    }
+  const handleViewAllClick = () => {
+    alert('Navigating to all Case Studies');
+    // In real app: window.location.href = '/CaseStudyDetails';
   };
 
   return (
@@ -145,16 +228,21 @@ const ServicesSection = () => {
             opportunities. We are here to provide the best services that fit your business.
           </p>
 
-          <div className="services-grid">
+          <div ref={servicesRef} className="services-grid">
             {services.map((service, i) => {
               const IconComponent = service.icon;
               return (
-                <div key={i} className={`service-card ${service.featured ? 'featured' : ''}`}>
+                <div 
+                  key={i} 
+                  className={`service-card ${service.featured ? 'featured' : ''} ${servicesInView ? 'animate-in' : ''}`}
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
                   <div className="service-icon">
                     <IconComponent size={48} strokeWidth={1.5} />
                   </div>
                   <h3 className="service-title">{service.title}</h3>
                   <p className="service-subtitle">{service.subtitle}</p>
+                  <div className="service-glow"></div>
                 </div>
               );
             })}
@@ -174,93 +262,115 @@ const ServicesSection = () => {
         </div>
       </section>
 
-      {/* Video Section */}
-      <section className="video-section">
-        <div className="services-container">
-          <div className="video-grid">
-            <div className="video-wrapper">
-              <div className="video-badge">
-                <div className="badge-number">13</div>
-                <div className="badge-text">Years<br/>Experience</div>
-              </div>
-              
-              <video
-                ref={videoRef}
-                className="custom-video"
-                poster="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&h=600&fit=crop"
-                onClick={toggleVideo}
+      {/* Case Studies Section - REDESIGNED */}
+      <section ref={caseStudiesRef} className="case-studies-section">
+        <div className="case-studies-container">
+          {/* Section Header with Animations */}
+          <div className={`case-studies-header ${caseStudiesInView ? 'header-animate' : ''}`}>
+            <p className="section-subtitle">
+              <Sparkles size={16} className="sparkle-icon" />
+              SUCCESS STORIES
+              <Sparkles size={16} className="sparkle-icon" />
+            </p>
+            <h2 className="section-title">
+              <span className="title-word">Real</span>{' '}
+              <span className="title-word">Results,</span>{' '}
+              <span className="title-word gradient-text">Real</span>{' '}
+              <span className="title-word gradient-text">Impact</span>
+            </h2>
+            <p className="section-description">
+              See how we've helped businesses across industries overcome challenges 
+              and achieve remarkable results with our technology solutions.
+            </p>
+          </div>
+
+          {/* Case Studies Grid - Image-based */}
+          <div className="case-studies-grid-new">
+            {caseStudies.map((caseStudy, index) => (
+              <div 
+                key={caseStudy.id}
+                className={`case-card ${caseStudiesInView ? 'card-animate' : ''} ${clickedCase === caseStudy.id ? 'clicked' : ''}`}
+                style={{ 
+                  animationDelay: `${index * 0.15}s`,
+                  '--card-gradient': caseStudy.gradient
+                } as React.CSSProperties}
+                onMouseEnter={() => setHoveredCard(caseStudy.id)}
+                onMouseLeave={() => setHoveredCard(null)}
+                onClick={() => handleCaseClick(caseStudy.id)}
               >
-                <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
-              </video>
+                {/* Background Image */}
+                <div className="case-image-wrapper">
+                  <img 
+                    src={caseStudy.image} 
+                    alt={caseStudy.client}
+                    className="case-image"
+                  />
+                  <div className="case-overlay"></div>
+                </div>
 
-              <button className="video-play-btn" onClick={toggleVideo}>
-                {isPlaying ? <Pause size={32} /> : <Play size={32} />}
-              </button>
+                {/* Industry Badge */}
+                <div className="case-badge">
+                  <span className="badge-dot"></span>
+                  {caseStudy.industry}
+                </div>
 
-              <div className="video-controls">
-                <button className="control-btn" onClick={toggleMute}>
-                  {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-                </button>
-                <button className="control-btn" onClick={toggleFullscreen}>
-                  <Maximize size={20} />
-                </button>
-              </div>
-            </div>
+                {/* Client Name - Shows on Hover */}
+                <div className={`case-client-name ${hoveredCard === caseStudy.id ? 'visible' : ''}`}>
+                  <h3>{caseStudy.client}</h3>
+                  <div className="client-underline"></div>
+                </div>
 
-            <div className="video-content">
-              <p className="video-label">GROW YOUR COMPANY WITH</p>
-              <h3 className="video-title">
-                WHAT WE'RE OFFERING TO OUR CUSTOMERS
-              </h3>
-              <p className="video-text">
-                Our agency is a business you hire to outsource your digital marketing 
-                efforts, instead of handling in-house. They can provide your business 
-                with a variety of digital solutions.
-              </p>
-
-              <div className="video-features">
-                <div className="feature-item">
-                  <div className="feature-icon">
-                    <Lightbulb size={36} strokeWidth={1.5} />
+                {/* Details - Shows on Click/Hover */}
+                <div className={`case-details ${hoveredCard === caseStudy.id ? 'visible' : ''}`}>
+                  <div className="detail-item">
+                    <span className="detail-label">Challenge</span>
+                    <p className="detail-text">{caseStudy.challenge}</p>
                   </div>
-                  <div>
-                    <h4>Strategic Vision</h4>
-                    <p>Transform your business</p>
+                  
+                  <div className="detail-item">
+                    <span className="detail-label">Solution</span>
+                    <p className="detail-text">{caseStudy.solution}</p>
                   </div>
-                </div>
-                <div className="feature-item">
-                  <div className="feature-icon">
-                    <Rocket size={36} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <h4>End-to-End Team Support</h4>
-                    <p>Dedicated team assistance</p>
-                  </div>
-                </div>
-              </div>
 
-              <div className="video-info">
-                <div className="info-avatars">
-                  <img src="https://i.pravatar.cc/40?img=1" alt="avatar" />
-                  <img src="https://i.pravatar.cc/40?img=2" alt="avatar" />
-                  <img src="https://i.pravatar.cc/40?img=3" alt="avatar" />
-                </div>
-                <div className="info-text">
-                  <strong>Meet Customer</strong>
-                  <p>Our Clients Are Our Priority</p>
-                </div>
-                <div className="info-contact">
-                  <span>📞 CONTACT</span>
-                  <strong>+234 000 0000</strong>
-                </div>
-              </div>
+                  <div className="case-results-compact">
+                    {caseStudy.results.split(' • ').map((result, i) => (
+                      <div key={i} className="result-badge">
+                        <span className="result-check">✓</span>
+                        {result}
+                      </div>
+                    ))}
+                  </div>
 
-              <div className="video-actions">
-                <button className="action-btn primary">DISCOVER</button>
-                <button className="action-btn secondary">OUR STORY</button>
-                <button className="action-btn secondary">LEARN MORE</button>
+                  <button 
+                    className="case-cta"
+                    style={{ background: caseStudy.gradient }}
+                  >
+                    View Full Case Study
+                    <ArrowRight size={20} />
+                  </button>
+                </div>
+
+                {/* Hover Indicator */}
+                <div className={`hover-indicator ${hoveredCard === caseStudy.id ? 'hidden' : ''}`}>
+                  <span>Click to explore</span>
+                  <div className="pulse-ring"></div>
+                </div>
+
+                {/* Animated Border */}
+                <div className="case-border"></div>
               </div>
-            </div>
+            ))}
+          </div>
+
+          {/* View All Button */}
+          <div className={`view-all-container ${caseStudiesInView ? 'button-animate' : ''}`}>
+            <button className="view-all-btn-new" onClick={handleViewAllClick}>
+              <span className="btn-text">Explore All Case Studies</span>
+              <span className="btn-icon">
+                <ChevronRight size={24} />
+              </span>
+              <div className="btn-glow"></div>
+            </button>
           </div>
         </div>
       </section>
@@ -300,6 +410,12 @@ const ServicesSection = () => {
       </section>
 
       <style>{`
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
         .services-root {
           background: #000;
           color: #fff;
@@ -324,6 +440,18 @@ const ServicesSection = () => {
           letter-spacing: 2px;
           margin-bottom: 20px;
           font-weight: 600;
+          animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .services-title {
@@ -343,6 +471,18 @@ const ServicesSection = () => {
           position: absolute;
           top: 0;
           left: 0;
+          animation: slideInLeft 1s ease-out;
+        }
+
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-100px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
 
         .title-fg {
@@ -364,6 +504,18 @@ const ServicesSection = () => {
           line-height: 1.8;
           margin: 30px 0 60px;
           font-size: 1.05rem;
+          animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .services-grid {
@@ -378,8 +530,23 @@ const ServicesSection = () => {
           border-radius: 16px;
           padding: 40px 24px;
           text-align: center;
-          transition: all 0.4s ease;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          opacity: 0;
+          transform: translateY(50px) scale(0.9);
+        }
+
+        .service-card.animate-in {
+          animation: cardZoomIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes cardZoomIn {
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
         }
 
         .service-card.featured {
@@ -389,13 +556,32 @@ const ServicesSection = () => {
         }
 
         .service-card:hover {
-          transform: translateY(-10px);
+          transform: translateY(-10px) scale(1.05);
           border-color: #6a00ff;
-          box-shadow: 0 20px 60px rgba(106, 0, 255, 0.3);
+          box-shadow: 0 20px 60px rgba(106, 0, 255, 0.4);
         }
 
         .service-card.featured:hover {
-          transform: scale(1.08) translateY(-10px);
+          transform: scale(1.1) translateY(-10px);
+          box-shadow: 0 25px 70px rgba(106, 0, 255, 0.5);
+        }
+
+        .service-glow {
+          position: absolute;
+          inset: -50%;
+          background: radial-gradient(circle, rgba(106, 0, 255, 0.3) 0%, transparent 70%);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+        }
+
+        .service-card:hover .service-glow {
+          opacity: 1;
+          animation: glowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+          0%, 100% { transform: scale(1); opacity: 0.3; }
+          50% { transform: scale(1.2); opacity: 0.5; }
         }
 
         .service-icon {
@@ -403,10 +589,21 @@ const ServicesSection = () => {
           display: flex;
           justify-content: center;
           align-items: center;
+          animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
         }
 
         .service-icon svg {
           filter: drop-shadow(0 4px 12px rgba(106, 0, 255, 0.3));
+          transition: transform 0.3s ease;
+        }
+
+        .service-card:hover .service-icon svg {
+          transform: scale(1.2) rotate(5deg);
         }
 
         .service-card.featured .service-icon svg {
@@ -442,6 +639,12 @@ const ServicesSection = () => {
           color: rgba(255, 255, 255, 0.4);
           font-size: 0.9rem;
           margin-bottom: 30px;
+          animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
 
         .marquee-wrapper {
@@ -461,6 +664,11 @@ const ServicesSection = () => {
           color: rgba(255, 255, 255, 0.15);
           white-space: nowrap;
           letter-spacing: 4px;
+          transition: color 0.3s ease;
+        }
+
+        .marquee-item:hover {
+          color: rgba(106, 0, 255, 0.4);
         }
 
         @keyframes marquee {
@@ -468,262 +676,646 @@ const ServicesSection = () => {
           100% { transform: translateX(-50%); }
         }
 
-        /* Video Section */
-        .video-section {
-          padding: 100px 20px;
-          background: #000;
-        }
-
-        .video-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-          gap: 60px;
-          align-items: center;
-        }
-
-        .video-wrapper {
+        /* REDESIGNED CASE STUDIES SECTION */
+        .case-studies-section {
+          padding: 120px 20px;
+          background: radial-gradient(ellipse at top, #0a0a0f 0%, #000 50%, #000 100%);
           position: relative;
+        }
+
+        .case-studies-section::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 600px;
+          height: 600px;
+          background: radial-gradient(circle, rgba(106, 0, 255, 0.15) 0%, transparent 70%);
+          pointer-events: none;
+          animation: glowPulseBackground 4s ease-in-out infinite;
+        }
+
+        @keyframes glowPulseBackground {
+          0%, 100% { opacity: 0.3; transform: translateX(-50%) scale(1); }
+          50% { opacity: 0.5; transform: translateX(-50%) scale(1.1); }
+        }
+
+        .case-studies-container {
+          max-width: 1400px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 1;
+        }
+
+        .case-studies-header {
+          text-align: center;
+          margin-bottom: 80px;
+          opacity: 0;
+          transform: translateY(30px);
+          transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .case-studies-header.header-animate {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .section-subtitle {
+          color: #00d4ff;
+          font-size: 0.85rem;
+          font-weight: 700;
+          letter-spacing: 3px;
+          margin-bottom: 24px;
+          text-transform: uppercase;
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          animation: subtitleGlow 2s ease-in-out infinite;
+        }
+
+        .sparkle-icon {
+          animation: sparkle 1.5s ease-in-out infinite;
+        }
+
+        .sparkle-icon:first-child {
+          animation-delay: 0s;
+        }
+
+        .sparkle-icon:last-child {
+          animation-delay: 0.75s;
+        }
+
+        @keyframes sparkle {
+          0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
+          50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
+        }
+
+        @keyframes subtitleGlow {
+          0%, 100% { text-shadow: 0 0 10px rgba(0, 212, 255, 0.3); }
+          50% { text-shadow: 0 0 20px rgba(0, 212, 255, 0.6), 0 0 30px rgba(0, 212, 255, 0.4); }
+        }
+
+        .section-title {
+          font-size: clamp(36px, 5vw, 56px);
+          font-weight: 900;
+          line-height: 1.2;
+          margin: 0 0 28px;
+          perspective: 1000px;
+        }
+
+        .title-word {
+          display: inline-block;
+          animation: titleWordFloat 3s ease-in-out infinite;
+          transform-origin: center;
+        }
+
+        .title-word:nth-child(1) { animation-delay: 0s; }
+        .title-word:nth-child(2) { animation-delay: 0.2s; }
+        .title-word:nth-child(3) { animation-delay: 0.4s; }
+        .title-word:nth-child(4) { animation-delay: 0.6s; }
+
+        @keyframes titleWordFloat {
+          0%, 100% { transform: translateY(0px) rotateX(0deg); }
+          50% { transform: translateY(-8px) rotateX(5deg); }
+        }
+
+        .gradient-text {
+          background: linear-gradient(90deg, #6a00ff 0%, #00d4ff 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: gradientShift 3s ease infinite;
+          background-size: 200% 100%;
+        }
+
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+
+        .section-description {
+          color: rgba(255, 255, 255, 0.7);
+          font-size: 1.15rem;
+          max-width: 700px;
+          margin: 0 auto;
+          line-height: 1.7;
+          animation: fadeInUp 1.2s ease-out 0.3s both;
+        }
+
+        /* NEW Case Studies Grid */
+        .case-studies-grid-new {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 35px;
+          margin-bottom: 80px;
+        }
+
+        .case-card {
+          position: relative;
+          height: 500px;
           border-radius: 24px;
           overflow: hidden;
-          box-shadow: 0 30px 80px rgba(106, 0, 255, 0.3);
-        }
-
-        .video-badge {
-          position: absolute;
-          top: 30px;
-          left: 30px;
-          z-index: 10;
-          background: linear-gradient(135deg, #6a00ff, #00d4ff);
-          border-radius: 16px;
-          padding: 20px;
-          text-align: center;
-          box-shadow: 0 10px 40px rgba(106, 0, 255, 0.5);
-        }
-
-        .badge-number {
-          font-size: 2.5rem;
-          font-weight: 900;
-          line-height: 1;
-        }
-
-        .badge-text {
-          font-size: 0.85rem;
-          font-weight: 600;
-          line-height: 1.2;
-          margin-top: 5px;
-        }
-
-        .custom-video {
-          width: 100%;
-          height: 500px;
-          object-fit: cover;
-          display: block;
           cursor: pointer;
+          opacity: 0;
+          transform: scale(0.8) translateY(50px);
         }
 
-        .video-play-btn {
+        .case-card.card-animate {
+          animation: cardReveal 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes cardReveal {
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        .case-card:hover {
+          transform: scale(1.03) translateY(-10px);
+          transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .case-card.clicked {
+          animation: cardClick 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes cardClick {
+          0% { transform: scale(1); }
+          50% { transform: scale(0.95); }
+          100% { transform: scale(1.05); opacity: 0; }
+        }
+
+        /* Image Background */
+        .case-image-wrapper {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+        }
+
+        .case-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .case-card:hover .case-image {
+          transform: scale(1.1);
+        }
+
+        .case-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.3) 0%,
+            rgba(0, 0, 0, 0.7) 50%,
+            rgba(0, 0, 0, 0.95) 100%
+          );
+          transition: background 0.4s ease;
+        }
+
+        .case-card:hover .case-overlay {
+          background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.5) 0%,
+            rgba(0, 0, 0, 0.85) 50%,
+            rgba(0, 0, 0, 0.98) 100%
+          );
+        }
+
+        /* Industry Badge */
+        .case-badge {
+          position: absolute;
+          top: 24px;
+          left: 24px;
+          z-index: 3;
+          background: rgba(0, 0, 0, 0.6);
+          backdrop-filter: blur(10px);
+          padding: 8px 16px;
+          border-radius: 30px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 1px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          animation: badgeSlideIn 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes badgeSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .badge-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--card-gradient);
+          animation: dotPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes dotPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.3); }
+        }
+
+        /* Client Name - Shows on Hover */
+        .case-client-name {
           position: absolute;
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.95);
-          border: none;
-          color: #6a00ff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 10px 40px rgba(106, 0, 255, 0.4);
+          z-index: 2;
+          text-align: center;
+          width: 90%;
+          opacity: 0;
+          transition: opacity 0.4s ease, transform 0.4s ease;
+          pointer-events: none;
         }
 
-        .video-play-btn:hover {
-          transform: translate(-50%, -50%) scale(1.1);
-          box-shadow: 0 15px 60px rgba(106, 0, 255, 0.6);
+        .case-client-name.visible {
+          opacity: 1;
+          transform: translate(-50%, -50%) translateY(-20px);
         }
 
-        .video-controls {
-          position: absolute;
-          bottom: 20px;
-          right: 20px;
-          display: flex;
-          gap: 10px;
-        }
-
-        .control-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: rgba(0, 0, 0, 0.7);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          color: #fff!important;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .control-btn:hover {
-          background: rgba(106, 0, 255, 0.8);
-          border-color: #6a00ff;
-        }
-
-        .video-content {
-          padding: 20px;
-        }
-
-        .video-label {
-          color: #6a00ff;
-          font-size: 0.85rem;
-          font-weight: 700;
-          letter-spacing: 2px;
-          margin-bottom: 15px;
-        }
-
-        .video-title {
-          font-size: clamp(24px, 4vw, 36px);
+        .case-client-name h3 {
+          font-size: clamp(1.8rem, 4vw, 2.8rem);
           font-weight: 900;
-          margin: 0 0 20px;
-          line-height: 1.2;
+          margin: 0 0 16px;
+          background: var(--card-gradient);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+          animation: clientNameZoom 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .video-text {
-          color: rgba(255, 255, 255, 0.7);
-          line-height: 1.8;
-          margin-bottom: 30px;
+        @keyframes clientNameZoom {
+          from {
+            opacity: 0;
+            transform: scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
-        .video-features {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          margin-bottom: 30px;
+        .client-underline {
+          height: 3px;
+          background: var(--card-gradient);
+          max-width: 200px;
+          margin: 0 auto;
+          border-radius: 2px;
+          animation: underlineExpand 0.6s ease-out;
         }
 
-        .feature-item {
-          display: flex;
-          gap: 15px;
-          align-items: flex-start;
+        @keyframes underlineExpand {
+          from {
+            width: 0;
+            opacity: 0;
+          }
+          to {
+            width: 100%;
+            opacity: 1;
+          }
         }
 
-        .feature-icon {
-          flex-shrink: 0;
-          color: #00d4ff;
+        /* Details Section */
+        .case-details {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 3;
+          padding: 30px;
+          opacity: 0;
+          transform: translateY(20px);
+          transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          pointer-events: none;
         }
 
-        .feature-item h4 {
-          margin: 0 0 5px;
-          font-size: 1.1rem;
+        .case-details.visible {
+          opacity: 1;
+          transform: translateY(0);
+          pointer-events: all;
         }
 
-        .feature-item p {
-          margin: 0;
-          color: rgba(255, 255, 255, 0.6);
-          font-size: 0.9rem;
+        .detail-item {
+          margin-bottom: 20px;
+          animation: detailSlideIn 0.5s ease-out;
         }
 
-        .video-info {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          padding: 20px;
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.05);
-          margin-bottom: 30px;
+        @keyframes detailSlideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
 
-        .info-avatars {
-          display: flex;
-        }
-
-        .info-avatars img {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          border: 2px solid #000;
-          margin-left: -10px;
-        }
-
-        .info-avatars img:first-child {
-          margin-left: 0;
-        }
-
-        .info-text strong {
-          display: block;
-          font-size: 0.95rem;
-          margin-bottom: 2px;
-        }
-
-        .info-text p {
-          margin: 0;
-          font-size: 0.85rem;
-          color: rgba(255, 255, 255, 0.6);
-        }
-
-        .info-contact {
-          margin-left: auto;
-          text-align: right;
-        }
-
-        .info-contact span {
+        .detail-label {
           display: block;
           font-size: 0.75rem;
-          color: rgba(255, 255, 255, 0.5);
-          margin-bottom: 5px;
-        }
-
-        .info-contact strong {
-          font-size: 1rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1px;
           color: #00d4ff;
+          margin-bottom: 8px;
         }
 
-        .video-actions {
+        .detail-text {
+          font-size: 0.9rem;
+          line-height: 1.5;
+          color: rgba(255, 255, 255, 0.9);
+          margin: 0;
+        }
+
+        .case-results-compact {
           display: flex;
-          gap: 15px;
-          flex-wrap: wrap;
+          flex-direction: column;
+          gap: 10px;
+          margin: 20px 0;
         }
 
-        .action-btn {
-          padding: 12px 24px;
-          border-radius: 10px;
+        .result-badge {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: rgba(0, 0, 0, 0.4);
+          backdrop-filter: blur(10px);
+          padding: 8px 14px;
+          border-radius: 30px;
+          font-size: 0.8rem;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          animation: resultBadgeSlide 0.4s ease-out;
+        }
+
+        @keyframes resultBadgeSlide {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .result-check {
+          color: #06d6a0;
+          font-weight: 900;
+        }
+
+        /* CTA Button */
+        .case-cta {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          width: 100%;
+          padding: 14px;
+          border: none;
+          border-radius: 12px;
+          color: white;
           font-weight: 700;
           font-size: 0.9rem;
           cursor: pointer;
-          transition: all 0.3s ease;
+          margin-top: 15px;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          animation: ctaSlideUp 0.6s ease-out;
+        }
+
+        @keyframes ctaSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .case-cta:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 10px 40px rgba(106, 0, 255, 0.5);
+        }
+
+        /* Hover Indicator */
+        .hover-indicator {
+          position: absolute;
+          bottom: 30px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 2;
+          text-align: center;
+          opacity: 1;
+          transition: opacity 0.3s ease;
+        }
+
+        .hover-indicator.hidden {
+          opacity: 0;
+        }
+
+        .hover-indicator span {
+          display: block;
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 12px;
+          animation: indicatorPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes indicatorPulse {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 1; }
+        }
+
+        .pulse-ring {
+          width: 40px;
+          height: 40px;
+          border: 2px solid var(--card-gradient, #6a00ff);
+          border-radius: 50%;
+          margin: 0 auto;
+          position: relative;
+          animation: ringPulse 2s ease-out infinite;
+        }
+
+        .pulse-ring::before {
+          content: '↓';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 1.2rem;
+          animation: arrowBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes ringPulse {
+          0% {
+            transform: scale(0.8);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1.3);
+            opacity: 0;
+          }
+        }
+
+        @keyframes arrowBounce {
+          0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+          50% { transform: translate(-50%, -50%) translateY(5px); }
+        }
+
+        /* Animated Border */
+        .case-border {
+          position: absolute;
+          inset: 0;
+          border-radius: 24px;
+          padding: 2px;
+          background: linear-gradient(45deg, transparent, var(--card-gradient), transparent);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          opacity: 0;
+          transition: opacity 0.4s ease;
+          pointer-events: none;
+          z-index: 4;
+        }
+
+        .case-card:hover .case-border {
+          opacity: 1;
+          animation: borderRotate 3s linear infinite;
+        }
+
+        @keyframes borderRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        /* View All Button */
+        .view-all-container {
+          text-align: center;
+          opacity: 0;
+          transform: translateY(30px);
+        }
+
+        .view-all-container.button-animate {
+          animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .view-all-btn-new {
+          display: inline-flex;
+          align-items: center;
+          gap: 16px;
+          background: linear-gradient(135deg, #6a00ff 0%, #00d4ff 100%);
           border: none;
+          border-radius: 60px;
+          padding: 20px 50px;
+          color: white;
+          font-size: 1.15rem;
+          font-weight: 800;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 10px 40px rgba(106, 0, 255, 0.3);
         }
 
-        .action-btn.primary {
-          background: linear-gradient(135deg, #6a00ff, #00d4ff);
-          color: #fff;
+        .view-all-btn-new::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.2);
+          transform: translate(-50%, -50%);
+          transition: width 0.6s ease, height 0.6s ease;
         }
 
-        .action-btn.primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(106, 0, 255, 0.4);
+        .view-all-btn-new:hover::before {
+          width: 300px;
+          height: 300px;
         }
 
-        .action-btn.secondary {
-          background: rgba(255, 255, 255, 0.05);
-          color: #fff;
-          border: 1px solid rgba(255, 255, 255, 0.1);
+        .view-all-btn-new:hover {
+          transform: translateY(-5px) scale(1.05);
+          box-shadow: 0 20px 60px rgba(106, 0, 255, 0.5);
         }
 
-        .action-btn.secondary:hover {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: #6a00ff;
+        .btn-text,
+        .btn-icon {
+          position: relative;
+          z-index: 1;
+        }
+
+        .btn-icon {
+          display: flex;
+          align-items: center;
+          transition: transform 0.3s ease;
+        }
+
+        .view-all-btn-new:hover .btn-icon {
+          transform: translateX(5px);
+        }
+
+        .btn-glow {
+          position: absolute;
+          inset: -50%;
+          background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+          pointer-events: none;
+        }
+
+        .view-all-btn-new:hover .btn-glow {
+          opacity: 1;
+          animation: glowRotate 3s linear infinite;
+        }
+
+        @keyframes glowRotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         /* Stats Section */
         .stats-section {
           background: linear-gradient(135deg, #6a00ff 0%, #00d4ff 100%);
           padding: 80px 20px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .stats-section::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+          background-size: 50px 50px;
+          animation: gridMove 20s linear infinite;
+          opacity: 0.3;
+        }
+
+        @keyframes gridMove {
+          from { transform: translate(0, 0); }
+          to { transform: translate(50px, 50px); }
         }
 
         .stats-grid {
@@ -732,10 +1324,24 @@ const ServicesSection = () => {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 40px;
+          position: relative;
+          z-index: 1;
         }
 
         .stat-card {
           text-align: center;
+          animation: statFadeIn 0.8s ease-out;
+        }
+
+        @keyframes statFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
 
         .stat-icon {
@@ -747,6 +1353,12 @@ const ServicesSection = () => {
 
         .stat-icon svg {
           filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+          animation: statIconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes statIconFloat {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(5deg); }
         }
 
         .stat-number {
@@ -754,6 +1366,18 @@ const ServicesSection = () => {
           font-weight: 900;
           margin-bottom: 10px;
           text-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+          animation: numberCount 1s ease-out;
+        }
+
+        @keyframes numberCount {
+          from {
+            opacity: 0;
+            transform: scale(0.5);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
         .stat-label {
@@ -764,10 +1388,6 @@ const ServicesSection = () => {
 
         /* Responsive */
         @media (max-width: 768px) {
-          .video-grid {
-            grid-template-columns: 1fr;
-          }
-
           .services-grid {
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
           }
@@ -777,24 +1397,61 @@ const ServicesSection = () => {
             gap: 30px;
           }
 
-          .custom-video {
-            height: 300px;
+          .case-studies-grid-new {
+            grid-template-columns: 1fr;
+            gap: 25px;
           }
 
-          .video-info {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
+          .case-card {
+            height: 450px;
           }
 
-          .info-contact {
-            margin-left: 0;
-            text-align: left;
+          .case-client-name h3 {
+            font-size: 1.8rem;
+          }
+
+          .case-details {
+            padding: 20px;
+          }
+
+          .view-all-btn-new {
+            width: 100%;
+            justify-content: center;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .case-card {
+            height: 420px;
+          }
+
+          .case-badge {
+            top: 16px;
+            left: 16px;
+            font-size: 0.7rem;
+            padding: 6px 12px;
+          }
+
+          .case-details {
+            padding: 16px;
+          }
+
+          .case-client-name h3 {
+            font-size: 1.5rem;
+          }
+
+          .detail-text {
+            font-size: 0.85rem;
+          }
+
+          .result-badge {
+            font-size: 0.75rem;
+            padding: 6px 12px;
           }
         }
       `}</style>
-    </div>
+      </div>
   );
 };
 
-export default ServicesSection;
+export default ServicesSection

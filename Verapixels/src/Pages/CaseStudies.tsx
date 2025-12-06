@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   FiArrowRight,
@@ -17,12 +18,16 @@ import {
   FiCloud,
   FiLayers
 } from 'react-icons/fi';
-import VeeAIChatbot from '../Components/VeeAIChatbot';
+
+// Import your detail component
+// import CaseStudyDetail from './CaseStudyDetail';
 
 const CaseStudies = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeCase, setActiveCase] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showDetail, setShowDetail] = useState(false);
+  const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -185,9 +190,52 @@ const CaseStudies = () => {
     ? caseStudies 
     : caseStudies.filter(cs => cs.category === selectedCategory);
 
+  const handleViewCase = (caseId: number) => {
+    setSelectedCaseId(caseId);
+    setShowDetail(true);
+    window.scrollTo(0, 0);
+  };
+
+  // If detail view is active, show detail component
+  // Replace this with your actual CaseStudyDetail component
+  if (showDetail && selectedCaseId) {
+    return (
+      <div>
+        {/* This is where your CaseStudyDetail component would go */}
+        {/* <CaseStudyDetail caseId={selectedCaseId} onBack={() => setShowDetail(false)} /> */}
+        
+        {/* Temporary placeholder - replace with actual component */}
+        <div style={{ padding: '100px 40px', textAlign: 'center', background: '#000', color: '#fff', minHeight: '100vh' }}>
+          <button 
+            onClick={() => setShowDetail(false)}
+            style={{
+              padding: '12px 24px',
+              background: '#0063f4',
+              border: 'none',
+              borderRadius: '30px',
+              color: '#fff',
+              fontSize: '1rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              marginBottom: '40px'
+            }}
+          >
+            ← Back to Case Studies
+          </button>
+          <h1 style={{ fontSize: '48px', marginBottom: '20px' }}>Case Study Detail Page</h1>
+          <p style={{ fontSize: '24px', color: 'rgba(255,255,255,0.7)' }}>
+            Showing details for Case ID: {selectedCaseId}
+          </p>
+          <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.5)', marginTop: '20px' }}>
+            Import and use your CaseStudyDetail component here
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="case-studies-page">
-      {/* Animated Background */}
       <div className="case-bg">
         <div 
           className="bg-orb orb-1"
@@ -209,7 +257,6 @@ const CaseStudies = () => {
         />
       </div>
 
-      {/* Hero Section */}
       <section className="case-hero">
         <div className="case-container">
           <div className="hero-badge">
@@ -223,7 +270,6 @@ const CaseStudies = () => {
             their digital presence and achieve remarkable growth.
           </p>
 
-          {/* Floating Stats */}
           <div className="hero-stats">
             <div className="hero-stat">
               <div className="stat-icon" style={{ background: '#0063f4' }}><FiTarget /></div>
@@ -244,7 +290,6 @@ const CaseStudies = () => {
         </div>
       </section>
 
-      {/* Category Filter */}
       <section className="filter-section">
         <div className="case-container">
           <div className="category-filters">
@@ -261,7 +306,6 @@ const CaseStudies = () => {
         </div>
       </section>
 
-      {/* Case Studies Grid */}
       <section className="cases-grid-section">
         <div className="case-container">
           <div className="cases-grid">
@@ -273,26 +317,21 @@ const CaseStudies = () => {
                 onMouseLeave={() => setActiveCase(null)}
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
-                {/* Card Glow */}
                 <div className="card-glow" style={{ background: study.color }}></div>
 
-                {/* Case Image */}
                 <div className="case-image-wrapper">
                   <img src={study.image} alt={study.title} className="case-image" />
                   <div className="image-gradient" style={{ background: `linear-gradient(135deg, ${study.color}66, transparent)` }}></div>
                   
-                  {/* Icon Badge */}
                   <div className="case-icon-badge" style={{ background: study.color }}>
                     {study.icon}
                   </div>
 
-                  {/* Category Tag */}
                   <div className="category-tag" style={{ borderColor: study.color, color: study.color }}>
                     {study.category}
                   </div>
                 </div>
 
-                {/* Case Content */}
                 <div className="case-content">
                   <h3 className="case-title">{study.title}</h3>
                   
@@ -317,7 +356,6 @@ const CaseStudies = () => {
                     <p className="section-text">{study.solution}</p>
                   </div>
 
-                  {/* Results Grid */}
                   <div className="results-grid">
                     {study.results.map((result, idx) => (
                       <div key={idx} className="result-item">
@@ -332,7 +370,6 @@ const CaseStudies = () => {
                     ))}
                   </div>
 
-                  {/* Technologies */}
                   <div className="tech-stack">
                     <h4 className="section-title" style={{ color: study.color }}>Technologies</h4>
                     <div className="tech-tags">
@@ -344,7 +381,6 @@ const CaseStudies = () => {
                     </div>
                   </div>
 
-                  {/* Testimonial */}
                   <div className="testimonial" style={{ borderLeftColor: study.color }}>
                     <p className="testimonial-text">"{study.testimonial.text}"</p>
                     <div className="testimonial-author">
@@ -353,8 +389,11 @@ const CaseStudies = () => {
                     </div>
                   </div>
 
-                  {/* View Full Case Button */}
-                  <button className="view-case-btn" style={{ background: study.color }}>
+                  <button 
+                    className="view-case-btn" 
+                    style={{ background: study.color }}
+                    onClick={() => handleViewCase(study.id)}
+                  >
                     View Full Case Study
                     <FiExternalLink />
                   </button>
@@ -365,7 +404,6 @@ const CaseStudies = () => {
         </div>
       </section>
 
-      {/* Project Inquiry Section */}
       <section className="project-inquiry-section">
         <div className="case-container">
           <div className="inquiry-content">
@@ -383,8 +421,6 @@ const CaseStudies = () => {
           </div>
         </div>
       </section>
-          <VeeAIChatbot />
-
       <style>{`
         * {
           margin: 0;
