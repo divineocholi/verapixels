@@ -15,6 +15,7 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@tailwindcss/vite": "^4.1.16",
+    "appwrite": "^21.5.0",
     "cloudinary": "^2.8.0",
     "framer-motion": "^12.23.24",
     "gh-pages": "^6.3.0",

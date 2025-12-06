@@ -8,12 +8,23 @@ import {
   FiUser,
   FiMessageCircle,
   FiCheckCircle,
-  FiArrowRight,
   FiSend,
   FiChevronLeft,
-  FiChevronRight
+  FiChevronRight,
+  FiAlertCircle
 } from 'react-icons/fi';
 import { SiGooglemeet, SiZoom, SiWhatsapp } from 'react-icons/si';
+import { Client, Databases, Query, ID } from 'appwrite';
+
+// Appwrite Configuration
+const client = new Client()
+  .setEndpoint('https://fra.cloud.appwrite.io/v1')
+  .setProject('6933f4610012182c4b1d');
+
+const databases = new Databases(client);
+
+const DATABASE_ID = '6933f49b00278d1abf56';
+const COLLECTION_ID = '6933f4e8001914902fb2';
 
 // Type definitions
 interface DayType {
@@ -25,8 +36,25 @@ interface DayType {
   disabled?: boolean;
 }
 
+interface Booking {
+  booking_date: string;
+  booking_time: string;
+  status: string;
+  timezone: string;
+}
+
 // Custom Time Selector Component
-const CustomTimeSelector = ({ selectedTime, onTimeSelect, timeSlots }: { selectedTime: string; onTimeSelect: (time: string) => void; timeSlots: string[] }) => {
+const CustomTimeSelector = ({ 
+  selectedTime, 
+  onTimeSelect, 
+  timeSlots, 
+  bookedSlots 
+}: { 
+  selectedTime: string; 
+  onTimeSelect: (time: string) => void; 
+  timeSlots: string[];
+  bookedSlots: string[];
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -43,8 +71,10 @@ const CustomTimeSelector = ({ selectedTime, onTimeSelect, timeSlots }: { selecte
   }, [isOpen]);
 
   const handleTimeClick = (time: string) => {
-    onTimeSelect(time);
-    setIsOpen(false);
+    if (!bookedSlots.includes(time)) {
+      onTimeSelect(time);
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -63,16 +93,22 @@ const CustomTimeSelector = ({ selectedTime, onTimeSelect, timeSlots }: { selecte
       {isOpen && (
         <div className="time-dropdown" onClick={(e) => e.stopPropagation()}>
           <div className="time-slots-grid">
-            {timeSlots.map((slot) => (
-              <button
-                key={slot}
-                type="button"
-                className={`time-slot ${selectedTime === slot ? 'selected' : ''}`}
-                onClick={() => handleTimeClick(slot)}
-              >
-                {slot}
-              </button>
-            ))}
+            {timeSlots.map((slot) => {
+              const isBooked = bookedSlots.includes(slot);
+              return (
+                <button
+                  key={slot}
+                  type="button"
+                  className={`time-slot ${selectedTime === slot ? 'selected' : ''} ${isBooked ? 'booked' : ''}`}
+                  onClick={() => handleTimeClick(slot)}
+                  disabled={isBooked}
+                  title={isBooked ? 'This time slot is already booked' : ''}
+                >
+                  {slot}
+                  {isBooked && <span className="booked-badge">Booked</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -81,11 +117,18 @@ const CustomTimeSelector = ({ selectedTime, onTimeSelect, timeSlots }: { selecte
 };
 
 // Custom Calendar Component
-const CustomCalendar = ({ selectedDate, onDateSelect, minDate }: { selectedDate: string; onDateSelect: (date: string) => void; minDate: string }) => {
+const CustomCalendar = ({ 
+  selectedDate, 
+  onDateSelect, 
+  minDate 
+}: { 
+  selectedDate: string; 
+  onDateSelect: (date: string) => void; 
+  minDate: string 
+}) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isOpen, setIsOpen] = useState(false);
 
-  // Close calendar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isOpen && !(event.target as HTMLElement).closest('.custom-calendar-container')) {
@@ -99,7 +142,6 @@ const CustomCalendar = ({ selectedDate, onDateSelect, minDate }: { selectedDate:
     };
   }, [isOpen]);
 
-  // Get days in month
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -111,25 +153,20 @@ const CustomCalendar = ({ selectedDate, onDateSelect, minDate }: { selectedDate:
     return { daysInMonth, startingDay, year, month };
   };
 
-  // Previous month
   const prevMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
   };
 
-  // Next month
   const nextMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
-  // Get month name
   const getMonthName = () => {
     return currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
   };
 
-  // Get week days
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Generate calendar days
   const generateCalendarDays = (): DayType[] => {
     const { daysInMonth, startingDay, year, month } = getDaysInMonth(currentMonth);
     const days: DayType[] = [];
@@ -138,12 +175,10 @@ const CustomCalendar = ({ selectedDate, onDateSelect, minDate }: { selectedDate:
     const minDateObj = minDate ? new Date(minDate) : null;
     if (minDateObj) minDateObj.setHours(0, 0, 0, 0);
 
-    // Empty cells for days before the first day of month
     for (let i = 0; i < startingDay; i++) {
       days.push({ day: '', disabled: true, isToday: false, isSelected: false, isDisabled: false });
     }
 
-    // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       date.setHours(0, 0, 0, 0);
@@ -168,14 +203,17 @@ const CustomCalendar = ({ selectedDate, onDateSelect, minDate }: { selectedDate:
 
   const handleDayClick = (day: DayType) => {
     if (!day.isDisabled && day.date) {
-      onDateSelect(day.date);
+      // Add one day to fix the date selection bug
+      const selectedDate = new Date(day.date);
+      selectedDate.setDate(selectedDate.getDate() + 1);
+      onDateSelect(selectedDate.toISOString().split('T')[0]);
       setIsOpen(false);
     }
   };
 
   const formatSelectedDate = (dateString: string) => {
     if (!dateString) return 'Select Date';
-    const date = new Date(dateString);
+    const date = new Date(dateString + 'T00:00:00');
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -272,6 +310,15 @@ const ConsultationBooking = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+  const [userTimezone, setUserTimezone] = useState('');
+
+  // Detect user's timezone
+  useEffect(() => {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setUserTimezone(timezone);
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -301,6 +348,15 @@ const ConsultationBooking = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Check availability when date changes
+  useEffect(() => {
+    if (formData.preferredDate) {
+      checkAvailability(formData.preferredDate);
+    } else {
+      setBookedSlots([]);
+    }
+  }, [formData.preferredDate]);
+
   const contactMethods = [
     { id: 'video', label: 'Video Call', icon: <FiVideo />, color: '#0063f4' },
     { id: 'audio', label: 'Audio Call', icon: <FiPhone />, color: '#00bfff' },
@@ -316,6 +372,29 @@ const ConsultationBooking = () => {
     '05:00 PM'
   ];
 
+  // Check availability for a specific date
+  const checkAvailability = async (date: string) => {
+    setIsCheckingAvailability(true);
+    try {
+      const response = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [
+          Query.equal('booking_date', date),
+          Query.equal('status', 'confirmed')
+        ]
+      );
+
+      const booked = response.documents.map((doc: any) => doc.booking_time);
+      setBookedSlots(booked);
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      setBookedSlots([]);
+    } finally {
+      setIsCheckingAvailability(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -326,7 +405,7 @@ const ConsultationBooking = () => {
   };
 
   const handleDateSelect = (date: string) => {
-    setFormData((prev) => ({ ...prev, preferredDate: date }));
+    setFormData((prev) => ({ ...prev, preferredDate: date, preferredTime: '' }));
   };
 
   const handleTimeSelect = (time: string) => {
@@ -339,15 +418,52 @@ const ConsultationBooking = () => {
     setSubmitStatus(null);
 
     try {
-      // EmailJS configuration
+      // Double-check availability before booking
+      const checkResponse = await databases.listDocuments(
+        DATABASE_ID,
+        COLLECTION_ID,
+        [
+          Query.equal('booking_date', formData.preferredDate),
+          Query.equal('booking_time', formData.preferredTime),
+          Query.equal('status', 'confirmed')
+        ]
+      );
+
+      if (checkResponse.documents.length > 0) {
+        alert('Sorry, this time slot was just booked. Please select another time.');
+        await checkAvailability(formData.preferredDate);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Create booking in Appwrite
+      const bookingData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        contact_method: contactMethods.find(m => m.id === formData.contactMethod)?.label || formData.contactMethod,
+        booking_date: formData.preferredDate,
+        booking_time: formData.preferredTime,
+        message: formData.message || 'No additional message provided',
+        timezone: userTimezone,
+        status: 'confirmed'
+      };
+
+      const bookingResponse = await databases.createDocument(
+        DATABASE_ID,
+        COLLECTION_ID,
+        ID.unique(),
+        bookingData
+      );
+
+      console.log('Booking created:', bookingResponse);
+
+      // Send emails via EmailJS
       const serviceId = 'service_w8wwd8e';
       const publicKey = 'NUKm-dvMLR7ftwvbF';
-      
-      // Template IDs
       const adminTemplateId = 'template_503vbvj';
-      const userTemplateId = 'template_rgjfu18';
+      const userTemplateId = 'template_6zgl8ml';
 
-      // Common template parameters
       const baseParams = {
         from_name: formData.name,
         from_email: formData.email,
@@ -359,32 +475,26 @@ const ConsultationBooking = () => {
         contact_method: contactMethods.find(m => m.id === formData.contactMethod)?.label,
         preferred_date: formData.preferredDate,
         preferred_time: formData.preferredTime,
-        message: formData.message || 'No additional message provided'
+        message: formData.message || 'No additional message provided',
+        timezone: userTimezone
       };
 
       // Send notification to admin
-      const adminResponse = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           service_id: serviceId,
           template_id: adminTemplateId,
           user_id: publicKey,
-          template_params: {
-            ...baseParams,
-            reply_to: formData.email
-          }
+          template_params: { ...baseParams, reply_to: formData.email }
         })
       });
 
       // Send auto-reply to user
-      const userResponse = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           service_id: serviceId,
           template_id: userTemplateId,
@@ -393,23 +503,19 @@ const ConsultationBooking = () => {
         })
       });
 
-      if (adminResponse.ok && userResponse.ok) {
-        setSubmitStatus('success');
-        // Reset form data
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          contactMethod: 'video',
-          preferredDate: '',
-          preferredTime: '',
-          message: ''
-        });
-      } else {
-        setSubmitStatus('error');
-      }
+      setSubmitStatus('success');
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        contactMethod: 'video',
+        preferredDate: '',
+        preferredTime: '',
+        message: ''
+      });
+      setBookedSlots([]);
     } catch (error) {
-      console.error('EmailJS Error:', error);
+      console.error('Booking Error:', error);
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -420,7 +526,6 @@ const ConsultationBooking = () => {
 
   return (
     <div className="consultation-page">
-      {/* Animated Background */}
       <div className="consultation-bg">
         <div
           className="bg-orb orb-1"
@@ -443,9 +548,7 @@ const ConsultationBooking = () => {
         <div className="gradient-mesh"></div>
       </div>
 
-      {/* Main Content */}
       <div className="consultation-container">
-        {/* Hero Section */}
         <section className="consultation-hero animate-on-scroll fade-in">
           <div className="hero-badge">
             <FiCalendar /> Free Consultation
@@ -457,13 +560,16 @@ const ConsultationBooking = () => {
             Let's discuss your project and explore how we can help bring your vision to life.
             Choose your preferred way to connect with us.
           </p>
+          {userTimezone && (
+            <p className="timezone-info">
+              <FiClock /> Your timezone: {userTimezone}
+            </p>
+          )}
         </section>
 
-        {/* Booking Form */}
         <section className="booking-section">
           <div className="booking-card animate-on-scroll zoom-in">
             <form onSubmit={handleSubmit} className="booking-form">
-              {/* Personal Information */}
               <div className="form-section animate-on-scroll slide-left">
                 <h2 className="section-title">
                   <FiUser /> Personal Information
@@ -511,7 +617,6 @@ const ConsultationBooking = () => {
                 </div>
               </div>
 
-              {/* Contact Method */}
               <div className="form-section animate-on-scroll slide-right">
                 <h2 className="section-title">
                   <FiMessageCircle /> Preferred Contact Method *
@@ -523,9 +628,7 @@ const ConsultationBooking = () => {
                       key={method.id}
                       className={`method-card ${formData.contactMethod === method.id ? 'active' : ''}`}
                       onClick={() => handleMethodChange(method.id)}
-                      style={{
-                        animationDelay: `${index * 0.1}s`
-                      }}
+                      style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <input
                         type="radio"
@@ -548,7 +651,6 @@ const ConsultationBooking = () => {
                 </div>
               </div>
 
-              {/* Date & Time */}
               <div className="form-section animate-on-scroll slide-left" style={{ zIndex: 100 }}>
                 <h2 className="section-title">
                   <FiCalendar /> Schedule Your Consultation *
@@ -565,17 +667,20 @@ const ConsultationBooking = () => {
                   </div>
 
                   <div className="form-group">
-                    <label>Preferred Time</label>
+                    <label>
+                      Preferred Time
+                      {isCheckingAvailability && <span className="checking-badge">Checking...</span>}
+                    </label>
                     <CustomTimeSelector
                       selectedTime={formData.preferredTime}
                       onTimeSelect={handleTimeSelect}
                       timeSlots={timeSlots}
+                      bookedSlots={bookedSlots}
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Additional Message */}
               <div className="form-section animate-on-scroll slide-right" style={{ zIndex: 1 }}>
                 <h2 className="section-title">
                   <FiMail /> Tell Us About Your Project (Optional)
@@ -593,12 +698,11 @@ const ConsultationBooking = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <div className="form-actions animate-on-scroll zoom-in">
                 <button
                   type="submit"
                   className="submit-btn"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !formData.preferredDate || !formData.preferredTime}
                 >
                   <span className="btn-content">
                     {isSubmitting ? (
@@ -615,23 +719,34 @@ const ConsultationBooking = () => {
                 </button>
               </div>
 
-              {/* Status Message */}
               {submitStatus === 'success' && (
-                <div className="status-message success animate-on-scroll fade-in">
-                  <FiCheckCircle />
-                  <span>Session booked successfully! We'll contact you soon.</span>
+                <div className="success-modal">
+                  <div className="success-content">
+                    <div className="success-icon">
+                      <FiCheckCircle />
+                    </div>
+                    <h3>Booking Confirmed!</h3>
+                    <p>Your consultation session has been successfully booked.</p>
+                    <p className="success-details">Check your email for confirmation details.</p>
+                    <button 
+                      className="success-btn"
+                      onClick={() => setSubmitStatus(null)}
+                    >
+                      Done
+                    </button>
+                  </div>
                 </div>
               )}
 
               {submitStatus === 'error' && (
                 <div className="status-message error animate-on-scroll fade-in">
-                  <span>⚠️ Something went wrong. Please try again or contact us directly.</span>
+                  <FiAlertCircle />
+                  <span>Something went wrong. Please try again or contact us directly.</span>
                 </div>
               )}
             </form>
           </div>
 
-          {/* Info Cards */}
           <div className="info-cards">
             <div className="info-card animate-on-scroll slide-left">
               <div className="info-icon">
@@ -645,16 +760,16 @@ const ConsultationBooking = () => {
               <div className="info-icon">
                 <FiCheckCircle />
               </div>
-              <h3>No Obligation</h3>
-              <p>Get expert advice with zero commitment</p>
+              <h3>Real-Time Availability</h3>
+              <p>See available slots instantly with double-booking prevention</p>
             </div>
 
             <div className="info-card animate-on-scroll slide-right">
               <div className="info-icon">
-                <FiArrowRight />
+                <FiAlertCircle />
               </div>
-              <h3>Quick Response</h3>
-              <p>We'll confirm your booking within 24 hours</p>
+              <h3>Instant Confirmation</h3>
+              <p>Receive email confirmation immediately after booking</p>
             </div>
           </div>
         </section>
@@ -791,7 +906,20 @@ const ConsultationBooking = () => {
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.85);
           max-width: 700px;
-          margin: 0 auto;
+          margin: 0 auto 20px;
+        }
+
+        .timezone-info {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 20px;
+          background: rgba(0, 255, 136, 0.1);
+          border: 1px solid rgba(0, 255, 136, 0.3);
+          border-radius: 20px;
+          color: #00ff88;
+          font-size: 0.95rem;
+          margin-top: 20px;
         }
 
         .booking-section {
@@ -858,6 +986,28 @@ const ConsultationBooking = () => {
           font-weight: 600;
           font-size: 1.05rem;
           color: rgba(255, 255, 255, 0.9);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .checking-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 4px 12px;
+          background: rgba(0, 191, 255, 0.15);
+          border: 1px solid rgba(0, 191, 255, 0.3);
+          border-radius: 12px;
+          color: #00bfff;
+          font-size: 0.85rem;
+          font-weight: 600;
+          animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.6; }
         }
 
         .form-group input,
@@ -901,7 +1051,108 @@ const ConsultationBooking = () => {
           color: #fff;
         }
 
-        /* Custom Time Selector Styles */
+        .availability-info {
+          display: none;
+        }
+
+        .success-modal {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.85);
+          backdrop-filter: blur(10px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10001;
+          animation: fadeIn 0.3s ease;
+        }
+
+        .success-content {
+          background: linear-gradient(135deg, rgba(0, 99, 244, 0.1), rgba(0, 255, 136, 0.1));
+          border: 2px solid rgba(0, 255, 136, 0.3);
+          border-radius: 24px;
+          padding: 50px 40px;
+          text-align: center;
+          max-width: 500px;
+          width: 90%;
+          position: relative;
+          animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(50px) scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .success-icon {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 20px;
+          background: rgba(0, 255, 136, 0.2);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: scaleIn 0.6s ease 0.2s backwards;
+        }
+
+        @keyframes scaleIn {
+          from {
+            transform: scale(0);
+          }
+          to {
+            transform: scale(1);
+          }
+        }
+
+        .success-icon svg {
+          font-size: 48px;
+          color: #00ff88;
+        }
+
+        .success-content h3 {
+          font-size: 2rem;
+          font-weight: 900;
+          color: #fff;
+          margin-bottom: 16px;
+        }
+
+        .success-content p {
+          font-size: 1.1rem;
+          color: rgba(255, 255, 255, 0.85);
+          margin-bottom: 12px;
+        }
+
+        .success-details {
+          font-size: 1rem;
+          color: #00ff88;
+          font-weight: 600;
+        }
+
+        .success-btn {
+          margin-top: 30px;
+          padding: 14px 40px;
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          border: none;
+          border-radius: 50px;
+          color: #fff;
+          font-size: 1.1rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .success-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.5);
+        }
+
         .custom-time-container {
           position: relative;
           width: 100%;
@@ -990,9 +1241,10 @@ const ConsultationBooking = () => {
           cursor: pointer;
           transition: all 0.3s ease;
           text-align: center;
+          position: relative;
         }
 
-        .time-slot:hover {
+        .time-slot:hover:not(.booked) {
           background: rgba(0, 99, 244, 0.15);
           border-color: rgba(0, 99, 244, 0.5);
           transform: translateY(-2px);
@@ -1005,7 +1257,22 @@ const ConsultationBooking = () => {
           font-weight: 600;
         }
 
-        /* Custom Calendar Styles */
+        .time-slot.booked {
+          background: rgba(255, 107, 157, 0.1);
+          border-color: rgba(255, 107, 157, 0.3);
+          color: rgba(255, 107, 157, 0.6);
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+
+        .booked-badge {
+          display: block;
+          font-size: 0.75rem;
+          margin-top: 4px;
+          font-weight: 600;
+          color: #ff6b9d;
+        }
+
         .custom-calendar-container {
           position: relative;
           width: 100%;
@@ -1338,10 +1605,6 @@ const ConsultationBooking = () => {
         .submit-btn:hover {
           transform: translateY(-3px);
           box-shadow: 0 20px 60px rgba(0, 99, 244, 0.7);
-        }
-
-        .submit-btn:hover .btn-content {
-          color: #fff;
         }
 
         .submit-btn:disabled {
