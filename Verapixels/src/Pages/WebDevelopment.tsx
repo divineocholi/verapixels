@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-
+import { Link } from "react-router-dom";
 import { 
   FiCode, 
   FiLayers,
@@ -170,7 +170,7 @@ const WebDevelopment = () => {
       ]
     },
     {
-      name: "Tools & Testing",
+      name: "Testing & Quality", 
       stack: [
         { name: "Jest", icon: <SiJest />, description: "JavaScript testing framework", color: "#C21325" },
         { name: "ESLint", icon: <SiEslint />, description: "Code linting utility", color: "#4B32C3" },
@@ -245,40 +245,6 @@ const WebDevelopment = () => {
     }
   ];
 
-  const stats = [
-    { icon: <FiCode />, value: "500+", label: "Projects Delivered" },
-    { icon: <FiClock />, value: "95%", label: "On-Time Delivery" },
-    { icon: <FiAward />, value: "4.9/5", label: "Client Rating" },
-    { icon: <FiTrendingUp />, value: "200%", label: "Avg. ROI Increase" }
-  ];
-
-  const contactMethods = [
-    {
-      icon: <FiPhone />,
-      title: "Call Us",
-      description: "Speak with our team directly",
-      action: "Customer Service"
-    },
-    {
-      icon: <FiMessageCircle />,
-      title: "WhatsApp",
-      description: "Quick chat support",
-      action: "Message Us"
-    },
-    {
-      icon: <FiMail />,
-      title: "Email",
-      description: "Send us your requirements",
-      action: "Email Us"
-    },
-    {
-      icon: <FiGlobe />,
-      title: "Social Media",
-      description: "Connect on social platforms",
-      action: "Follow Us"
-    }
-  ];
-
   return (
     <div className="webdev-page">
       {/* Animated Background */}
@@ -322,23 +288,12 @@ const WebDevelopment = () => {
               that engage users, boost conversions, and scale with your business.
             </p>
             <div className="hero-buttons">
-              <button className="btn-primary">
+              <Link to="/consultationbooking" className="btn-primary">
                 Start Your Project <FiArrowRight />
-              </button>
-              <button className="btn-secondary">
+              </Link>
+              <Link to="/allprojects" className="btn-secondary">
                 View Portfolio
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="hero-stats">
-              {stats.map((stat, i) => (
-                <div key={i} className="stat-item">
-                  <div className="stat-icon">{stat.icon}</div>
-                  <div className="stat-value">{stat.value}</div>
-                  <div className="stat-label">{stat.label}</div>
-                </div>
-              ))}
+              </Link>
             </div>
           </div>
 
@@ -514,61 +469,28 @@ export default App;`}</code></pre>
         </div>
       </section>
 
-      {/* Contact for Pricing Section */}
-      <section className="pricing-section">
+      {/* CTA Section - Updated */}
+      <section className="final-cta">
         <div className="webdev-container">
-          <div className="section-header">
-            <h2 className="section-title">
-              Get a <span className="gradient-text">Custom Quote</span>
-            </h2>
-            <p className="section-subtitle">
-              Every project is unique. Contact us for personalized pricing tailored to your specific needs
-            </p>
-          </div>
-
-          <div className="contact-grid">
-            {contactMethods.map((method, i) => (
-              <div 
-                key={i} 
-                className={`contact-card animate-on-scroll ${i % 2 === 0 ? 'slide-left' : 'slide-right'}`}
-              >
-                <div className="contact-icon">{method.icon}</div>
-                <h3 className="contact-title">{method.title}</h3>
-                <p className="contact-description">{method.description}</p>
-                <button className="contact-button">
-                  {method.action} <FiArrowRight />
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="pricing-note animate-on-scroll fade-in">
-            <div className="note-content">
-              <FiCheckCircle className="note-icon" />
-              <p>
-                Our team will work with you to understand your requirements and provide a 
-                detailed quote that fits your budget and timeline.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="webdev-container">
-          <div className="cta-content animate-on-scroll zoom-in">
-            <h2 className="cta-title">Ready to Build Something Amazing?</h2>
+          <div className="cta-card">
+            <FiZap className="cta-icon" />
+            <h2 className="cta-title">Ready to Start Your <span className="highlight">Project?</span></h2>
             <p className="cta-text">
-              Let's turn your vision into a powerful web application that drives growth and delights users.
+              Let's discuss your idea and create a solution that drives your business forward.
             </p>
-            <div className="cta-buttons">
-              <button className="btn-primary-large">
-                Schedule Free Consultation <FiArrowRight />
-              </button>
-              <button className="btn-secondary-large">
-                Chat With Us
-              </button>
+            <div className="cta-actions">
+              <Link to="/consultationbooking" className="cta-btn-primary">
+                <FiMessageCircle />
+                Free Consultation
+              </Link>
+              <Link to="/contact" className="cta-btn-secondary">
+                <FiMail />
+                Contact Us
+              </Link>
+              <Link to="/allprojects" className="cta-btn-tertiary">
+                <FiGlobe />
+                View Our Work
+              </Link>
             </div>
           </div>
         </div>
@@ -767,35 +689,38 @@ export default App;`}</code></pre>
         }
 
         .btn-primary {
-          background: linear-gradient(135deg, #0063f4, #00bfff);
-          box-shadow: 0 10px 40px rgba(0, 99, 244, 0.5);
-          position: relative;
-          overflow: hidden;
-        }
+  background: linear-gradient(135deg, #0063f4, #00bfff);
+  box-shadow: 0 10px 40px rgba(0, 99, 244, 0.5);
+  position: relative;
+  overflow: hidden;
+  z-index: 1; /* Add this */
+}
 
-        .btn-primary::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, #00bfff, #00ff88);
-          opacity: 0;
-          transition: opacity 0.4s ease;
-        }
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #00bfff, #00ff88);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1; /* Add this to push it behind the text */
+}
 
-        .btn-primary:hover::before {
-          opacity: 1;
-        }
+.btn-primary:hover::before {
+  opacity: 1;
+}
 
-        .btn-primary:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 50px rgba(0, 99, 244, 0.7);
-          color: #fff;
-        }
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 50px rgba(0, 99, 244, 0.7);
+  color: #fff;
+}
 
-        .btn-primary svg, .btn-primary span {
-          position: relative;
-          z-index: 1;
-        }
+/* Remove these lines as they're no longer needed */
+.btn-primary svg, .btn-primary span {
+  position: relative;
+  z-index: 1;
+}
 
         .btn-secondary {
           background: rgba(255, 255, 255, 0.05);
@@ -809,93 +734,6 @@ export default App;`}</code></pre>
           transform: translateY(-3px);
           box-shadow: 0 10px 30px rgba(255, 255, 255, 0.1);
           color: #fff;
-        }
-
-        .hero-stats {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 30px;
-        }
-
-        .stat-item {
-          text-align: center;
-          padding: 20px;
-          background: rgba(255, 255, 255, 0.03);
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          transition: all 0.4s ease;
-          backdrop-filter: blur(10px);
-        }
-
-        .stat-item:hover {
-          transform: translateY(-5px);
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(0, 99, 244, 0.4);
-          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.2);
-        }
-
-        .stat-icon {
-          font-size: 32px;
-          color: #00bfff;
-          margin-bottom: 12px;
-        }
-
-        .stat-value {
-          font-size: 2.2rem;
-          font-weight: 900;
-          background: linear-gradient(135deg, #0063f4, #00bfff, #00ff88);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          margin-bottom: 8px;
-        }
-
-        /* Fix for hero stats on mobile */
-@media (max-width: 768px) {
-  .hero-stats {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    justify-items: center; /* This centers the items in their grid cells */
-  }
-
-  .stat-item {
-    width: 100%;
-    max-width: 200px; /* Optional: Limit max width for better centering */
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* This centers the content inside each stat item */
-    text-align: center;
-    padding: 20px 15px;
-  }
-
-  .stat-icon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-
-  .stat-value, .stat-label {
-    text-align: center;
-    width: 100%;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-stats {
-    grid-template-columns: 1fr;
-    gap: 15px;
-  }
-
-  .stat-item {
-    max-width: 280px; /* Wider on very small screens */
-    margin: 0 auto; /* Center the stat items themselves */
-  }
-}
-
-        .stat-label {
-          font-size: 0.9rem;
-          color: rgba(255, 255, 255, 0.7);
-          font-weight: 600;
         }
 
         .hero-visual {
@@ -973,7 +811,6 @@ export default App;`}</code></pre>
           margin-bottom: 80px;
         }
 
-        /* Scroll Animation Base Styles */
         .animate-on-scroll {
           opacity: 0;
           transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
@@ -983,7 +820,6 @@ export default App;`}</code></pre>
           opacity: 1;
         }
 
-        /* Slide Left Animation */
         .animate-on-scroll.slide-left {
           transform: translateX(-80px);
         }
@@ -992,7 +828,6 @@ export default App;`}</code></pre>
           transform: translateX(0);
         }
 
-        /* Slide Right Animation */
         .animate-on-scroll.slide-right {
           transform: translateX(80px);
         }
@@ -1001,7 +836,6 @@ export default App;`}</code></pre>
           transform: translateX(0);
         }
 
-        /* Zoom In Animation */
         .animate-on-scroll.zoom-in {
           transform: scale(0.8);
         }
@@ -1010,16 +844,6 @@ export default App;`}</code></pre>
           transform: scale(1);
         }
 
-        /* Zoom Out Animation */
-        .animate-on-scroll.zoom-out {
-          transform: scale(1.2);
-        }
-
-        .animate-on-scroll.zoom-out.animate-in {
-          transform: scale(1);
-        }
-
-        /* Fade In Animation */
         .animate-on-scroll.fade-in {
           opacity: 0;
         }
@@ -1043,17 +867,18 @@ export default App;`}</code></pre>
           line-height: 1.7;
         }
 
-        .services-section {
+        .services-section, .tech-section, .process-section, .benefits-section {
           padding: 120px 0;
         }
 
-        .services-grid {
+        .services-grid, .benefits-grid {
+        text-align: center;
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
           gap: 40px;
         }
 
-        .service-card {
+        .service-card, .benefit-card {
           position: relative;
           padding: 50px 40px;
           background: rgba(255, 255, 255, 0.03);
@@ -1064,30 +889,33 @@ export default App;`}</code></pre>
           backdrop-filter: blur(10px);
         }
 
-        .service-card:hover {
+        .service-card:hover, .benefit-card:hover {
           transform: translateY(-15px);
           border-color: rgba(0, 99, 244, 0.6);
           background: rgba(0, 99, 244, 0.08);
           box-shadow: 0 25px 70px rgba(0, 99, 244, 0.4);
         }
 
-        .service-icon {
+        .service-icon, .benefit-icon {
           font-size: 56px;
           margin-bottom: 28px;
           transition: all 0.4s ease;
+          display: flex;
+          justify-content: center;
+          align-items: center;
         }
 
-        .service-card:hover .service-icon {
+        .service-card:hover .service-icon, .benefit-card:hover .benefit-icon {
           transform: scale(1.1) rotate(5deg);
         }
 
-        .service-title {
+        .service-title, .benefit-title {
           font-size: 1.8rem;
           font-weight: 800;
           margin-bottom: 18px;
         }
 
-        .service-description {
+        .service-description, .benefit-description {
           font-size: 1.05rem;
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.8);
@@ -1134,7 +962,6 @@ export default App;`}</code></pre>
         }
 
         .tech-section {
-          padding: 120px 0;
           background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.04), transparent);
         }
 
@@ -1246,10 +1073,6 @@ export default App;`}</code></pre>
           opacity: 0.2;
         }
 
-        .process-section {
-          padding: 120px 0;
-        }
-
         .process-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1324,304 +1147,132 @@ export default App;`}</code></pre>
           50% { transform: translateY(-50%) translateX(5px); }
         }
 
-        .benefits-section {
-          padding: 120px 0;
-          background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.04), transparent);
+        /* Final CTA Section - Updated Styles */
+        .final-cta {
+          padding: 100px 0 120px;
         }
 
-        .benefits-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 40px;
-        }
-
-        .benefit-card {
-          padding: 45px 40px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          transition: all 0.5s ease;
-          backdrop-filter: blur(10px);
-          text-align: center;
-        }
-
-        .benefit-card:hover {
-          transform: translateY(-12px);
-          border-color: rgba(0, 99, 244, 0.6);
-          background: rgba(0, 99, 244, 0.08);
-          box-shadow: 0 25px 70px rgba(0, 99, 244, 0.35);
-        }
-
-        .benefit-icon {
-          font-size: 52px;
-          color: #00bfff;
-          margin-bottom: 28px;
-          transition: all 0.4s ease;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .benefit-card:hover .benefit-icon {
-          transform: scale(1.15) rotate(-5deg);
-        }
-
-        .benefit-title {
-          font-size: 1.7rem;
-          font-weight: 800;
-          margin-bottom: 18px;
-        }
-
-        .benefit-description {
-          font-size: 1.05rem;
-          line-height: 1.8;
-          color: rgba(255, 255, 255, 0.8);
-        }
-
-        .pricing-section {
-          padding: 120px 0;
-        }
-
-        .contact-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 40px;
-          max-width: 1200px;
-          margin: 0 auto 60px;
-        }
-
-        .contact-card {
-          position: relative;
-          padding: 50px 40px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 24px;
-          text-align: center;
-          transition: all 0.5s ease;
-          backdrop-filter: blur(10px);
-          overflow: hidden;
-        }
-
-        .contact-card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, rgba(0, 99, 244, 0.1), transparent);
-          opacity: 0;
-          transition: opacity 0.5s ease;
-        }
-
-        .contact-card:hover::before {
-          opacity: 1;
-        }
-
-        .contact-card:hover {
-          transform: translateY(-15px);
-          border-color: rgba(0, 99, 244, 0.6);
-          box-shadow: 0 25px 70px rgba(0, 99, 244, 0.4);
-        }
-
-        .contact-icon {
-          font-size: 56px;
-          color: #00bfff;
-          margin-bottom: 28px;
-          transition: all 0.4s ease;
-          position: relative;
-          z-index: 1;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .contact-card:hover .contact-icon {
-          transform: scale(1.2) rotate(10deg);
-          color: #00ff88;
-        }
-
-        .contact-title {
-          font-size: 1.8rem;
-          font-weight: 800;
-          margin-bottom: 16px;
-          position: relative;
-          z-index: 1;
-        }
-
-        .contact-description {
-          font-size: 1.05rem;
-          color: rgba(255, 255, 255, 0.75);
-          margin-bottom: 32px;
-          line-height: 1.7;
-          position: relative;
-          z-index: 1;
-        }
-
-        .contact-button {
-          width: 100%;
-          padding: 16px 32px;
-          font-size: 1.1rem;
-          font-weight: 700;
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.15);
-          border-radius: 50px;
-          color: #fff;
-          cursor: pointer;
-          transition: all 0.4s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 12px;
-          position: relative;
-          z-index: 1;
-          backdrop-filter: blur(10px);
-        }
-
-        .contact-button:hover {
-          background: linear-gradient(135deg, #0063f4, #00bfff);
-          border-color: transparent;
-          box-shadow: 0 10px 40px rgba(0, 99, 244, 0.5);
-          transform: translateY(-3px);
-          color: #fff;
-        }
-
-        .pricing-note {
-          max-width: 900px;
-          margin: 0 auto;
-          padding: 40px;
-          background: rgba(0, 99, 244, 0.08);
-          border: 1px solid rgba(0, 99, 244, 0.3);
-          border-radius: 20px;
-          backdrop-filter: blur(10px);
-        }
-
-        .note-content {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          text-align: left;
-        }
-
-        .note-icon {
-          font-size: 32px;
-          color: #00ff88;
-          flex-shrink: 0;
-        }
-
-        .note-content p {
-          font-size: 1.1rem;
-          line-height: 1.8;
-          color: rgba(255, 255, 255, 0.85);
-          margin: 0;
-        }
-
-        .cta-section {
-          padding: 120px 0;
-          background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.06), transparent);
-        }
-
-        .cta-content {
-          text-align: center;
+        .cta-card {
           max-width: 1000px;
           margin: 0 auto;
-          padding: 90px 60px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 30px;
+          padding: 80px 60px;
+          background: linear-gradient(135deg, rgba(0, 99, 244, 0.15), rgba(0, 191, 255, 0.1));
+          border: 1px solid rgba(0, 99, 244, 0.3);
+          border-radius: 32px;
+          text-align: center;
           position: relative;
           overflow: hidden;
           backdrop-filter: blur(20px);
         }
 
-        .cta-content::before {
+        .cta-card::before {
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(135deg, rgba(0, 99, 244, 0.15), rgba(0, 191, 255, 0.1), transparent);
-          opacity: 0.6;
+          background: radial-gradient(circle at 50% 50%, rgba(0, 99, 244, 0.2), transparent 70%);
+          opacity: 0.5;
+        }
+
+        .cta-icon {
+          font-size: 64px;
+          color: #00bfff;
+          margin-bottom: 32px;
+          animation: pulse 2s ease-in-out infinite;
+          position: relative;
+          z-index: 1;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          margin-left: auto;
+          margin-right: auto;
+          width: fit-content;
+        }
+
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.1); opacity: 0.8; }
         }
 
         .cta-title {
-          font-size: clamp(32px, 5vw, 56px);
-          font-weight: 900;
-          margin-bottom: 28px;
+          font-size: clamp(28px, 5vw, 48px);
+          font-weight: 800;
+          margin-bottom: 20px;
           position: relative;
           z-index: 1;
+        }
+
+        .highlight {
+          color: #00bfff;
         }
 
         .cta-text {
-          font-size: 1.3rem;
-          line-height: 1.9;
-          color: rgba(255, 255, 255, 0.85);
-          margin-bottom: 50px;
+          font-size: 1.25rem;
+          line-height: 1.8;
+          color: rgba(255, 255, 255, 0.75);
+          margin-bottom: 48px;
+          max-width: 700px;
+          margin-left: auto;
+          margin-right: auto;
           position: relative;
           z-index: 1;
         }
 
-        .cta-buttons {
+        .cta-actions {
           display: flex;
-          gap: 24px;
+          gap: 20px;
           justify-content: center;
           flex-wrap: wrap;
           position: relative;
           z-index: 1;
         }
 
-        .btn-primary-large, .btn-secondary-large {
-          padding: 22px 50px;
-          font-size: 1.2rem;
+        .cta-btn-primary, .cta-btn-secondary, .cta-btn-tertiary {
+          padding: 18px 36px;
+          border-radius: 12px;
+          font-size: 1.05rem;
           font-weight: 700;
-          border-radius: 50px;
           border: none;
           cursor: pointer;
-          transition: all 0.4s ease;
-          display: inline-flex;
+          display: flex;
           align-items: center;
-          gap: 14px;
-          color: #fff;
+          gap: 10px;
+          transition: all 0.3s ease;
+          text-decoration: none;
         }
 
-        .btn-primary-large {
+        .cta-btn-primary {
           background: linear-gradient(135deg, #0063f4, #00bfff);
-          box-shadow: 0 12px 45px rgba(0, 99, 244, 0.5);
-          position: relative;
-          overflow: hidden;
+          color: white;
+          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
         }
 
-        .btn-primary-large::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(135deg, #00bfff, #00ff88);
-          opacity: 0;
-          transition: opacity 0.4s ease;
+        .cta-btn-primary:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 15px 40px rgba(0, 99, 244, 0.6);
         }
 
-        .btn-primary-large:hover::before {
-          opacity: 1;
+        .cta-btn-secondary {
+          background: rgba(0, 255, 136, 0.2);
+          color: white;
+          border: 2px solid #00ff88;
         }
 
-        .btn-primary-large:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 20px 60px rgba(0, 99, 244, 0.7);
-          color: #fff;
+        .cta-btn-secondary:hover {
+          background: #00ff88;
+          color: #000;
+          transform: translateY(-3px);
         }
 
-        .btn-primary-large svg, .btn-primary-large span {
-          position: relative;
-          z-index: 1;
+        .cta-btn-tertiary {
+          background:#4a32c33d;
+          color: white;
+          border: 2px solid #4B32C3;
         }
 
-        .btn-secondary-large {
-          background: rgba(255, 255, 255, 0.05);
-          border: 2px solid rgba(255, 255, 255, 0.25);
-          backdrop-filter: blur(10px);
-        }
-
-        .btn-secondary-large:hover {
-          background: rgba(255, 255, 255, 0.1);
-          border-color: rgba(255, 255, 255, 0.5);
-          transform: translateY(-5px);
-          box-shadow: 0 15px 40px rgba(255, 255, 255, 0.15);
-          color: #fff;
+        .cta-btn-tertiary:hover {
+          background: #4B32C3;
+          color: #000;
+          transform: translateY(-3px);
         }
 
         @media (max-width: 1024px) {
@@ -1634,11 +1285,7 @@ export default App;`}</code></pre>
             order: -1;
           }
 
-          .hero-stats {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .services-grid {
+          .services-grid, .benefits-grid {
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
           }
 
@@ -1669,18 +1316,11 @@ export default App;`}</code></pre>
             justify-content: center;
           }
 
-          .hero-stats {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-          }
-
           .section-title {
             font-size: 34px;
           }
 
-          .services-grid,
-          .benefits-grid,
-          .contact-grid {
+          .services-grid, .benefits-grid {
             grid-template-columns: 1fr;
           }
 
@@ -1692,7 +1332,7 @@ export default App;`}</code></pre>
             grid-template-columns: 1fr;
           }
 
-          .cta-content {
+          .cta-card {
             padding: 70px 40px;
           }
 
@@ -1700,33 +1340,22 @@ export default App;`}</code></pre>
             font-size: 30px;
           }
 
-          .cta-buttons {
+          .cta-actions {
             flex-direction: column;
+            align-items: stretch;
           }
 
-          .btn-primary-large,
-          .btn-secondary-large {
+          .cta-btn-primary,
+          .cta-btn-secondary,
+          .cta-btn-tertiary {
             width: 100%;
             justify-content: center;
-          }
-
-          .note-content {
-            flex-direction: column;
-            text-align: center;
           }
         }
 
         @media (max-width: 480px) {
           .webdev-container {
             padding: 0 20px;
-          }
-
-          .hero-stats {
-            grid-template-columns: 1fr;
-          }
-
-          .stat-value {
-            font-size: 2rem;
           }
 
           .tech-tabs {
@@ -1748,21 +1377,21 @@ export default App;`}</code></pre>
 
           .service-card,
           .benefit-card,
-          .contact-card,
           .process-card {
             padding: 35px 28px;
           }
 
-          .cta-content {
+          .cta-card {
             padding: 50px 30px;
           }
 
-          .pricing-note {
-            padding: 30px 24px;
+          .cta-icon {
+            font-size: 48px;
           }
-        } `}</style>
+        }
+      `}</style>
     </div>
   );
 };
 
-export  default WebDevelopment
+export default WebDevelopment;

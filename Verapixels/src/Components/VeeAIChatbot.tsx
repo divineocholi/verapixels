@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 /**
  * Enhanced VeeAIChatbot.tsx
  * Smarter Verapixels assistant with improved navigation and contextual awareness
+ * Now with draggable icon functionality
  */
 
 /* --------------------------- Types --------------------------- */
@@ -248,6 +249,9 @@ const VeeAIChatbot: React.FC = () => {
   const [theme, setTheme] = useState<"dark" | "light">(() => 
     (typeof window !== "undefined" && localStorage.getItem("vee-theme")) === "light" ? "light" : "dark"
   );
+  const [buttonPos, setButtonPos] = useState({ x: 24, y: 24 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
@@ -286,6 +290,36 @@ const VeeAIChatbot: React.FC = () => {
   useEffect(() => {
     if (isOpen) setUnreadCount(0);
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isDragging) {
+      const handleMouseMove = (e: MouseEvent) => {
+        const newX = e.clientX - dragStart.x;
+        const newY = e.clientY - dragStart.y;
+        
+        // Keep button within viewport
+        const maxX = window.innerWidth - 64 - 24;
+        const maxY = window.innerHeight - 64 - 24;
+        
+        setButtonPos({
+          x: Math.max(24, Math.min(newX, maxX)),
+          y: Math.max(24, Math.min(newY, maxY))
+        });
+      };
+
+      const handleMouseUp = () => {
+        setIsDragging(false);
+      };
+
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -450,19 +484,43 @@ const VeeAIChatbot: React.FC = () => {
 
   const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - buttonPos.x,
+      y: e.clientY - buttonPos.y
+    });
+  };
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    // Only open chat if not dragging
+    if (!isDragging) {
+      setIsOpen(true);
+    }
+  };
+
   return (
     <div className="vee-chat-root" style={{ fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
+      <style>{`
+        @keyframes vee-typing {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+          30% { transform: translateY(-6px); opacity: 1; }
+        }
+      `}</style>
+
       {/* Chat button */}
       {!isOpen && (
         <button
           className="vee-chat-button"
-          onClick={() => setIsOpen(true)}
+          onClick={handleButtonClick}
+          onMouseDown={handleMouseDown}
           aria-label="Open Vee Chat"
-          title="Chat with Vee - Your AI Assistant"
+          title="Chat with Vee - Your AI Assistant (Drag to move)"
           style={{
             position: "fixed",
-            right: 24,
-            bottom: 24,
+            right: buttonPos.x,
+            bottom: buttonPos.y,
             width: 64,
             height: 64,
             borderRadius: "999px",
@@ -473,17 +531,22 @@ const VeeAIChatbot: React.FC = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            cursor: "pointer",
+            cursor: isDragging ? "grabbing" : "grab",
             zIndex: 9999,
-            transition: "transform 0.2s, box-shadow 0.2s",
+            transition: isDragging ? "none" : "transform 0.2s, box-shadow 0.2s",
+            userSelect: "none"
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "scale(1.05)";
-            e.currentTarget.style.boxShadow = "0 15px 40px rgba(0,99,244,0.5)";
+            if (!isDragging) {
+              e.currentTarget.style.transform = "scale(1.05)";
+              e.currentTarget.style.boxShadow = "0 15px 40px rgba(0,99,244,0.5)";
+            }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "scale(1)";
-            e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,99,244,0.4)";
+            if (!isDragging) {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,99,244,0.4)";
+            }
           }}
         >
           <IconChat size={24} />
@@ -870,9 +933,9 @@ const VeeAIChatbot: React.FC = () => {
             </div>
           </div>
         </div>
-        )}
+      )}
     </div>
-    );
+  );
 };
 
-export default VeeAIChatbot
+export default VeeAIChatbot;
