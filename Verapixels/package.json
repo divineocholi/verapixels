@@ -1,7 +1,6 @@
 {
   "name": "verapixels",
-  "homepage": "https://github.com/divineocholi/Verapixels",
-  "private": true,
+  "homepage": "https://verapixels.com",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
