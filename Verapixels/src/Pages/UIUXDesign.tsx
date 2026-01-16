@@ -432,8 +432,7 @@ const UIUXDesignPage = () => {
           </div>
         </div>
       </section>
-          <VeeAIChatbot />
-
+         
       <style>{`
         * {
           margin: 0;
@@ -450,7 +449,8 @@ const UIUXDesignPage = () => {
         }
 
         .animated-bg {
-          position: fixed;
+          pos
+ition: fixed;
           inset: 0;
           pointer-events: none;
           z-index: 0;

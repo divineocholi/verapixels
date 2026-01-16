@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FiCheckCircle,
   FiTarget,
@@ -31,6 +32,7 @@ import {
 } from "react-icons/si";
 
 const HowWeWorkandFunction = () => {
+  const navigate = useNavigate();
   const [activeProcess, setActiveProcess] = useState(0);
   const [scrollY, setScrollY] = useState(0);
 
@@ -401,7 +403,10 @@ const HowWeWorkandFunction = () => {
               </div>
             </div>
             <div className="action-right">
-              <button className="start-button">
+              <button 
+                className="start-button"
+                onClick={() => navigate('/consultationbooking')}
+              >
                 <span>Get Started</span>
                 <FiArrowRight className="arrow-icon" />
               </button>

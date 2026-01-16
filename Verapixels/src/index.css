@@ -55,7 +55,7 @@ body {
 .vp-name {
   font-size: 1.5rem;
   font-weight: 900;
-  background: linear-gradient(135deg, #007aff, #ff6b9d);
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6, #06b6d4, #10b981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

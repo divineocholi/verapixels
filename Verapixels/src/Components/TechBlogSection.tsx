@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, Clock, User, TrendingUp, Zap, Palette, Code } from 'lucide-react';
 
-const TechBlogSection = () => {
-const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+interface TechBlogSectionProps {
+  onBlogClick?: (blogId: string) => void;
+  onViewAllClick?: () => void;
+}
+
+const TechBlogSection: React.FC<TechBlogSectionProps> = ({ onBlogClick, onViewAllClick }) => {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [isInView, setIsInView] = useState(false);
   const sectionRef = useRef(null);
 
@@ -25,7 +30,8 @@ const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   const blogPosts = [
     {
-      id: 1,
+      id: "5-ui-ux-tricks",
+      numericId: 1,
       title: "5 UI/UX Tricks That Make Websites Feel Premium",
       excerpt: "Discover the secret design patterns that top tech companies use to create luxury digital experiences that captivate users.",
       author: "Sarah Chen",
@@ -37,7 +43,8 @@ const [hoveredCard, setHoveredCard] = useState<number | null>(null);
       image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=400&fit=crop"
     },
     {
-      id: 2,
+      id: "website-speed-revenue",
+      numericId: 2,
       title: "How Fast Websites Boost Business Revenue",
       excerpt: "Learn why website speed is directly tied to conversion rates and discover optimization techniques that increase sales.",
       author: "Michael Zhang",
@@ -49,7 +56,8 @@ const [hoveredCard, setHoveredCard] = useState<number | null>(null);
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop"
     },
     {
-      id: 3,
+      id: "smooth-animations-tech",
+      numericId: 3,
       title: "The Tech Behind Smooth Animations",
       excerpt: "Dive deep into the frameworks and principles that power buttery-smooth animations in modern web applications.",
       author: "Alex Rivera",
@@ -60,8 +68,25 @@ const [hoveredCard, setHoveredCard] = useState<number | null>(null);
       gradient: "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
       image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=600&h=400&fit=crop"
     },
-    
   ];
+
+  const handleBlogClick = (blogId: string) => {
+    if (onBlogClick) {
+      onBlogClick(blogId);
+    } else {
+      // Fallback: navigate to /blog with the ID
+      window.location.href = `/blog?id=${blogId}`;
+    }
+  };
+
+  const handleViewAllClick = () => {
+    if (onViewAllClick) {
+      onViewAllClick();
+    } else {
+      // Fallback: navigate to /blog
+      window.location.href = '/blog';
+    }
+  };
 
   return (
     <div className="blog-root" ref={sectionRef}>
@@ -95,8 +120,9 @@ const [hoveredCard, setHoveredCard] = useState<number | null>(null);
                 key={post.id}
                 className={`blog-card ${isInView ? 'blog-fade-in' : ''}`}
                 style={{ animationDelay: `${index * 0.15}s` }}
-                onMouseEnter={() => setHoveredCard(post.id)}
+                onMouseEnter={() => setHoveredCard(post.numericId)}
                 onMouseLeave={() => setHoveredCard(null)}
+                onClick={() => handleBlogClick(post.id)}
               >
                 {/* Card Image */}
                 <div className="blog-card-image-wrapper">
@@ -118,7 +144,7 @@ const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
                   {/* 3D Floating Icon */}
                   <div 
-                    className={`blog-floating-icon ${hoveredCard === post.id ? 'blog-icon-active' : ''}`}
+                    className={`blog-floating-icon ${hoveredCard === post.numericId ? 'blog-icon-active' : ''}`}
                     style={{ background: post.gradient }}
                   >
                     <IconComponent size={32} />
@@ -147,7 +173,7 @@ const [hoveredCard, setHoveredCard] = useState<number | null>(null);
                     <span>Read Article</span>
                     <ArrowRight 
                       size={20} 
-                      className={hoveredCard === post.id ? 'blog-arrow-active' : ''}
+                      className={hoveredCard === post.numericId ? 'blog-arrow-active' : ''}
                     />
                   </button>
                 </div>
@@ -161,7 +187,7 @@ const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
         {/* View All Button */}
         <div className={`blog-cta ${isInView ? 'blog-fade-in' : ''}`} style={{ animationDelay: '0.8s' }}>
-          <button className="blog-view-all-btn">
+          <button className="blog-view-all-btn" onClick={handleViewAllClick}>
             <span>View All Blog Posts</span>
             <ArrowRight size={24} />
           </button>

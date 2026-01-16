@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Mail,
   Phone,
@@ -19,12 +20,11 @@ const Footer = () => {
 
   // Initialize Appwrite client
   const client = new Client()
-    .setEndpoint('https://fra.cloud.appwrite.io/v1') // Replace with your Appwrite endpoint
-    .setProject('6933f4610012182c4b1d'); // Replace with your project ID
+    .setEndpoint('https://fra.cloud.appwrite.io/v1')
+    .setProject('6933f4610012182c4b1d');
 
   const databases = new Databases(client);
 
-  // Replace these with your actual values
   const DATABASE_ID = '6933f49b00278d1abf56';
   const COLLECTION_ID = '693443360011a536a28f';
 
@@ -39,7 +39,6 @@ const Footer = () => {
     setIsSubmitting(true);
 
     try {
-      // Check if email already exists in Appwrite
       const response = await databases.listDocuments(
         DATABASE_ID,
         COLLECTION_ID,
@@ -52,7 +51,6 @@ const Footer = () => {
         return;
       }
 
-      // Create new subscription document
       await databases.createDocument(
         DATABASE_ID,
         COLLECTION_ID,
@@ -276,10 +274,10 @@ const Footer = () => {
               <ul className="footer-links">
                 {aboutLinks.map((link, idx) => (
                   <li key={idx}>
-                    <a href={link.path}>
+                    <Link to={link.path}>
                       <ArrowRight className="link-icon" size={14} />
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -291,10 +289,10 @@ const Footer = () => {
               <ul className="footer-links">
                 {serviceLinks.map((link, idx) => (
                   <li key={idx}>
-                    <a href={link.path}>
+                    <Link to={link.path}>
                       <ArrowRight className="link-icon" size={14} />
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -306,10 +304,10 @@ const Footer = () => {
               <ul className="footer-links">
                 {portfolioLinks.map((link, idx) => (
                   <li key={idx}>
-                    <a href={link.path}>
+                    <Link to={link.path}>
                       <ArrowRight className="link-icon" size={14} />
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -321,10 +319,10 @@ const Footer = () => {
               <ul className="footer-links">
                 {quickLinks.map((link, idx) => (
                   <li key={idx}>
-                    <a href={link.path}>
+                    <Link to={link.path}>
                       <ArrowRight className="link-icon" size={14} />
                       {link.name}
-                    </a>
+                    </Link>
                   </li>
                 ))}
               </ul>

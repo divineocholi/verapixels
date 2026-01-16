@@ -432,7 +432,7 @@ const MobileAppDevelopment = () => {
           </div>
         </div>
       </section>
-          <VeeAIChatbot />
+        
 
       <style>{`
         * {

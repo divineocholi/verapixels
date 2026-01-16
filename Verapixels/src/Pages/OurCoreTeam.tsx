@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import {
   FiGithub,
@@ -32,7 +33,7 @@ const OurCoreTeam = () => {
       name: "Ocholi Divine",
       role: "Founder & CEO",
       image:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop",
+        "/src/assets/ocholi founder.jpeg",
       bio: "Visionary leader driving innovation and excellence at Verapixels",
       specialties: ["Strategy", "Innovation", "Leadership"],
       social: {
@@ -43,93 +44,93 @@ const OurCoreTeam = () => {
       },
       color: "#0063f4",
     },
-    {
-      name: "Sarah Chen",
-      role: "Lead Developer",
-      image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=600&fit=crop",
-      bio: "Full-stack wizard crafting elegant solutions to complex problems",
-      specialties: ["React", "Node.js", "Cloud"],
-      social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
-        email: "sarah@verapixels.com",
-      },
-      color: "#00bfff",
-    },
-    {
-      name: "Marcus Johnson",
-      role: "Creative Director",
-      image:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=600&fit=crop",
-      bio: "Design genius transforming ideas into stunning visual experiences",
-      specialties: ["UI/UX", "Branding", "Animation"],
-      social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
-        email: "marcus@verapixels.com",
-      },
-      color: "#00ff88",
-    },
-    {
-      name: "Amara Williams",
-      role: "Tech Lead",
-      image:
-        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=600&fit=crop",
-      bio: "Architecture expert building scalable systems that power the future",
-      specialties: ["DevOps", "Security", "Microservices"],
-      social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
-        email: "amara@verapixels.com",
-      },
-      color: "#ffd700",
-    },
-    {
-      name: "David Park",
-      role: "Product Manager",
-      image:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=600&fit=crop",
-      bio: "Strategic thinker aligning technology with business goals",
-      specialties: ["Product Strategy", "Agile", "Analytics"],
-      social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
-        email: "david@verapixels.com",
-      },
-      color: "#ff6b9d",
-    },
-    {
-      name: "Elena Rodriguez",
-      role: "Marketing Director",
-      image:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=600&fit=crop",
-      bio: "Brand storyteller connecting technology with human experiences",
-      specialties: ["Digital Marketing", "Content", "Growth"],
-      social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
-        email: "elena@verapixels.com",
-      },
-      color: "#9d4edd",
-    },
+   {
+  name: "Freda Mbajiorgu",
+  role: "Frontend Developer",
+  image: "/src/assets/freeda team member.jpeg",
+  bio: " Focused on building clean, responsive, and user-friendly interfaces.",
+  specialties: ["React", "JavaScript", "CSS"],
+  social: {
+    github: "#",
+    linkedin: "#",
+    twitter: "#",
+    email: "freda@verapixels.com",
+  },
+  color: "#00bfff",
+},
+
+   {
+  name: "Precious",
+  role: "Backend Developer",
+  image: "/src/assets/prech vera teem.jpeg",
+  bio: "Focused on building secure, scalable, and efficient server-side systems.",
+  specialties: ["Node.js", "APIs", "Databases"],
+  social: {
+    github: "#",
+    linkedin: "#",
+    twitter: "#",
+    email: "precious@verapixels.com",
+  },
+  color: "#00ff88",
+},
+
+   {
+  name: "Emmanuel Sanusi",
+  role: "Full Stack Developer",
+  image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=600&fit=crop",
+  bio: " Building complete web applications from frontend interfaces to backend logic.",
+  specialties: ["React", "Node.js", "Databases"],
+  social: {
+    github: "#",
+    linkedin: "#",
+    twitter: "#",
+    email: "emmanuel@verapixels.com",
+  },
+  color: "#ffd700",
+},
+
+   {
+  name: "Favour",
+  role: "Backend Engineer (Python)",
+  image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=600&fit=crop",
+  bio: "Building reliable APIs, business logic, and data-driven systems.",
+  specialties: ["Python", "APIs", "Databases"],
+  social: {
+    github: "#",
+    linkedin: "#",
+    twitter: "#",
+    email: "favour@verapixels.com",
+  },
+  color: "#ff6b9d",
+},
+
+ {
+  name: "Ella",
+  role: "UI/UX Designer",
+  image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=600&fit=crop",
+  bio: "Creating intuitive, user-centered interfaces and meaningful digital experiences.",
+  specialties: ["UI Design", "UX Research", "Prototyping"],
+  social: {
+    github: "#",
+    linkedin: "#",
+    twitter: "#",
+    email: "ella@verapixels.com",
+  },
+  color: "#9d4edd",
+},
+
   ];
 
   const stats = [
     {
       icon: <FiUsers />,
-      value: "15+",
+      value: "10+",
       label: "Team Members",
       color: "#0063f4",
     },
     {
       icon: <FiAward />,
-      value: "50+",
+      value: "20+",
       label: "Projects Delivered",
       color: "#00ff88",
     },
@@ -337,9 +338,11 @@ const OurCoreTeam = () => {
               passion for innovation and excellence. Join us in building the
               future of digital experiences.
             </p>
-            <button className="join-button">
-              View Open Positions <FiZap />
-            </button>
+            <Link to="/career">
+  <button className="join-button">
+    View Open Positions <FiZap />
+  </button>
+</Link>
           </div>
         </div>
       </section>
@@ -619,7 +622,7 @@ const OurCoreTeam = () => {
         .member-image-wrapper {
           position: relative;
           width: 100%;
-          height: 420px;
+          height: 460px;
           overflow: hidden;
         }
 
@@ -627,6 +630,7 @@ const OurCoreTeam = () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
+            object-position: center top;  
           transition: transform 0.6s ease;
         }
 
@@ -894,7 +898,6 @@ const OurCoreTeam = () => {
           }
         }
       `}</style>
-      <VeeAIChatbot />
     </div>
   );
 };

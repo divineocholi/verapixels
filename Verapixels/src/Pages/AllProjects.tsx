@@ -381,7 +381,7 @@ const AllProjects = () => {
           </div>
         </motion.div>
       </div>
-      <VeeAIChatbot />
+      
 
       {/* Animated Particles */}
       <style>{`

@@ -116,7 +116,7 @@ const Index: React.FC = () => {
         </Swiper>
       </main>
       
-      <VeeAIChatbot />
+      
       <ServicesSection />
       <TechSolutionBanner />
       <VeraAISection />

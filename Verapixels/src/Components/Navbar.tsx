@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FiChevronDown, FiPhone, FiMenu, FiX } from "react-icons/fi";
-import logo from "../assets/verapixels_logo_icon.jpg";
+import logo from "../assets/offical_main-removebg-preview.png";
 
 const Navbar: React.FC = () => {
   const [aboutDropdown, setAboutDropdown] = useState(false);
@@ -33,7 +33,7 @@ const Navbar: React.FC = () => {
       <div className="vp-nav-inner">
         <div className="vp-brand">
           <div className="vp-brand-left">
-            <img src={logo} alt="Verapixel" />
+            <img src={logo} alt="Verapixel" className="vp-logo" />
             <span className="vp-name">Verapixels</span>
           </div>
 
@@ -98,15 +98,12 @@ const Navbar: React.FC = () => {
               )}
             </div>
 
-            <Link to="/blog" className="vp-mobile-link" onClick={closeMobileMenu}>Blog</Link>
-
-        
+            <Link to="/blog">Blog</Link>
             <Link to="/career">Career</Link>
           </nav>
 
           {/* Mobile Menu Button */}
           <button className="vp-mobile-menu-btn" onClick={toggleMobileMenu}>
-            
             <span className="menu-text">Menu</span>
           </button>
 
@@ -189,8 +186,7 @@ const Navbar: React.FC = () => {
                 )}
               </div>
 
-               <Link to="/blog" className="vp-mobile-link" onClick={closeMobileMenu}>Blog</Link>
-
+              <Link to="/blog" className="vp-mobile-link" onClick={closeMobileMenu}>Blog</Link>
               <Link to="/career" className="vp-mobile-link" onClick={closeMobileMenu}>Career</Link>
 
               <Link to="/contact" className="vp-mobile-cta" onClick={closeMobileMenu}>

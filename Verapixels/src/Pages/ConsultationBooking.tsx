@@ -16,27 +16,15 @@ import {
   FiRefreshCw
 } from 'react-icons/fi';
 import { SiGooglemeet, SiZoom, SiWhatsapp } from 'react-icons/si';
-import { Client, Databases, Query, ID } from 'appwrite';
+import { supabase } from '../Components/supabase';
 
-// Appwrite Configuration
-const client = new Client()
-  .setEndpoint('https://fra.cloud.appwrite.io/v1')
-  .setProject('6933f4610012182c4b1d');
-
-const databases = new Databases(client);
-
-const DATABASE_ID = '6933f49b00278d1abf56';
-const COLLECTION_ID = '6933f4e8001914902fb2';
-
-// Business timezone (Lagos, Nigeria)
 const BUSINESS_TIMEZONE = 'Africa/Lagos';
 const BUSINESS_HOURS = {
-  start: 9, // 9:00 AM
-  end: 16, // 4:00 PM
-  endMinutes: 30 // 4:30 PM (last slot starts at 4:00 PM, ends at 4:30 PM)
+  start: 9,
+  end: 16,
+  endMinutes: 30
 };
 
-// Type definitions
 interface DayType {
   day: string | number;
   date?: string;
@@ -46,24 +34,15 @@ interface DayType {
   disabled?: boolean;
 }
 
-interface Booking {
-  booking_date: string;
-  booking_time: string;
-  status: string;
-  timezone: string;
-}
-
-// Timezone utilities
 const convertTimeToTimezone = (time: string, date: string, fromTz: string, toTz: string) => {
   const [hours, minutes, period] = time.match(/(\d+):(\d+)\s*(AM|PM)/i)?.slice(1) || [];
   let hour = parseInt(hours);
-  if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
-  if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
+  if (period?.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+  if (period?.toUpperCase() === 'AM' && hour === 12) hour = 0;
 
   const dateTimeString = `${date}T${hour.toString().padStart(2, '0')}:${minutes}:00`;
   const sourceDate = new Date(dateTimeString + ' GMT');
   
-  // Get offset difference
   const sourceFormatter = new Intl.DateTimeFormat('en-US', {
     timeZone: fromTz,
     year: 'numeric',
@@ -84,11 +63,9 @@ const convertTimeToTimezone = (time: string, date: string, fromTz: string, toTz:
     hour12: false
   });
 
-  // Create date in source timezone
   const sourceParts = sourceFormatter.formatToParts(new Date(dateTimeString));
   const sourceHour = parseInt(sourceParts.find(p => p.type === 'hour')?.value || '0');
   
-  // Create date in target timezone
   const targetParts = targetFormatter.formatToParts(new Date(dateTimeString));
   const targetHour = parseInt(targetParts.find(p => p.type === 'hour')?.value || '0');
   
@@ -103,7 +80,6 @@ const convertTimeToTimezone = (time: string, date: string, fromTz: string, toTz:
 };
 
 const isTimeSlotAvailable = (time: string, date: string, userTz: string) => {
-  // Convert user's selected time to business timezone
   const businessTime = convertTimeToTimezone(time, date, userTz, BUSINESS_TIMEZONE);
   const [hours, minutes] = businessTime.match(/(\d+):(\d+)\s*(AM|PM)/i)?.slice(1, 3) || [];
   let hour = parseInt(hours);
@@ -113,12 +89,10 @@ const isTimeSlotAvailable = (time: string, date: string, userTz: string) => {
   if (period === 'PM' && hour !== 12) hour += 12;
   if (period === 'AM' && hour === 12) hour = 0;
   
-  // Check if time is within business hours (9:00 AM to 4:00 PM, with 4:00 PM being the last slot)
   if (hour < BUSINESS_HOURS.start) return false;
   if (hour > BUSINESS_HOURS.end) return false;
   if (hour === BUSINESS_HOURS.end && minute > 0) return false;
   
-  // Check if it's today and the time has already passed in Lagos timezone
   const now = new Date();
   const lagosNow = new Date(now.toLocaleString('en-US', { timeZone: BUSINESS_TIMEZONE }));
   const selectedDate = new Date(date + 'T00:00:00');
@@ -129,7 +103,6 @@ const isTimeSlotAvailable = (time: string, date: string, userTz: string) => {
     const currentHour = lagosNow.getHours();
     const currentMinute = lagosNow.getMinutes();
     
-    // If current time is past the selected slot time, mark as unavailable
     if (hour < currentHour) return false;
     if (hour === currentHour && minute <= currentMinute) return false;
   }
@@ -137,7 +110,6 @@ const isTimeSlotAvailable = (time: string, date: string, userTz: string) => {
   return true;
 };
 
-// Custom Time Selector Component
 const CustomTimeSelector = ({ 
   selectedTime, 
   onTimeSelect, 
@@ -170,16 +142,16 @@ const CustomTimeSelector = ({
     };
   }, [isOpen]);
 
+  const getBusinessTime = (time: string) => {
+    if (!selectedDate) return '';
+    return convertTimeToTimezone(time, selectedDate, userTimezone, businessTimezone);
+  };
+
   const handleTimeClick = (time: string) => {
     if (!bookedSlots.includes(time) && isTimeSlotAvailable(time, selectedDate, userTimezone)) {
       onTimeSelect(time);
       setIsOpen(false);
     }
-  };
-
-  const getBusinessTime = (time: string) => {
-    if (!selectedDate) return '';
-    return convertTimeToTimezone(time, selectedDate, userTimezone, businessTimezone);
   };
 
   return (
@@ -234,7 +206,6 @@ const CustomTimeSelector = ({
   );
 };
 
-// Custom Calendar Component
 const CustomCalendar = ({ 
   selectedDate, 
   onDateSelect, 
@@ -413,7 +384,6 @@ const CustomCalendar = ({
   );
 };
 
-// Timezone Selector Component with Search
 const TimezoneSelector = ({ 
   currentTimezone, 
   onTimezoneChange 
@@ -424,9 +394,7 @@ const TimezoneSelector = ({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Comprehensive list of all timezones
   const allTimezones = [
-    // Africa
     { value: 'Africa/Abidjan', label: 'Abidjan (GMT)', region: 'Africa' },
     { value: 'Africa/Accra', label: 'Accra (GMT)', region: 'Africa' },
     { value: 'Africa/Addis_Ababa', label: 'Addis Ababa (EAT)', region: 'Africa' },
@@ -438,7 +406,6 @@ const TimezoneSelector = ({
     { value: 'Africa/Nairobi', label: 'Nairobi (EAT)', region: 'Africa' },
     { value: 'Africa/Tunis', label: 'Tunis (CET)', region: 'Africa' },
     
-    // America - North
     { value: 'America/Anchorage', label: 'Anchorage (AKST)', region: 'America' },
     { value: 'America/Chicago', label: 'Chicago (CST)', region: 'America' },
     { value: 'America/Denver', label: 'Denver (MST)', region: 'America' },
@@ -449,7 +416,6 @@ const TimezoneSelector = ({
     { value: 'America/Toronto', label: 'Toronto (EST)', region: 'America' },
     { value: 'America/Vancouver', label: 'Vancouver (PST)', region: 'America' },
     
-    // America - South
     { value: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires (ART)', region: 'America' },
     { value: 'America/Bogota', label: 'Bogota (COT)', region: 'America' },
     { value: 'America/Caracas', label: 'Caracas (VET)', region: 'America' },
@@ -457,12 +423,10 @@ const TimezoneSelector = ({
     { value: 'America/Santiago', label: 'Santiago (CLT)', region: 'America' },
     { value: 'America/Sao_Paulo', label: 'São Paulo (BRT)', region: 'America' },
     
-    // America - Caribbean
     { value: 'America/Havana', label: 'Havana (CST)', region: 'America' },
     { value: 'America/Jamaica', label: 'Jamaica (EST)', region: 'America' },
     { value: 'America/Puerto_Rico', label: 'Puerto Rico (AST)', region: 'America' },
     
-    // Asia
     { value: 'Asia/Baghdad', label: 'Baghdad (AST)', region: 'Asia' },
     { value: 'Asia/Baku', label: 'Baku (AZT)', region: 'Asia' },
     { value: 'Asia/Bangkok', label: 'Bangkok (ICT)', region: 'Asia' },
@@ -490,12 +454,10 @@ const TimezoneSelector = ({
     { value: 'Asia/Tokyo', label: 'Tokyo (JST)', region: 'Asia' },
     { value: 'Asia/Yangon', label: 'Yangon (MMT)', region: 'Asia' },
     
-    // Atlantic
     { value: 'Atlantic/Azores', label: 'Azores (AZOT)', region: 'Atlantic' },
     { value: 'Atlantic/Bermuda', label: 'Bermuda (AST)', region: 'Atlantic' },
     { value: 'Atlantic/Reykjavik', label: 'Reykjavik (GMT)', region: 'Atlantic' },
     
-    // Australia
     { value: 'Australia/Adelaide', label: 'Adelaide (ACST)', region: 'Australia' },
     { value: 'Australia/Brisbane', label: 'Brisbane (AEST)', region: 'Australia' },
     { value: 'Australia/Darwin', label: 'Darwin (ACST)', region: 'Australia' },
@@ -503,7 +465,6 @@ const TimezoneSelector = ({
     { value: 'Australia/Perth', label: 'Perth (AWST)', region: 'Australia' },
     { value: 'Australia/Sydney', label: 'Sydney (AEST)', region: 'Australia' },
     
-    // Europe
     { value: 'Europe/Amsterdam', label: 'Amsterdam (CET)', region: 'Europe' },
     { value: 'Europe/Athens', label: 'Athens (EET)', region: 'Europe' },
     { value: 'Europe/Berlin', label: 'Berlin (CET)', region: 'Europe' },
@@ -527,7 +488,6 @@ const TimezoneSelector = ({
     { value: 'Europe/Warsaw', label: 'Warsaw (CET)', region: 'Europe' },
     { value: 'Europe/Zurich', label: 'Zurich (CET)', region: 'Europe' },
     
-    // Pacific
     { value: 'Pacific/Auckland', label: 'Auckland (NZST)', region: 'Pacific' },
     { value: 'Pacific/Fiji', label: 'Fiji (FJT)', region: 'Pacific' },
     { value: 'Pacific/Guam', label: 'Guam (ChST)', region: 'Pacific' },
@@ -626,6 +586,35 @@ const TimezoneSelector = ({
   );
 };
 
+const contactMethods = [
+  { id: 'video', label: 'Video Call', icon: <FiVideo />, color: '#0063f4' },
+  { id: 'audio', label: 'Audio Call', icon: <FiPhone />, color: '#00bfff' },
+  { id: 'googlemeet', label: 'Google Meet', icon: <SiGooglemeet />, color: '#00ff88' },
+  { id: 'whatsapp', label: 'WhatsApp', icon: <SiWhatsapp />, color: '#25D366' },
+  { id: 'zoom', label: 'Zoom Call', icon: <SiZoom />, color: '#2D8CFF' },
+  { id: 'phone', label: 'Phone Call', icon: <FiPhone />, color: '#ff6b9d' }
+];
+
+const generateTimeSlots = () => {
+  const slots: string[] = [];
+  const startHour = BUSINESS_HOURS.start;
+  const endHour = BUSINESS_HOURS.end;
+  
+  for (let hour = startHour; hour <= endHour; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      if (hour === endHour && minute > 0) break;
+      
+      const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const minuteStr = minute.toString().padStart(2, '0');
+      slots.push(`${displayHour.toString().padStart(2, '0')}:${minuteStr} ${period}`);
+    }
+  }
+  return slots;
+};
+
+const timeSlots = generateTimeSlots();
+
 const ConsultationBooking = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -645,7 +634,6 @@ const ConsultationBooking = () => {
   const [userTimezone, setUserTimezone] = useState('');
   const [detectedTimezone, setDetectedTimezone] = useState('');
 
-  // Detect user's timezone
   useEffect(() => {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     setUserTimezone(timezone);
@@ -680,7 +668,6 @@ const ConsultationBooking = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Check availability when date changes
   useEffect(() => {
     if (formData.preferredDate) {
       checkAvailability(formData.preferredDate);
@@ -689,52 +676,21 @@ const ConsultationBooking = () => {
     }
   }, [formData.preferredDate]);
 
-  const contactMethods = [
-    { id: 'video', label: 'Video Call', icon: <FiVideo />, color: '#0063f4' },
-    { id: 'audio', label: 'Audio Call', icon: <FiPhone />, color: '#00bfff' },
-    { id: 'googlemeet', label: 'Google Meet', icon: <SiGooglemeet />, color: '#00ff88' },
-    { id: 'whatsapp', label: 'WhatsApp', icon: <SiWhatsapp />, color: '#25D366' },
-    { id: 'zoom', label: 'Zoom Call', icon: <SiZoom />, color: '#2D8CFF' },
-    { id: 'phone', label: 'Phone Call', icon: <FiPhone />, color: '#ff6b9d' }
-  ];
-
-  // Generate time slots based on business hours (30-minute intervals)
-  const generateTimeSlots = () => {
-    const slots: string[] = [];
-    const startHour = BUSINESS_HOURS.start;
-    const endHour = BUSINESS_HOURS.end;
-    
-    for (let hour = startHour; hour <= endHour; hour++) {
-      // Add slots for :00 and :30
-      for (let minute = 0; minute < 60; minute += 30) {
-        // Skip if it's past 4:00 PM (last slot is 4:00 PM)
-        if (hour === endHour && minute > 0) break;
-        
-        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
-        const period = hour >= 12 ? 'PM' : 'AM';
-        const minuteStr = minute.toString().padStart(2, '0');
-        slots.push(`${displayHour.toString().padStart(2, '0')}:${minuteStr} ${period}`);
-      }
-    }
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
-
-  // Check availability for a specific date
   const checkAvailability = async (date: string) => {
     setIsCheckingAvailability(true);
     try {
-      const response = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTION_ID,
-        [
-          Query.equal('booking_date', date),
-          Query.equal('status', 'confirmed')
-        ]
-      );
+      const { data, error } = await supabase
+        .from('consultations')
+        .select('booking_time, status')
+        .eq('booking_date', date)
+        .in('status', ['confirmed', 'pending']);
 
-      const booked = response.documents.map((doc: any) => doc.booking_time);
+      if (error) throw error;
+
+      const booked = data
+        .filter(booking => booking.status === 'confirmed' || booking.status === 'pending')
+        .map(booking => booking.booking_time);
+      
       setBookedSlots(booked);
     } catch (error) {
       console.error('Error checking availability:', error);
@@ -763,7 +719,6 @@ const ConsultationBooking = () => {
 
   const handleTimezoneChange = (tz: string) => {
     setUserTimezone(tz);
-    // Clear selected time when timezone changes
     setFormData((prev) => ({ ...prev, preferredTime: '' }));
   };
 
@@ -778,18 +733,16 @@ const ConsultationBooking = () => {
     setSubmitStatus(null);
 
     try {
-      // Double-check availability before booking
-      const checkResponse = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTION_ID,
-        [
-          Query.equal('booking_date', formData.preferredDate),
-          Query.equal('booking_time', formData.preferredTime),
-          Query.equal('status', 'confirmed')
-        ]
-      );
+      const { data: existingBookings, error: checkError } = await supabase
+        .from('consultations')
+        .select('*')
+        .eq('booking_date', formData.preferredDate)
+        .eq('booking_time', formData.preferredTime)
+        .in('status', ['confirmed', 'pending']);
 
-      if (checkResponse.documents.length > 0) {
+      if (checkError) throw checkError;
+
+      if (existingBookings && existingBookings.length > 0) {
         alert('Sorry, this time slot was just booked. Please select another time.');
         await checkAvailability(formData.preferredDate);
         setIsSubmitting(false);
@@ -797,31 +750,34 @@ const ConsultationBooking = () => {
       }
 
       const businessTime = getBusinessTime(formData.preferredTime);
+      const consultationId = `cons_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // Create booking in Appwrite
-      const bookingData = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        contact_method: contactMethods.find(m => m.id === formData.contactMethod)?.label || formData.contactMethod,
-        booking_date: formData.preferredDate,
-        booking_time: formData.preferredTime,
-        message: formData.message || 'No additional message provided',
-        timezone: userTimezone,
-        business_time: businessTime,
-        status: 'confirmed'
-      };
+      // FIXED: User bookings use same structure as admin bookings
+      const { data, error } = await supabase
+        .from('consultations')
+        .insert([{
+          consultation_id: consultationId,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          contact_method: contactMethods.find(m => m.id === formData.contactMethod)?.label || formData.contactMethod,
+          booking_date: formData.preferredDate,
+          booking_time: formData.preferredTime,
+          user_timezone: userTimezone,
+          business_time: businessTime,
+          message: formData.message || 'No additional message provided',
+          status: 'pending', // Same as admin bookings
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          admin_reply_sent: false, // Added
+          assigned_admin_id: null // Added
+        }])
+        .select();
 
-      const bookingResponse = await databases.createDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        ID.unique(),
-        bookingData
-      );
+      if (error) throw error;
 
-      console.log('Booking created:', bookingResponse);
+      console.log('Booking created in Supabase:', data);
 
-      // Send emails via EmailJS
       const serviceId = 'service_w8wwd8e';
       const publicKey = 'NUKm-dvMLR7ftwvbF';
       const adminTemplateId = 'template_503vbvj';
@@ -842,10 +798,10 @@ const ConsultationBooking = () => {
         user_timezone: userTimezone,
         business_timezone: BUSINESS_TIMEZONE,
         message: formData.message || 'No additional message provided',
-        timezone: userTimezone
+        timezone: userTimezone,
+        consultation_id: consultationId
       };
 
-      // Send notification to admin
       await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -857,7 +813,6 @@ const ConsultationBooking = () => {
         })
       });
 
-      // Send auto-reply to user
       await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1578,7 +1533,7 @@ const ConsultationBooking = () => {
 
         .form-section {
           display: flex;
-          flex-direction: column;
+          flexDirection: column;
           gap: 24px;
           position: relative;
           z-index: auto;
@@ -2434,7 +2389,7 @@ const ConsultationBooking = () => {
 
         .info-card p {
           font-size: 1.05rem;
-          line-height: 1.6;
+          lineHeight: 1.6;
           color: rgba(255, 255, 255, 0.75);
         }
 

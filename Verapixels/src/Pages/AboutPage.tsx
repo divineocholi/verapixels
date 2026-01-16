@@ -13,9 +13,7 @@ import {
   FiStar,
   FiHeart,
   FiAward,
-  FiBook,
-  FiMenu,
-  FiX
+  FiBook
 } from "react-icons/fi";
 
 const AboutPage = () => {
@@ -23,7 +21,7 @@ const AboutPage = () => {
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement> | MouseEvent) => {
+    const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
 
@@ -31,13 +29,36 @@ const AboutPage = () => {
       setScrollY(window.scrollY);
     };
 
-    window.addEventListener("mousemove", handleMouseMove as any);
+    window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("scroll", handleScroll);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove as any);
+      window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("scroll", handleScroll);
     };
+  }, []);
+
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: "0px 0px -100px 0px"
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-in");
+        }
+      });
+    }, observerOptions);
+
+    const animatedElements = document.querySelectorAll(
+      ".scroll-animate, .scroll-fade, .scroll-zoom, .scroll-slide-left, .scroll-slide-right, .scroll-slide-up"
+    );
+
+    animatedElements.forEach(el => observer.observe(el));
+
+    return () => observer.disconnect();
   }, []);
 
   const values = [
@@ -75,7 +96,6 @@ const AboutPage = () => {
 
   return (
     <div className="about-page">
-      {/* Animated Background */}
       <div className="about-bg-particles">
         <div 
           className="particle particle-1"
@@ -97,11 +117,10 @@ const AboutPage = () => {
         />
       </div>
 
-      {/* Hero Section */}
       <section className="about-hero">
         <div className="about-container">
           <div className="hero-grid">
-            <div className="hero-content">
+            <div className="hero-content scroll-slide-left">
               <div 
                 className="hero-badge"
                 style={{
@@ -128,7 +147,7 @@ const AboutPage = () => {
               </div>
             </div>
             
-            <div className="hero-visual">
+            <div className="hero-visual scroll-zoom">
               <div 
                 className="floating-cube"
                 style={{
@@ -147,14 +166,13 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Founder Story Section */}
       <section className="founder-section">
         <div className="about-container">
           <div className="founder-grid">
-            <div className="founder-image-wrapper">
+            <div className="founder-image-wrapper scroll-slide-left">
               <div className="founder-frame">
                 <img 
-                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=600&fit=crop" 
+                  src="/src/assets/main founder.jpeg" 
                   alt="Ocholi Divine"
                   className="founder-image"
                 />
@@ -162,7 +180,7 @@ const AboutPage = () => {
               </div>
             </div>
             
-            <div className="founder-content">
+            <div className="founder-content scroll-slide-right">
               <div className="founder-label">
                 <FiBook /> Our Founder
               </div>
@@ -198,10 +216,9 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Origin Story Section */}
       <section className="origin-section">
         <div className="about-container">
-          <div className="origin-header">
+          <div className="origin-header scroll-fade">
             <h2 className="section-title text-center">
               The Birth of <span className="gradient-text">Verapixels</span>
             </h2>
@@ -209,7 +226,7 @@ const AboutPage = () => {
           </div>
 
           <div className="origin-story">
-            <div className="story-card">
+            <div className="story-card scroll-slide-up">
               <div className="story-number">01</div>
               <div className="story-icon">
                 <FiBook />
@@ -222,7 +239,7 @@ const AboutPage = () => {
               </p>
             </div>
 
-            <div className="story-card">
+            <div className="story-card scroll-slide-up" style={{ animationDelay: "0.15s" }}>
               <div className="story-number">02</div>
               <div className="story-icon">
                 <FiLayers />
@@ -235,7 +252,7 @@ const AboutPage = () => {
               </p>
             </div>
 
-            <div className="story-card">
+            <div className="story-card scroll-slide-up" style={{ animationDelay: "0.3s" }}>
               <div className="story-number">03</div>
               <div className="story-icon">
                 <FiStar />
@@ -251,11 +268,10 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Name Meaning Section */}
       <section className="meaning-section">
         <div className="about-container">
           <div className="meaning-content">
-            <div className="meaning-visual">
+            <div className="meaning-visual scroll-zoom">
               <div className="pixel-grid">
                 {[...Array(20)].map((_, i) => (
                   <div 
@@ -269,7 +285,7 @@ const AboutPage = () => {
               </div>
             </div>
             
-            <div className="meaning-text">
+            <div className="meaning-text scroll-slide-right">
               <h2 className="section-title">
                 What <span className="gradient-text">Verapixels</span> Means
               </h2>
@@ -303,11 +319,10 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Mission & Vision Section */}
       <section className="mission-section">
         <div className="about-container">
           <div className="mission-grid">
-            <div className="mission-card">
+            <div className="mission-card scroll-zoom">
               <div className="mission-icon">
                 <FiTarget />
               </div>
@@ -319,7 +334,7 @@ const AboutPage = () => {
               </p>
             </div>
 
-            <div className="mission-card">
+            <div className="mission-card scroll-zoom" style={{ animationDelay: "0.2s" }}>
               <div className="mission-icon">
                 <FiZap />
               </div>
@@ -334,10 +349,9 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Values Section */}
       <section className="values-section">
         <div className="about-container">
-          <h2 className="section-title text-center">
+          <h2 className="section-title text-center scroll-fade">
             Our Core <span className="gradient-text">Values</span>
           </h2>
           <p className="section-subtitle">The principles that drive everything we do</p>
@@ -346,7 +360,7 @@ const AboutPage = () => {
             {values.map((value, i) => (
               <div 
                 key={i} 
-                className="value-card"
+                className="value-card scroll-zoom"
                 style={{
                   animationDelay: `${i * 0.15}s`
                 }}
@@ -366,10 +380,9 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* Timeline Section */}
       <section className="timeline-section">
         <div className="about-container">
-          <h2 className="section-title text-center">
+          <h2 className="section-title text-center scroll-fade">
             Our <span className="gradient-text">Journey</span>
           </h2>
           <p className="section-subtitle">Building the future, one pixel at a time</p>
@@ -378,7 +391,7 @@ const AboutPage = () => {
             {milestones.map((milestone, i) => (
               <div 
                 key={i} 
-                className="timeline-item"
+                className="timeline-item scroll-slide-right"
                 style={{
                   animationDelay: `${i * 0.2}s`
                 }}
@@ -395,10 +408,9 @@ const AboutPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="cta-section">
         <div className="about-container">
-          <div className="cta-content">
+          <div className="cta-content scroll-zoom">
             <h2 className="cta-title">Ready to Create Something Amazing?</h2>
             <p className="cta-description">
               Let's bring your vision to life with pixel-perfect precision
@@ -439,7 +451,6 @@ const AboutPage = () => {
           min-height: 100vh;
         }
 
-        /* Animated Background */
         .about-bg-particles {
           position: fixed;
           inset: 0;
@@ -487,6 +498,61 @@ const AboutPage = () => {
           66% { transform: translate(-20px, 20px) scale(0.9); }
         }
 
+        .scroll-animate,
+        .scroll-fade,
+        .scroll-zoom,
+        .scroll-slide-left,
+        .scroll-slide-right,
+        .scroll-slide-up {
+          opacity: 0;
+          transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .scroll-fade {
+          transform: translateY(30px);
+        }
+
+        .scroll-fade.animate-in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        .scroll-zoom {
+          transform: scale(0.85);
+        }
+
+        .scroll-zoom.animate-in {
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        .scroll-slide-left {
+          transform: translateX(-60px);
+        }
+
+        .scroll-slide-left.animate-in {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        .scroll-slide-right {
+          transform: translateX(60px);
+        }
+
+        .scroll-slide-right.animate-in {
+          opacity: 1;
+          transform: translateX(0);
+        }
+
+        .scroll-slide-up {
+          transform: translateY(60px);
+        }
+
+        .scroll-slide-up.animate-in {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
         .about-container {
           max-width: 1200px;
           margin: 0 auto;
@@ -495,7 +561,6 @@ const AboutPage = () => {
           z-index: 1;
         }
 
-        /* Hero Section */
         .about-hero {
           min-height: 100vh;
           display: flex;
@@ -508,15 +573,6 @@ const AboutPage = () => {
           grid-template-columns: 1fr 1fr;
           gap: 3rem;
           align-items: center;
-        }
-
-        .hero-content {
-          animation: slideInLeft 1s ease;
-        }
-
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-50px); }
-          to { opacity: 1; transform: translateX(0); }
         }
 
         .hero-badge {
@@ -597,12 +653,10 @@ const AboutPage = () => {
           transform: translateY(-3px);
         }
 
-        /* 3D Floating Cube */
         .hero-visual {
           display: flex;
           justify-content: center;
           align-items: center;
-          transition: transform 0.1s ease;
         }
 
         .floating-cube {
@@ -635,7 +689,6 @@ const AboutPage = () => {
         .cube-face.top    { transform: rotateX(90deg) translateZ(100px); }
         .cube-face.bottom { transform: rotateX(-90deg) translateZ(100px); }
 
-        /* Founder Section */
         .founder-section {
           padding: 7.5rem 0;
           background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.03), transparent);
@@ -648,17 +701,12 @@ const AboutPage = () => {
           align-items: center;
         }
 
-        .founder-image-wrapper {
-          position: relative;
-        }
-
         .founder-frame {
-          position: relative;
           border-radius: 30px;
           overflow: hidden;
           border: 3px solid rgba(0, 99, 244, 0.3);
           box-shadow: 0 30px 80px rgba(0, 99, 244, 0.2);
-          animation: fadeInUp 1s ease;
+          position: relative;
         }
 
         .founder-image {
@@ -672,15 +720,6 @@ const AboutPage = () => {
           position: absolute;
           inset: 0;
           background: linear-gradient(135deg, rgba(0, 99, 244, 0.2), rgba(0, 191, 255, 0.1));
-        }
-
-        .founder-content {
-          animation: fadeInUp 1s ease 0.2s both;
-        }
-
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
         }
 
         .founder-label {
@@ -700,7 +739,6 @@ const AboutPage = () => {
         .section-title {
           font-size: clamp(2.25rem, 5vw, 3.25rem);
           font-weight: 900;
-          text-align: center;
           line-height: 1.2;
           margin: 0 0 1.75rem;
         }
@@ -737,10 +775,6 @@ const AboutPage = () => {
           border-radius: 16px;
           text-align: center;
           transition: all 0.3s ease;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
         }
 
         .stat-box:hover {
@@ -753,15 +787,6 @@ const AboutPage = () => {
           font-size: 2rem;
           color: #00bfff;
           margin-bottom: 0.75rem;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-        }
-
-        .stat-icon svg {
-          display: block;
-          margin: 0 auto;
         }
 
         .stat-label {
@@ -770,7 +795,6 @@ const AboutPage = () => {
           font-size: 0.95rem;
         }
 
-        /* Origin Story Section */
         .origin-section {
           padding: 7.5rem 0;
         }
@@ -793,7 +817,6 @@ const AboutPage = () => {
           border-radius: 24px;
           transition: all 0.4s ease;
           overflow: hidden;
-          animation: fadeInUp 0.8s ease both;
         }
 
         .story-card:hover {
@@ -823,29 +846,22 @@ const AboutPage = () => {
           border-radius: 18px;
           color: #fff;
           font-size: 2rem;
-          margin: 0 0 1.5rem 0;
+          margin-bottom: 1.5rem;
           box-shadow: 0 10px 30px rgba(0, 99, 244, 0.3);
-        }
-
-        .story-icon svg {
-          display: block;
-          margin: 0;
         }
 
         .story-title {
           font-size: clamp(1.375rem, 3vw, 1.6rem);
           font-weight: 700;
-          margin: 0 0 1rem;
+          margin-bottom: 1rem;
         }
 
         .story-text {
           font-size: clamp(0.95rem, 2vw, 1.05rem);
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.8);
-          margin: 0;
         }
 
-        /* Name Meaning Section */
         .meaning-section {
           padding: 7.5rem 0;
           background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.05), transparent);
@@ -859,7 +875,6 @@ const AboutPage = () => {
         }
 
         .meaning-visual {
-          position: relative;
           min-height: 400px;
           display: flex;
           align-items: center;
@@ -871,7 +886,6 @@ const AboutPage = () => {
           grid-template-columns: repeat(5, 1fr);
           gap: 1.25rem;
           max-width: 400px;
-          margin: 0 auto;
         }
 
         .pixel-dot {
@@ -907,14 +921,13 @@ const AboutPage = () => {
           background: linear-gradient(135deg, #0063f4, #00bfff);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          margin: 0 0 0.75rem;
+          margin-bottom: 0.75rem;
         }
 
         .word-description {
           font-size: clamp(0.95rem, 2vw, 1.05rem);
           line-height: 1.7;
           color: rgba(255, 255, 255, 0.8);
-          margin: 0;
         }
 
         .plus-sign {
@@ -935,17 +948,15 @@ const AboutPage = () => {
           font-size: clamp(1.5rem, 3vw, 1.8rem);
           font-weight: 800;
           color: #00bfff;
-          margin: 0 0 1rem;
+          margin-bottom: 1rem;
         }
 
         .result-text {
           font-size: clamp(1rem, 2vw, 1.1rem);
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.9);
-          margin: 0;
         }
 
-        /* Mission Section */
         .mission-section {
           padding: 7.5rem 0;
         }
@@ -965,9 +976,7 @@ const AboutPage = () => {
           position: relative;
           overflow: hidden;
           min-height: 360px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+          text-align: center;
         }
 
         .mission-card::before {
@@ -1005,33 +1014,22 @@ const AboutPage = () => {
           z-index: 1;
         }
 
-        .mission-icon svg {
-          display: block;
-          margin: 0 auto;
-        }
-
         .mission-title {
           font-size: clamp(1.75rem, 3vw, 2rem);
           font-weight: 800;
-          margin: 0 0 1.25rem;
+          margin-bottom: 1.25rem;
           position: relative;
           z-index: 1;
-          text-align: center;
-          width: 100%;
         }
 
         .mission-text {
           font-size: clamp(1rem, 2vw, 1.1rem);
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.85);
-          margin: 0;
           position: relative;
           z-index: 1;
-          text-align: center;
-          width: 100%;
         }
 
-        /* Values Section */
         .values-section {
           padding: 7.5rem 0;
           background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.03), transparent);
@@ -1052,11 +1050,8 @@ const AboutPage = () => {
           border-radius: 20px;
           transition: all 0.4s ease;
           overflow: hidden;
-          animation: fadeInUp 0.8s ease both;
           min-height: 340px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+          text-align: center;
         }
 
         .value-card:hover {
@@ -1083,41 +1078,21 @@ const AboutPage = () => {
 
         .value-icon {
           font-size: 3.5rem;
-          margin: 0 0 2rem 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 100%;
-          height: 80px;
-        }
-
-        .value-icon svg {
-          display: block;
-          margin: 0 auto;
+          margin-bottom: 2rem;
         }
 
         .value-title {
           font-size: clamp(1.375rem, 2.5vw, 1.5rem);
           font-weight: 700;
-          margin: 0 0 1.25rem;
-          position: relative;
-          z-index: 1;
-          text-align: center;
-          width: 100%;
+          margin-bottom: 1.25rem;
         }
 
         .value-description {
           font-size: clamp(1rem, 2vw, 1.05rem);
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.8);
-          margin: 0;
-          position: relative;
-          z-index: 1;
-          text-align: center;
-          width: 100%;
         }
 
-        /* Timeline Section */
         .timeline-section {
           padding: 7.5rem 0;
         }
@@ -1142,7 +1117,6 @@ const AboutPage = () => {
           position: relative;
           padding-left: 90px;
           margin-bottom: 5rem;
-          animation: fadeInUp 0.8s ease both;
         }
 
         .timeline-dot {
@@ -1191,17 +1165,15 @@ const AboutPage = () => {
         .timeline-title {
           font-size: clamp(1.5rem, 3vw, 1.8rem);
           font-weight: 700;
-          margin: 0 0 0.75rem;
+          margin-bottom: 0.75rem;
         }
 
         .timeline-text {
           font-size: clamp(0.95rem, 2vw, 1.05rem);
           line-height: 1.7;
           color: rgba(255, 255, 255, 0.8);
-          margin: 0;
         }
 
-        /* CTA Section */
         .cta-section {
           padding: 7.5rem 0 5rem;
           text-align: center;
@@ -1216,7 +1188,7 @@ const AboutPage = () => {
           font-size: clamp(2.25rem, 5vw, 3.5rem);
           font-weight: 900;
           line-height: 1.2;
-          margin: 0 0 1.5rem;
+          margin-bottom: 1.5rem;
         }
 
         .cta-description {
@@ -1310,30 +1282,10 @@ const AboutPage = () => {
           box-shadow: 0 10px 30px rgba(0, 99, 244, 0.5);
         }
 
-        /* Responsive Design */
         @media (max-width: 968px) {
-          .about-container {
-            padding: 0 1.5rem;
-          }
-
           .hero-grid {
             grid-template-columns: 1fr;
             text-align: center;
-            gap: 2rem;
-          }
-
-          .hero-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-          }
-
-          .hero-subtitle {
-            margin: 0 auto 2rem;
-          }
-
-          .hero-visual {
-            margin-top: 2rem;
           }
 
           .hero-cta {
@@ -1350,66 +1302,13 @@ const AboutPage = () => {
             height: 450px;
           }
 
-          .mission-grid {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-          }
-
-          .origin-story {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-          }
-
           .values-grid {
             grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-          }
-
-          .meaning-breakdown {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 1.5rem;
-          }
-
-          .word-part {
-            min-width: 100%;
-            text-align: center;
-          }
-
-          .word-description {
-            text-align: center;
-          }
-
-          .plus-sign {
-            align-self: center;
-            margin: 1rem 0;
-          }
-
-          .meaning-visual {
-            min-height: 300px;
-            margin-bottom: 2rem;
-          }
-
-          .pixel-grid {
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            max-width: 280px;
-          }
-
-          .pixel-dot {
-            width: 50px;
-            height: 50px;
-          }
-
-          .meaning-result {
-            text-align: left;
           }
         }
 
         @media (max-width: 768px) {
           .about-hero {
-            min-height: auto;
             padding: 100px 0 60px;
           }
 
@@ -1426,25 +1325,6 @@ const AboutPage = () => {
             height: 400px;
           }
 
-          .founder-stats {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-          }
-
-          .stat-box {
-            min-width: 100%;
-          }
-
-          .story-card {
-            padding: 40px 25px;
-          }
-
-          .story-number {
-            font-size: 3.5rem;
-            top: 15px;
-            right: 20px;
-          }
-
           .timeline::before {
             left: 15px;
           }
@@ -1458,93 +1338,28 @@ const AboutPage = () => {
             margin-bottom: 60px;
           }
 
-          .timeline-content {
-            padding: 25px;
-          }
-
-          .meaning-visual {
-            min-height: 250px;
-          }
-
           .pixel-grid {
             grid-template-columns: repeat(4, 1fr);
-            gap: 0.875rem;
-            max-width: 240px;
+            gap: 1rem;
+            max-width: 280px;
           }
 
           .pixel-dot {
-            width: 45px;
-            height: 45px;
-          }
-
-          .floating-cube {
-            width: 160px;
-            height: 160px;
-          }
-
-          .cube-face {
-            width: 160px;
-            height: 160px;
-          }
-
-          .cube-face.front  { transform: translateZ(80px); }
-          .cube-face.back   { transform: rotateY(180deg) translateZ(80px); }
-          .cube-face.left   { transform: rotateY(-90deg) translateZ(80px); }
-          .cube-face.right  { transform: rotateY(90deg) translateZ(80px); }
-          .cube-face.top    { transform: rotateX(90deg) translateZ(80px); }
-          .cube-face.bottom { transform: rotateX(-90deg) translateZ(80px); }
-
-          .value-card {
-            padding: 2.5rem 2rem;
-            min-height: 300px;
-          }
-
-          .value-icon {
-            font-size: 3rem;
-            height: 70px;
-          }
-          
-          .value-title {
-            font-size: 1.375rem;
-          }
-          
-          .value-description {
-            font-size: 1rem;
-          }
-
-          .origin-header {
-            margin-bottom: 50px;
+            width: 50px;
+            height: 50px;
           }
         }
 
         @media (max-width: 640px) {
-          .about-container {
-            padding: 0 1.25rem;
-          }
-
-          .hero-badge {
-            padding: 8px 16px;
-            font-size: 0.85rem;
-          }
-
           .cta-buttons {
             flex-direction: column;
-            align-items: stretch;
             width: 100%;
-          }
-
-          .btn-primary,
-          .btn-secondary {
-            width: 100%;
-            justify-content: center;
           }
 
           .btn-primary-large,
           .btn-secondary-large {
             width: 100%;
             justify-content: center;
-            padding: 16px 32px;
-            font-size: 1rem;
           }
 
           .social-section {
@@ -1552,44 +1367,8 @@ const AboutPage = () => {
             gap: 1.25rem;
           }
 
-          .social-links {
-            gap: 12px;
-          }
-
-          .social-link-large {
-            width: 45px;
-            height: 45px;
-            font-size: 1.25rem;
-          }
-
-          .story-number {
-            font-size: 3rem;
-            top: 12px;
-            right: 15px;
-          }
-
-          .story-icon {
-            width: 60px;
-            height: 60px;
-            font-size: 1.75rem;
-          }
-
-          .meaning-result {
-            padding: 25px 20px;
-          }
-
-          .mission-icon {
-            width: 70px;
-            height: 70px;
-            font-size: 2rem;
-          }
-
-          .value-icon {
-            font-size: 2.5rem;
-          }
-
-          .meaning-visual {
-            min-height: 220px;
+          .values-grid {
+            grid-template-columns: 1fr;
           }
 
           .pixel-grid {
@@ -1602,25 +1381,10 @@ const AboutPage = () => {
             width: 35px;
             height: 35px;
           }
-
-          .timeline-item {
-            padding-left: 50px;
-          }
-
-          .timeline-content {
-            padding: 20px;
-          }
-
-          .values-grid {
-            grid-template-columns: 1fr;
-          }
         }
 
         @media (max-width: 480px) {
-          .about-hero {
-            padding: 90px 0 50px;
-          }
-
+          .about-hero,
           .founder-section,
           .origin-section,
           .meaning-section,
@@ -1631,14 +1395,8 @@ const AboutPage = () => {
             padding: 60px 0;
           }
 
-          .hero-badge {
-            font-size: 0.8rem;
-            padding: 6px 12px;
-          }
-
-          .section-subtitle {
-            font-size: 1rem;
-            margin: -12px 0 40px;
+          .founder-image {
+            height: 350px;
           }
 
           .floating-cube {
@@ -1657,104 +1415,6 @@ const AboutPage = () => {
           .cube-face.right  { transform: rotateY(90deg) translateZ(65px); }
           .cube-face.top    { transform: rotateX(90deg) translateZ(65px); }
           .cube-face.bottom { transform: rotateX(-90deg) translateZ(65px); }
-
-          .pixel-grid {
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
-          }
-
-          .pixel-dot {
-            width: 30px;
-            height: 30px;
-            border-radius: 8px;
-          }
-
-          .founder-image {
-            height: 350px;
-          }
-
-          .story-card {
-            padding: 30px 20px;
-          }
-
-          .value-card {
-            padding: 2.25rem 1.75rem;
-            min-height: 280px;
-          }
-
-          .value-icon {
-            font-size: 2.75rem;
-            height: 65px;
-            margin-bottom: 1.5rem;
-          }
-          
-          .value-title {
-            font-size: 1.25rem;
-          }
-          
-          .value-description {
-            font-size: 0.95rem;
-          }
-
-          .mission-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .meaning-visual {
-            height: 240px;
-          }
-
-          .origin-header {
-            margin-bottom: 40px;
-          }
-
-          .timeline {
-            margin: 50px auto 0;
-          }
-
-          .cta-section {
-            padding: 60px 0 40px;
-          }
-
-          .cta-description {
-            font-size: 1.1rem;
-            margin-bottom: 40px;
-          }
-
-          .cta-buttons {
-            margin-bottom: 50px;
-          }
-        }
-
-        @media (max-width: 380px) {
-          .about-container {
-            padding: 0 1rem;
-          }
-
-          .story-number {
-            font-size: 2.5rem;
-          }
-
-          .pixel-grid {
-            grid-template-columns: repeat(2, 1fr);
-          }
-
-          .floating-cube {
-            width: 110px;
-            height: 110px;
-          }
-
-          .cube-face {
-            width: 110px;
-            height: 110px;
-          }
-
-          .cube-face.front  { transform: translateZ(55px); }
-          .cube-face.back   { transform: rotateY(180deg) translateZ(55px); }
-          .cube-face.left   { transform: rotateY(-90deg) translateZ(55px); }
-          .cube-face.right  { transform: rotateY(90deg) translateZ(55px); }
-          .cube-face.top    { transform: rotateX(90deg) translateZ(55px); }
-          .cube-face.bottom { transform: rotateX(-90deg) translateZ(55px); }
         }
       `}</style>
     </div>

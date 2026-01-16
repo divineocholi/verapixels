@@ -1,9 +1,26 @@
+// vite.config.ts
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(),],
-  base: '/Verapixels',
+  base: './', // 👈 THIS FIXES THE WHITE PAGE
+  plugins: [react()],
+  server: {
+    port: 5173,
+    proxy: {
+      '/socket.io': {
+        target: 'http://localhost:5001',
+        ws: true,
+        changeOrigin: true
+      },
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true
+      }
+    }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true
+  }
 })
