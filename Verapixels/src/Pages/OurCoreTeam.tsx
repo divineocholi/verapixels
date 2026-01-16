@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
 import React, { useState, useEffect } from "react";
+// Import team member images
+import ocholiImage from "@/assets/ocholi founder.jpeg";
+import fredaImage from "@/assets/freeda team member.jpeg";
+import preciousImage from "@/assets/prech vera teem.jpeg";
 import {
   FiGithub,
   FiLinkedin,
@@ -33,7 +37,7 @@ const OurCoreTeam = () => {
       name: "Ocholi Divine",
       role: "Founder & CEO",
       image:
-        "/src/assets/ocholi founder.jpeg",
+       ocholiImage,
       bio: "Visionary leader driving innovation and excellence at Verapixels",
       specialties: ["Strategy", "Innovation", "Leadership"],
       social: {
@@ -47,7 +51,7 @@ const OurCoreTeam = () => {
    {
   name: "Freda Mbajiorgu",
   role: "Frontend Developer",
-  image: "/src/assets/freeda team member.jpeg",
+  image: fredaImage ,
   bio: " Focused on building clean, responsive, and user-friendly interfaces.",
   specialties: ["React", "JavaScript", "CSS"],
   social: {
@@ -62,7 +66,7 @@ const OurCoreTeam = () => {
    {
   name: "Precious",
   role: "Backend Developer",
-  image: "/src/assets/prech vera teem.jpeg",
+  image: preciousImage,
   bio: "Focused on building secure, scalable, and efficient server-side systems.",
   specialties: ["Node.js", "APIs", "Databases"],
   social: {
