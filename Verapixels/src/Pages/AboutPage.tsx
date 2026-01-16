@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import founderImage from '@/assets/founder.jpeg'
 import { 
   FiCode, 
   FiZap, 
@@ -171,11 +172,11 @@ const AboutPage = () => {
           <div className="founder-grid">
             <div className="founder-image-wrapper scroll-slide-left">
               <div className="founder-frame">
-                <img 
-                  src="/src/assets/founder.jpeg" 
-                  alt="Ocholi Divine"
-                  className="founder-image"
-                />
+              <img 
+  src={founderImage} 
+  alt="Ocholi Divine"
+  className="founder-image"
+/>
                 <div className="founder-glow"></div>
               </div>
             </div>
