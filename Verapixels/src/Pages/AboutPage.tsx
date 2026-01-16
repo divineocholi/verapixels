@@ -172,7 +172,7 @@ const AboutPage = () => {
             <div className="founder-image-wrapper scroll-slide-left">
               <div className="founder-frame">
                 <img 
-                  src="/src/assets/main founder.jpeg" 
+                  src="/src/assets/founder.jpeg" 
                   alt="Ocholi Divine"
                   className="founder-image"
                 />
