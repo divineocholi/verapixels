@@ -237,13 +237,13 @@ const Footer = () => {
               </p>
               
               <div className="contact-info">
-                <a href="tel:+15551234567" className="contact-item">
+                <a href="tel:+2348160847613" className="contact-item">
                   <Phone size={20} />
-                  <span>+1 (555) 123-4567</span>
+                  <span>+234 816 084 7613</span>
                 </a>
-                <a href="mailto:hello@verapixels.com" className="contact-item">
+                <a href="mailto:info@verapixels.com" className="contact-item">
                   <Mail size={20} />
-                  <span>hello@verapixels.com</span>
+                  <span>info@verapixels.com</span>
                 </a>
                 <div className="contact-item">
                   <MapPin size={20} />

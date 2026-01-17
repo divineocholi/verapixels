@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 // Import team member images
 import ocholiImage from "@/assets/ocholi founder.jpeg";
 import fredaImage from "@/assets/freeda team member.jpeg";
@@ -17,27 +17,71 @@ import {
   FiStar,
   FiHeart,
   FiZap,
+  FiCamera,
 } from "react-icons/fi";
-import VeeAIChatbot from "../Components/VeeAIChatbot";
 
 const OurCoreTeam = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeCard, setActiveCard] = useState<number | null>(null);
+  const [scrollY, setScrollY] = useState(0);
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  
+  const sectionRefs = {
+    hero: useRef<HTMLDivElement>(null),
+    stats: useRef<HTMLDivElement>(null),
+    team: useRef<HTMLDivElement>(null),
+    group: useRef<HTMLDivElement>(null),
+    join: useRef<HTMLDivElement>(null),
+  };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
+    
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    
     window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener("scroll", handleScroll);
+    
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    const observers = Object.entries(sectionRefs).map(([key, ref]) => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setVisibleSections((prev) => new Set(prev).add(key));
+            }
+          });
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -100px 0px" }
+      );
+
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+
+      return observer;
+    });
+
+    return () => {
+      observers.forEach((observer) => observer.disconnect());
+    };
   }, []);
 
   const teamMembers = [
     {
       name: "Ocholi Divine",
       role: "Founder & CEO",
-      image:
-       ocholiImage,
+      image: ocholiImage,
       bio: "Visionary leader driving innovation and excellence at Verapixels",
       specialties: ["Strategy", "Innovation", "Leadership"],
       social: {
@@ -48,81 +92,76 @@ const OurCoreTeam = () => {
       },
       color: "#0063f4",
     },
-   {
-  name: "Freda Mbajiorgu",
-  role: "Frontend Developer",
-  image: fredaImage ,
-  bio: " Focused on building clean, responsive, and user-friendly interfaces.",
-  specialties: ["React", "JavaScript", "CSS"],
-  social: {
-    github: "#",
-    linkedin: "#",
-    twitter: "#",
-    email: "freda@verapixels.com",
-  },
-  color: "#00bfff",
-},
-
-   {
-  name: "Precious",
-  role: "Backend Developer",
-  image: preciousImage,
-  bio: "Focused on building secure, scalable, and efficient server-side systems.",
-  specialties: ["Node.js", "APIs", "Databases"],
-  social: {
-    github: "#",
-    linkedin: "#",
-    twitter: "#",
-    email: "precious@verapixels.com",
-  },
-  color: "#00ff88",
-},
-
-   {
-  name: "Emmanuel Sanusi",
-  role: "Full Stack Developer",
-  image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=600&fit=crop",
-  bio: " Building complete web applications from frontend interfaces to backend logic.",
-  specialties: ["React", "Node.js", "Databases"],
-  social: {
-    github: "#",
-    linkedin: "#",
-    twitter: "#",
-    email: "emmanuel@verapixels.com",
-  },
-  color: "#ffd700",
-},
-
-   {
-  name: "Favour",
-  role: "Backend Engineer (Python)",
-  image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=600&fit=crop",
-  bio: "Building reliable APIs, business logic, and data-driven systems.",
-  specialties: ["Python", "APIs", "Databases"],
-  social: {
-    github: "#",
-    linkedin: "#",
-    twitter: "#",
-    email: "favour@verapixels.com",
-  },
-  color: "#ff6b9d",
-},
-
- {
-  name: "Ella",
-  role: "UI/UX Designer",
-  image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=600&fit=crop",
-  bio: "Creating intuitive, user-centered interfaces and meaningful digital experiences.",
-  specialties: ["UI Design", "UX Research", "Prototyping"],
-  social: {
-    github: "#",
-    linkedin: "#",
-    twitter: "#",
-    email: "ella@verapixels.com",
-  },
-  color: "#9d4edd",
-},
-
+    {
+      name: "Freda Mbajiorgu",
+      role: "Frontend Developer",
+      image: fredaImage,
+      bio: "Focused on building clean, responsive, and user-friendly interfaces.",
+      specialties: ["React", "JavaScript", "CSS"],
+      social: {
+        github: "#",
+        linkedin: "#",
+        twitter: "#",
+        email: "freda@verapixels.com",
+      },
+      color: "#00bfff",
+    },
+    {
+      name: "Precious",
+      role: "Backend Developer",
+      image: preciousImage,
+      bio: "Focused on building secure, scalable, and efficient server-side systems.",
+      specialties: ["Node.js", "APIs", "Databases"],
+      social: {
+        github: "#",
+        linkedin: "#",
+        twitter: "#",
+        email: "precious@verapixels.com",
+      },
+      color: "#00ff88",
+    },
+    {
+      name: "Emmanuel Sanusi",
+      role: "Full Stack Developer",
+      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=600&fit=crop",
+      bio: "Building complete web applications from frontend interfaces to backend logic.",
+      specialties: ["React", "Node.js", "Databases"],
+      social: {
+        github: "#",
+        linkedin: "#",
+        twitter: "#",
+        email: "emmanuel@verapixels.com",
+      },
+      color: "#ffd700",
+    },
+    {
+      name: "Favour",
+      role: "Backend Engineer (Python)",
+      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=600&fit=crop",
+      bio: "Building reliable APIs, business logic, and data-driven systems.",
+      specialties: ["Python", "APIs", "Databases"],
+      social: {
+        github: "#",
+        linkedin: "#",
+        twitter: "#",
+        email: "favour@verapixels.com",
+      },
+      color: "#ff6b9d",
+    },
+    {
+      name: "Ella",
+      role: "UI/UX Designer",
+      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=600&fit=crop",
+      bio: "Creating intuitive, user-centered interfaces and meaningful digital experiences.",
+      specialties: ["UI Design", "UX Research", "Prototyping"],
+      social: {
+        github: "#",
+        linkedin: "#",
+        twitter: "#",
+        email: "ella@verapixels.com",
+      },
+      color: "#9d4edd",
+    },
   ];
 
   const stats = [
@@ -152,6 +191,8 @@ const OurCoreTeam = () => {
     },
   ];
 
+  const parallaxOffset = scrollY * 0.5;
+
   return (
     <div className="team-page">
       {/* Animated Background */}
@@ -159,31 +200,28 @@ const OurCoreTeam = () => {
         <div
           className="bg-orb orb-1"
           style={{
-            transform: `translate(${mousePosition.x * 0.02}px, ${
-              mousePosition.y * 0.02
-            }px)`,
+            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02 + parallaxOffset}px)`,
           }}
         />
         <div
           className="bg-orb orb-2"
           style={{
-            transform: `translate(${mousePosition.x * -0.03}px, ${
-              mousePosition.y * -0.03
-            }px)`,
+            transform: `translate(${mousePosition.x * -0.03}px, ${mousePosition.y * -0.03 - parallaxOffset * 0.8}px)`,
           }}
         />
         <div
           className="bg-orb orb-3"
           style={{
-            transform: `translate(${mousePosition.x * 0.04}px, ${
-              mousePosition.y * -0.02
-            }px)`,
+            transform: `translate(${mousePosition.x * 0.04}px, ${mousePosition.y * -0.02 + parallaxOffset * 1.2}px)`,
           }}
         />
       </div>
 
       {/* Hero Section */}
-      <section className="team-hero">
+      <section 
+        className={`team-hero ${visibleSections.has('hero') ? 'visible' : ''}`}
+        ref={sectionRefs.hero}
+      >
         <div className="team-container">
           <div className="hero-badge">
             <FiHeart /> Meet the Minds Behind Verapixels
@@ -215,7 +253,10 @@ const OurCoreTeam = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="stats-section">
+      <section 
+        className={`stats-section ${visibleSections.has('stats') ? 'visible' : ''}`}
+        ref={sectionRefs.stats}
+      >
         <div className="team-container">
           <div className="stats-grid">
             {stats.map((stat, i) => (
@@ -242,8 +283,20 @@ const OurCoreTeam = () => {
       </section>
 
       {/* Team Members Grid */}
-      <section className="team-grid-section">
+      <section 
+        className={`team-grid-section ${visibleSections.has('team') ? 'visible' : ''}`}
+        ref={sectionRefs.team}
+      >
         <div className="team-container">
+          <div className="section-header">
+            <h2 className="section-title">
+              <span className="gradient-text">Meet</span> the Team
+            </h2>
+            <p className="section-subtitle">
+              The brilliant minds behind our success
+            </p>
+          </div>
+          
           <div className="team-grid">
             {teamMembers.map((member, i) => (
               <div
@@ -253,13 +306,11 @@ const OurCoreTeam = () => {
                 onMouseLeave={() => setActiveCard(null)}
                 style={{ animationDelay: `${i * 0.1}s` }}
               >
-                {/* Card Glow Effect */}
                 <div
                   className="card-glow"
                   style={{ background: member.color }}
                 ></div>
 
-                {/* Member Image */}
                 <div className="member-image-wrapper">
                   <img
                     src={member.image}
@@ -273,7 +324,6 @@ const OurCoreTeam = () => {
                     }}
                   ></div>
 
-                  {/* Hover Social Links */}
                   <div className="social-overlay">
                     <a href={member.social.github} className="social-icon">
                       <FiGithub />
@@ -293,7 +343,6 @@ const OurCoreTeam = () => {
                   </div>
                 </div>
 
-                {/* Member Info */}
                 <div className="member-info">
                   <h3 className="member-name">{member.name}</h3>
                   <div className="member-role" style={{ color: member.color }}>
@@ -301,7 +350,6 @@ const OurCoreTeam = () => {
                   </div>
                   <p className="member-bio">{member.bio}</p>
 
-                  {/* Specialties Tags */}
                   <div className="specialties">
                     {member.specialties.map((specialty, idx) => (
                       <span
@@ -318,7 +366,6 @@ const OurCoreTeam = () => {
                   </div>
                 </div>
 
-                {/* Decorative Corner */}
                 <div
                   className="card-corner"
                   style={{ borderColor: member.color }}
@@ -329,8 +376,78 @@ const OurCoreTeam = () => {
         </div>
       </section>
 
+      {/* Group Photo Section - NEW */}
+      <section 
+        className={`group-photo-section ${visibleSections.has('group') ? 'visible' : ''}`}
+        ref={sectionRefs.group}
+      >
+        <div className="team-container">
+          <div className="group-header">
+            <div className="group-badge">
+              <FiCamera /> Our Team Together
+            </div>
+            <h2 className="group-title">
+              United by <span className="gradient-text">Passion</span>
+            </h2>
+            <p className="group-subtitle">
+              More than colleagues, we're a family committed to excellence
+            </p>
+          </div>
+
+          <div className="group-photo-container">
+            <div className="photo-frame">
+              <img
+                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&h=800&fit=crop"
+                alt="Verapixels Team"
+                className="group-photo"
+              />
+              <div className="photo-overlay">
+                <div className="overlay-content">
+                  <FiUsers className="overlay-icon" />
+                  <p className="overlay-text">The Verapixels Family</p>
+                </div>
+              </div>
+              <div className="photo-border"></div>
+            </div>
+
+            <div className="group-stats">
+              <div className="group-stat">
+                <div className="group-stat-icon" style={{ color: "#0063f4" }}>
+                  <FiUsers />
+                </div>
+                <div className="group-stat-content">
+                  <div className="group-stat-value">10+</div>
+                  <div className="group-stat-label">Team Members</div>
+                </div>
+              </div>
+              <div className="group-stat">
+                <div className="group-stat-icon" style={{ color: "#00ff88" }}>
+                  <FiHeart />
+                </div>
+                <div className="group-stat-content">
+                  <div className="group-stat-value">100%</div>
+                  <div className="group-stat-label">Dedication</div>
+                </div>
+              </div>
+              <div className="group-stat">
+                <div className="group-stat-icon" style={{ color: "#ffd700" }}>
+                  <FiZap />
+                </div>
+                <div className="group-stat-content">
+                  <div className="group-stat-value">24/7</div>
+                  <div className="group-stat-label">Innovation</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Join Team CTA */}
-      <section className="join-section">
+      <section 
+        className={`join-section ${visibleSections.has('join') ? 'visible' : ''}`}
+        ref={sectionRefs.join}
+      >
         <div className="team-container">
           <div className="join-content">
             <div className="join-icon">
@@ -343,10 +460,10 @@ const OurCoreTeam = () => {
               future of digital experiences.
             </p>
             <Link to="/career">
-  <button className="join-button">
-    View Open Positions <FiZap />
-  </button>
-</Link>
+              <button className="join-button">
+                View Open Positions <FiZap />
+              </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -380,6 +497,7 @@ const OurCoreTeam = () => {
           filter: blur(140px);
           opacity: 0.15;
           animation: float 12s ease-in-out infinite;
+          transition: transform 0.3s ease-out;
         }
 
         .orb-1 {
@@ -422,6 +540,18 @@ const OurCoreTeam = () => {
           z-index: 1;
         }
 
+        /* Scroll Reveal Animations */
+        section {
+          opacity: 0;
+          transform: translateY(60px);
+          transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        section.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
         /* Hero Section */
         .team-hero {
           min-height: 80vh;
@@ -446,6 +576,12 @@ const OurCoreTeam = () => {
           font-size: 1rem;
           margin-bottom: 30px;
           animation: fadeInDown 1s ease;
+          transition: all 0.3s ease;
+        }
+
+        .hero-badge:hover {
+          background: rgba(0, 99, 244, 0.25);
+          transform: translateY(-3px);
         }
 
         @keyframes fadeInDown {
@@ -466,6 +602,13 @@ const OurCoreTeam = () => {
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
+          background-size: 200% 200%;
+          animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
         }
 
         .hero-subtitle {
@@ -514,33 +657,46 @@ const OurCoreTeam = () => {
         }
 
         .stats-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 30px;
-  justify-content: center;
-  align-items: center;
-}
+          display: flex;
+          flex-wrap: wrap;
+          gap: 30px;
+          justify-content: center;
+          align-items: center;
+        }
 
-.stat-card {
-  position: relative;
-  padding: 40px 30px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  text-align: center;
-  transition: all 0.4s ease;
-  overflow: hidden;
-  animation: fadeInUp 0.8s ease both;
-  width: 280px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
+        .stat-card {
+          position: relative;
+          padding: 40px 30px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 24px;
+          text-align: center;
+          transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          overflow: hidden;
+          width: 280px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
 
+        .stats-section.visible .stat-card {
+          animation: slideInUp 0.8s ease both;
+        }
+
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(50px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
 
         .stat-card:hover {
-          transform: translateY(-10px);
+          transform: translateY(-15px) scale(1.05);
           border-color: rgba(0, 99, 244, 0.5);
           background: rgba(0, 99, 244, 0.05);
         }
@@ -558,12 +714,17 @@ const OurCoreTeam = () => {
         }
 
         .stat-card:hover .stat-glow {
-          opacity: 0.3;
+          opacity: 0.4;
         }
 
         .stat-icon {
           font-size: 48px;
           margin-bottom: 20px;
+          transition: transform 0.5s ease;
+        }
+
+        .stat-card:hover .stat-icon {
+          transform: scale(1.2) rotate(10deg);
         }
 
         .stat-value {
@@ -571,12 +732,34 @@ const OurCoreTeam = () => {
           font-weight: 900;
           line-height: 1;
           margin-bottom: 12px;
+          transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover .stat-value {
+          transform: scale(1.1);
         }
 
         .stat-label {
           font-size: 1.1rem;
           color: rgba(255, 255, 255, 0.7);
           font-weight: 600;
+        }
+
+        /* Section Headers */
+        .section-header {
+          text-align: center;
+          margin-bottom: 80px;
+        }
+
+        .section-title {
+          font-size: clamp(36px, 6vw, 64px);
+          font-weight: 900;
+          margin-bottom: 20px;
+        }
+
+        .section-subtitle {
+          font-size: 1.2rem;
+          color: rgba(255, 255, 255, 0.7);
         }
 
         /* Team Grid */
@@ -597,11 +780,25 @@ const OurCoreTeam = () => {
           border-radius: 30px;
           overflow: hidden;
           transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-          animation: fadeInUp 0.8s ease both;
+        }
+
+        .team-grid-section.visible .member-card {
+          animation: fadeInScale 0.8s ease both;
+        }
+
+        @keyframes fadeInScale {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
         .member-card:hover {
-          transform: translateY(-15px) scale(1.02);
+          transform: translateY(-20px) scale(1.02);
           border-color: rgba(0, 99, 244, 0.6);
           box-shadow: 0 30px 80px rgba(0, 99, 244, 0.4);
         }
@@ -619,7 +816,7 @@ const OurCoreTeam = () => {
         }
 
         .member-card:hover .card-glow {
-          opacity: 0.15;
+          opacity: 0.2;
         }
 
         /* Member Image */
@@ -634,12 +831,12 @@ const OurCoreTeam = () => {
           width: 100%;
           height: 100%;
           object-fit: cover;
-            object-position: center top;  
-          transition: transform 0.6s ease;
+          object-position: center top;
+          transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .member-card:hover .member-image {
-          transform: scale(1.1);
+          transform: scale(1.15);
         }
 
         .image-overlay {
@@ -650,7 +847,7 @@ const OurCoreTeam = () => {
         }
 
         .member-card:hover .image-overlay {
-          opacity: 0.8;
+          opacity: 0.9;
         }
 
         /* Social Overlay */
@@ -699,7 +896,7 @@ const OurCoreTeam = () => {
         .social-icon:hover {
           background: #00bfff;
           border-color: #00bfff;
-          transform: translateY(0) scale(1.15);
+          transform: translateY(0) scale(1.2) rotate(10deg);
         }
 
         /* Member Info */
@@ -711,6 +908,11 @@ const OurCoreTeam = () => {
           font-size: 1.8rem;
           font-weight: 800;
           margin-bottom: 8px;
+          transition: color 0.3s ease;
+        }
+
+        .member-card:hover .member-name {
+          color: #00bfff;
         }
 
         .member-role {
@@ -770,6 +972,207 @@ const OurCoreTeam = () => {
           height: 60px;
         }
 
+        /* Group Photo Section */
+        .group-photo-section {
+          padding: 100px 0;
+          background: linear-gradient(180deg, transparent, rgba(0, 99, 244, 0.03), transparent);
+        }
+
+        .group-header {
+          text-align: center;
+          margin-bottom: 70px;
+        }
+
+        .group-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px 24px;
+          background: rgba(0, 191, 255, 0.15);
+          border: 1px solid rgba(0, 191, 255, 0.4);
+          border-radius: 30px;
+          color: #00bfff;
+          font-weight: 700;
+          font-size: 1rem;
+          margin-bottom: 30px;
+          transition: all 0.3s ease;
+        }
+
+        .group-badge:hover {
+          background: rgba(0, 191, 255, 0.25);
+          transform: translateY(-3px);
+        }
+
+        .group-title {
+          font-size: clamp(36px, 6vw, 64px);
+          font-weight: 900;
+          margin-bottom: 20px;
+        }
+
+        .group-subtitle {
+          font-size: 1.2rem;
+          color: rgba(255, 255, 255, 0.7);
+          max-width: 600px;
+          margin: 0 auto;
+        }
+
+        .group-photo-container {
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        .photo-frame {
+          position: relative;
+          border-radius: 30px;
+          overflow: hidden;
+          margin-bottom: 50px;
+          transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .group-photo-section.visible .photo-frame {
+          animation: zoomIn 1s ease both;
+        }
+
+        @keyframes zoomIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .photo-frame:hover {
+          transform: translateY(-10px);
+          box-shadow: 0 40px 100px rgba(0, 99, 244, 0.3);
+        }
+
+        .group-photo {
+          width: 100%;
+          height: auto;
+          display: block;
+          transition: transform 0.8s ease;
+        }
+
+        .photo-frame:hover .group-photo {
+          transform: scale(1.05);
+        }
+
+        .photo-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.7));
+          opacity: 0;
+          transition: opacity 0.4s ease;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          padding: 40px;
+        }
+
+        .photo-frame:hover .photo-overlay {
+          opacity: 1;
+        }
+
+        .overlay-content {
+          text-align: center;
+          transform: translateY(20px);
+          transition: transform 0.4s ease;
+        }
+
+        .photo-frame:hover .overlay-content {
+          transform: translateY(0);
+        }
+
+        .overlay-icon {
+          font-size: 48px;
+          color: #00bfff;
+          margin-bottom: 10px;
+        }
+
+        .overlay-text {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #fff;
+        }
+
+        .photo-border {
+          position: absolute;
+          inset: 0;
+          border: 2px solid rgba(0, 191, 255, 0);
+          border-radius: 30px;
+          transition: border-color 0.4s ease;
+          pointer-events: none;
+        }
+
+        .photo-frame:hover .photo-border {
+          border-color: rgba(0, 191, 255, 0.5);
+        }
+
+        /* Group Stats */
+        .group-stats {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 30px;
+        }
+
+        .group-stat {
+          display: flex;
+          align-items: center;
+          gap: 25px;
+          padding: 30px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          transition: all 0.4s ease;
+        }
+
+        .group-photo-section.visible .group-stat {
+          animation: slideInUp 0.8s ease both;
+        }
+
+        .group-stat:nth-child(1) { animation-delay: 0.1s; }
+        .group-stat:nth-child(2) { animation-delay: 0.2s; }
+        .group-stat:nth-child(3) { animation-delay: 0.3s; }
+
+        .group-stat:hover {
+          transform: translateY(-10px);
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(0, 191, 255, 0.3);
+        }
+
+        .group-stat-icon {
+          font-size: 48px;
+          transition: transform 0.4s ease;
+        }
+
+        .group-stat:hover .group-stat-icon {
+          transform: scale(1.2) rotate(10deg);
+        }
+
+        .group-stat-content {
+          flex: 1;
+        }
+
+        .group-stat-value {
+          font-size: 2.5rem;
+          font-weight: 900;
+          line-height: 1;
+          margin-bottom: 8px;
+          background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.6));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        .group-stat-label {
+          font-size: 1.1rem;
+          color: rgba(255, 255, 255, 0.7);
+          font-weight: 600;
+        }
+
         /* Join Section */
         .join-section {
           padding: 100px 0;
@@ -788,6 +1191,10 @@ const OurCoreTeam = () => {
           overflow: hidden;
         }
 
+        .join-section.visible .join-content {
+          animation: fadeInScale 1s ease both;
+        }
+
         .join-content::before {
           content: '';
           position: absolute;
@@ -797,15 +1204,15 @@ const OurCoreTeam = () => {
         }
           
         .join-icon {
-  font-size: 72px;
-  color: #00bfff;
-  margin: 0 auto 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  animation: bounce 2s ease infinite;
-}
+          font-size: 72px;
+          color: #00bfff;
+          margin: 0 auto 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: fit-content;
+          animation: bounce 2s ease infinite;
+        }
 
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
@@ -890,6 +1297,18 @@ const OurCoreTeam = () => {
           .join-title {
             font-size: 2rem;
           }
+
+          .group-stats {
+            grid-template-columns: 1fr;
+          }
+
+          .section-title {
+            font-size: 36px;
+          }
+
+          .group-title {
+            font-size: 36px;
+          }
         }
 
         @media (max-width: 480px) {
@@ -899,6 +1318,20 @@ const OurCoreTeam = () => {
 
           .stat-value {
             font-size: 2.5rem;
+          }
+
+          .stat-card {
+            width: 100%;
+          }
+
+          .group-stat {
+            flex-direction: column;
+            text-align: center;
+          }
+
+          .hero-badge, .group-badge {
+            font-size: 0.9rem;
+            padding: 10px 20px;
           }
         }
       `}</style>

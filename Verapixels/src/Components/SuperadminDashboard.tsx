@@ -484,50 +484,85 @@ const SuperadminDashboard: React.FC = () => {
     navigate("/superadmin/login");
   };
 
-  // Create admin invite
-  const handleCreateInvite = async () => {
-    if (!inviteEmail.trim() || !admin) return;
+ // In your SuperadminDashboard.tsx - UPDATED handleCreateInvite function
+const handleCreateInvite = async () => {
+  if (!inviteEmail.trim() || !admin) return;
 
-    try {
-      const token = `inv_${Date.now()}_${Math.random()
-        .toString(36)
-        .substr(2, 9)}`;
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+  try {
+    // 1. Check if user already exists in auth
+    const { data: existingAuthUser } = await supabase
+      .from('auth.users')
+      .select('id')
+      .eq('email', inviteEmail)
+      .maybeSingle();
 
-      const { error } = await supabase.from("admin_invites").insert({
-        token,
+    let authUserId;
+    
+    if (existingAuthUser) {
+      // User already exists in auth
+      authUserId = existingAuthUser.id;
+    } else {
+      // 2. Create user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: inviteEmail,
-        role_assigned: inviteRole,
-        expires_at: expiresAt.toISOString(),
-        created_by: admin.id,
+        password: 'TemporaryPassword123!', // Will be changed on first login
+        email_confirm: true,
+        user_metadata: { name: 'New Admin' }
       });
 
-      if (error) throw error;
-
-      // Log activity
-      await supabase.from("security_logs").insert({
-        admin_id: admin.id,
-        action: "create_invite",
-        details: { email: inviteEmail, role: inviteRole },
-      });
-
-      // Generate invite URL
-      const inviteUrl = `${window.location.origin}/superadmin/register?token=${token}`;
-
-      // Show success message with invite link
-      alert(
-        `Invite created! Send this link to ${inviteEmail}:\n\n${inviteUrl}\n\nLink expires in 7 days.`
-      );
-
-      setInviteEmail("");
-      setShowInviteModal(false);
-      fetchInvites();
-      fetchRecentActivity();
-    } catch (error: any) {
-      console.error("Error creating invite:", error);
-      alert(`Error: ${error.message}`);
+      if (authError) throw authError;
+      authUserId = authData.user.id;
     }
-  };
+
+    // 3. Generate invite token
+    const token = `inv_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // 4. Create invite record
+    const { error: inviteError } = await supabase.from("admin_invites").insert({
+      token,
+      email: inviteEmail,
+      role_assigned: inviteRole,
+      expires_at: expiresAt.toISOString(),
+      created_by: admin.id,
+      auth_user_id: authUserId  // Store the auth user ID
+    });
+
+    if (inviteError) throw inviteError;
+
+    // 5. Generate invite URL with password reset
+    const inviteUrl = `${window.location.origin}/superadmin/register?token=${token}`;
+    
+    // 6. Send invite email (simplified)
+    const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
+      body: {
+        to: inviteEmail,
+        inviteUrl,
+        adminName: admin.name,
+        role: inviteRole
+      }
+    });
+
+    if (emailError) {
+      console.warn('Email sending failed, but invite was created:', emailError);
+    }
+
+    // 7. Show success message
+    alert(`✅ Invite sent to ${inviteEmail}!\n\nInvite Link: ${inviteUrl}\n\nTemporary Password: TemporaryPassword123!`);
+
+    // 8. Clean up
+    setInviteEmail("");
+    setShowInviteModal(false);
+    fetchInvites();
+    fetchRecentActivity();
+
+  } catch (error: any) {
+    console.error("Error creating invite:", error);
+    alert(`❌ Error: ${error.message}`);
+  }
+};
 
   // Deactivate admin
   const handleDeactivateAdmin = async (adminId: string, adminName: string) => {
