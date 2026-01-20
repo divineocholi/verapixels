@@ -41,6 +41,8 @@ const AboutPage = () => {
     cta: useRef<HTMLElement>(null),
   };
 
+  
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });

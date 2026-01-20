@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Cpu, TrendingUp, Users, CheckCircle, ArrowRight } from 'lucide-react';
+import { Sparkles, Rocket, Target, Shield, ArrowRight, Zap, TrendingUp, Award } from 'lucide-react';
 
 const TechSolutionBanner = () => {
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
@@ -37,540 +37,816 @@ const TechSolutionBanner = () => {
     };
   }, []);
 
-  const reasons = [
+  const features = [
     {
-      icon: Cpu,
-      title: "We're Recognized IT Solutions Company",
-      subtitle: "Industry Leader"
+      icon: Rocket,
+      title: "Launch Your Brand with Impact",
+      subtitle: "From naming to logo design, we build your identity",
+      color: "#6a00ff"
     },
     {
-      icon: TrendingUp,
-      title: "We're Boosting Your Business Growth",
-      subtitle: "Proven Results"
+      icon: Target,
+      title: "Precision-Crafted Digital Experiences",
+      subtitle: "Custom websites & apps that convert visitors to customers",
+      color: "#00d4ff"
     },
     {
-      icon: Users,
-      title: "We're Leading Your Team with Care",
-      subtitle: "Expert Support"
+      icon: Shield,
+      title: "Reliable Support, Always",
+      subtitle: "Ongoing maintenance keeps your business running smoothly",
+      color: "#06d6a0"
     }
   ];
 
+  const stats = [
+    { icon: "🎯", number: "15+", label: "Projects Delivered" },
+    { icon: "⚡", number: "12+", label: "Happy Clients" },
+    { icon: "🏆", number: "100%", label: "Client Satisfaction" }
+  ];
+
   return (
-    <div className="tech-banner-root">
-      <div className="tech-banner-container">
+    <div className="banner-root">
+      {/* Background Elements */}
+      <div className="banner-bg-grid"></div>
+      <div className="banner-bg-gradient"></div>
+      
+      <div className="banner-container">
         {/* Left Content */}
-        <div className="tech-content-section">
-          <div className="tech-content-header">
-            <div 
-              className={`tech-header-badge ${isVisible['badge'] ? 'animate-zoom-in' : ''}`}
-              data-animate-id="badge"
-            >
-              <CheckCircle size={20} />
-              <span>TRUSTED BY 1000+ BUSINESSES</span>
-            </div>
-            <h2 
-              className={`tech-main-title ${isVisible['title'] ? 'animate-text-split' : ''}`}
-              data-animate-id="title"
-            >
-              Why Our Technology Solutions
-              <br />
-              <span className="tech-gradient-text">Company Stands Out?</span>
-            </h2>
+        <div className="banner-content">
+          <div 
+            className={`banner-badge ${isVisible['badge'] ? 'reveal-zoom' : ''}`}
+            data-animate-id="badge"
+          >
+            <Sparkles size={16} />
+            <span>TRANSFORMING BUSINESSES DIGITALLY</span>
+            <Sparkles size={16} />
           </div>
 
-          <div className="tech-reasons-list">
-            {reasons.map((reason, index) => {
-              const IconComponent = reason.icon;
-              const animateId = `reason-${index}`;
-              const direction = index % 2 === 0 ? 'left' : 'right';
+          <h1 
+            className={`banner-title ${isVisible['title'] ? 'reveal-slide-up' : ''}`}
+            data-animate-id="title"
+          >
+            Why Choose Us for Your
+            <span className="banner-gradient-text"> Digital Journey?</span>
+          </h1>
+
+          <p 
+            className={`banner-description ${isVisible['desc'] ? 'reveal-fade' : ''}`}
+            data-animate-id="desc"
+          >
+            We're not just developers—we're your partners in growth. From crafting your brand identity 
+            to building powerful digital solutions, we handle it all with expertise and care.
+          </p>
+
+          {/* Feature Cards */}
+          <div className="banner-features">
+            {features.map((feature, index) => {
+              const IconComponent = feature.icon;
+              const animateId = `feature-${index}`;
               return (
                 <div 
-                  key={index} 
-                  className={`tech-reason-item ${isVisible[animateId] ? `animate-fade-${direction}` : ''}`}
+                  key={index}
+                  className={`feature-card ${isVisible[animateId] ? 'reveal-slide-left' : ''}`}
                   data-animate-id={animateId}
-                  style={{ animationDelay: `${index * 0.2}s` }}
+                  style={{ 
+                    animationDelay: `${index * 0.15}s`,
+                    '--feature-color': feature.color
+                  } as React.CSSProperties}
                 >
-                  <div className="tech-reason-icon">
-                    <IconComponent size={28} strokeWidth={2} />
+                  <div className="feature-icon-wrapper">
+                    <div className="feature-icon-glow"></div>
+                    <IconComponent size={24} strokeWidth={2.5} />
                   </div>
-                  <div className="tech-reason-content">
-                    <h3>{reason.title}</h3>
-                    <p>{reason.subtitle}</p>
+                  <div className="feature-text">
+                    <h3>{feature.title}</h3>
+                    <p>{feature.subtitle}</p>
                   </div>
-                  <div className="tech-reason-arrow">
-                    <ArrowRight size={24} />
+                  <div className="feature-arrow">
+                    <ArrowRight size={20} />
                   </div>
                 </div>
               );
             })}
           </div>
 
+          {/* CTA Button */}
           <div 
-            className={`tech-website-link ${isVisible['website'] ? 'animate-zoom-in' : ''}`}
-            data-animate-id="website"
-          >
-            <span className="tech-link-icon">🌐</span>
-            <span className="tech-link-text">www.YourTechCompany.com</span>
-          </div>
-
-          {/* CTA Section */}
-          <div 
-            className={`tech-cta-section ${isVisible['cta'] ? 'animate-zoom-in' : ''}`}
+            className={`banner-cta-wrapper ${isVisible['cta'] ? 'reveal-zoom' : ''}`}
             data-animate-id="cta"
           >
-            <div className="tech-cta-content">
-              <h3>Get The Best Source for IT Solutions and Service</h3>
-              <p>Transform your business with cutting-edge technology solutions</p>
-            </div>
-            <button className="tech-cta-button">
-              Get Started
-              <ArrowRight size={20} />
+            <button className="banner-cta-button">
+              <span>Start Your Project</span>
+              <div className="cta-icon">
+                <ArrowRight size={20} />
+              </div>
+              <div className="cta-shimmer"></div>
             </button>
+            <p className="banner-cta-subtext">Free consultation • No commitment required</p>
           </div>
         </div>
 
-        {/* Right Image Section */}
-        <div className="tech-image-section">
+        {/* Right Visual Section */}
+        <div className="banner-visual">
           <div 
-            className={`tech-image-wrapper ${isVisible['image'] ? 'animate-zoom-in' : ''}`}
-            data-animate-id="image"
+            className={`visual-main ${isVisible['visual'] ? 'reveal-zoom' : ''}`}
+            data-animate-id="visual"
           >
-            <img 
-              src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=900&fit=crop" 
-              alt="Tech team collaboration"
-              className="tech-main-image"
-            />
-            <div className="tech-image-overlay"></div>
-            
-            {/* Floating Stats */}
+            {/* Main Image Container */}
+            <div className="visual-image-container">
+              <img 
+                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&h=900&fit=crop" 
+                alt="Creative team collaboration"
+                className="visual-image"
+              />
+              <div className="visual-overlay"></div>
+              
+              {/* Decorative Elements */}
+              <div className="visual-decoration visual-decoration-1"></div>
+              <div className="visual-decoration visual-decoration-2"></div>
+            </div>
+
+            {/* Floating Stats Cards */}
+            {stats.map((stat, index) => (
+              <div 
+                key={index}
+                className={`floating-stat stat-${index + 1} ${isVisible[`stat${index}`] ? 'reveal-float' : ''}`}
+                data-animate-id={`stat${index}`}
+                style={{ animationDelay: `${0.5 + index * 0.2}s` }}
+              >
+                <div className="stat-icon">{stat.icon}</div>
+                <div className="stat-content">
+                  <div className="stat-number">{stat.number}</div>
+                  <div className="stat-label">{stat.label}</div>
+                </div>
+                <div className="stat-pulse"></div>
+              </div>
+            ))}
+
+            {/* Quality Badge */}
             <div 
-              className={`tech-floating-stat tech-stat-1 ${isVisible['stat1'] ? 'animate-fade-left' : ''}`}
-              data-animate-id="stat1"
-              style={{ animationDelay: '0.5s' }}
+              className={`quality-badge ${isVisible['badge-quality'] ? 'reveal-zoom' : ''}`}
+              data-animate-id="badge-quality"
+              style={{ animationDelay: '1s' }}
             >
-              <div className="tech-stat-icon">💼</div>
-              <div className="tech-stat-content">
-                <div className="tech-stat-number">500K+</div>
-                <div className="tech-stat-label">Projects</div>
+              <Award size={32} strokeWidth={2} />
+              <div className="badge-text">
+                <div className="badge-title">Quality Driven</div>
+                <div className="badge-subtitle">Every Project</div>
               </div>
             </div>
-            
-            <div 
-              className={`tech-floating-stat tech-stat-2 ${isVisible['stat2'] ? 'animate-fade-right' : ''}`}
-              data-animate-id="stat2"
-              style={{ animationDelay: '0.7s' }}
-            >
-              <div className="tech-stat-icon">⚡</div>
-              <div className="tech-stat-content">
-                <div className="tech-stat-number">99%</div>
-                <div className="tech-stat-label">Success Rate</div>
-              </div>
-            </div>
+          </div>
+
+          {/* Animated Dots Pattern */}
+          <div className="dots-pattern">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <div 
+                key={i} 
+                className="dot"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              ></div>
+            ))}
           </div>
         </div>
       </div>
 
       <style>{`
-        .tech-banner-root {
-          background: #000;
+        .banner-root {
+          background: #0a0a0f;
           color: #fff;
-          padding: 80px 20px;
+          padding: 100px 20px;
           min-height: 100vh;
           display: flex;
           align-items: center;
+          position: relative;
+          overflow: hidden;
         }
 
-        .tech-banner-container {
+        /* Background Elements */
+        .banner-bg-grid {
+          position: absolute;
+          inset: 0;
+          background-image: 
+            linear-gradient(rgba(106, 0, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(106, 0, 255, 0.03) 1px, transparent 1px);
+          background-size: 50px 50px;
+          mask-image: radial-gradient(ellipse at center, black 0%, transparent 80%);
+        }
+
+        .banner-bg-gradient {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(
+            ellipse at 30% 50%,
+            rgba(106, 0, 255, 0.15) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            ellipse at 70% 50%,
+            rgba(0, 212, 255, 0.1) 0%,
+            transparent 50%
+          );
+          animation: gradientPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes gradientPulse {
+          0%, 100% { opacity: 0.5; }
+          50% { opacity: 0.8; }
+        }
+
+        .banner-container {
           max-width: 1400px;
           margin: 0 auto;
+          position: relative;
+          z-index: 1;
           display: grid;
-          grid-template-columns: 1fr 1fr;
+          grid-template-columns: 1.1fr 0.9fr;
           gap: 80px;
           align-items: center;
         }
 
         /* Content Section */
-        .tech-content-section {
-          padding: 40px;
+        .banner-content {
+          max-width: 650px;
         }
 
-        .tech-content-header {
-          margin-bottom: 50px;
-        }
-
-        .tech-header-badge {
+        .banner-badge {
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          background: rgba(106, 0, 255, 0.1);
+          gap: 10px;
+          background: rgba(106, 0, 255, 0.15);
           border: 1px solid rgba(106, 0, 255, 0.3);
-          padding: 10px 20px;
+          padding: 12px 24px;
           border-radius: 50px;
           font-size: 0.75rem;
           font-weight: 700;
-          letter-spacing: 1.5px;
-          color: #00d4ff;
+          letter-spacing: 2px;
+          color: #a855f7;
           margin-bottom: 30px;
         }
 
-        .tech-header-badge svg {
-          color: #00d4ff;
-        }
-
-        .tech-main-title {
-          font-size: clamp(32px, 4vw, 48px);
+        .banner-title {
+          font-size: clamp(2.5rem, 5vw, 4rem);
           font-weight: 900;
-          line-height: 1.2;
-          margin: 0;
+          line-height: 1.1;
+          margin: 0 0 25px;
         }
 
-        .tech-gradient-text {
-          background: linear-gradient(90deg, #6a00ff 0%, #00d4ff 100%);
+        .banner-gradient-text {
+          display: block;
+          background: linear-gradient(135deg, #6a00ff 0%, #00d4ff 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
+          background-size: 200% 200%;
+          animation: gradientShift 3s ease infinite;
         }
 
-        /* Reasons List */
-        .tech-reasons-list {
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+
+        .banner-description {
+          font-size: 1.15rem;
+          line-height: 1.8;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 50px;
+        }
+
+        /* Feature Cards */
+        .banner-features {
           display: flex;
           flex-direction: column;
-          gap: 20px;
-          margin-bottom: 40px;
+          gap: 16px;
+          margin-bottom: 50px;
         }
 
-        .tech-reason-item {
+        .feature-card {
           display: flex;
           align-items: center;
           gap: 20px;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.05);
           border-radius: 16px;
-          padding: 20px;
-          transition: all 0.3s ease;
+          padding: 24px;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           cursor: pointer;
+          position: relative;
+          overflow: hidden;
         }
 
-        .tech-reason-item:hover {
-          background: rgba(106, 0, 255, 0.1);
-          border-color: #6a00ff;
+        .feature-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: var(--feature-color);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover {
           transform: translateX(10px);
+          border-color: rgba(255, 255, 255, 0.1);
         }
 
-        .tech-reason-icon {
-          width: 60px;
-          height: 60px;
-          border-radius: 12px;
-          background: linear-gradient(135deg, #6a00ff, #00d4ff);
+        .feature-card:hover::before {
+          opacity: 0.05;
+        }
+
+        .feature-icon-wrapper {
+          position: relative;
+          width: 56px;
+          height: 56px;
+          border-radius: 14px;
+          background: rgba(255, 255, 255, 0.03);
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
+          z-index: 1;
         }
 
-        .tech-reason-content {
+        .feature-icon-glow {
+          position: absolute;
+          inset: 0;
+          background: var(--feature-color);
+          border-radius: 14px;
+          opacity: 0;
+          filter: blur(20px);
+          transition: opacity 0.4s ease;
+        }
+
+        .feature-card:hover .feature-icon-glow {
+          opacity: 0.4;
+        }
+
+        .feature-icon-wrapper svg {
+          position: relative;
+          z-index: 1;
+          transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon-wrapper svg {
+          transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-text {
           flex: 1;
+          z-index: 1;
         }
 
-        .tech-reason-content h3 {
+        .feature-text h3 {
           font-size: 1.1rem;
           font-weight: 700;
-          margin: 0 0 5px;
+          margin: 0 0 6px;
+          color: #fff;
         }
 
-        .tech-reason-content p {
+        .feature-text p {
           margin: 0;
           color: rgba(255, 255, 255, 0.6);
           font-size: 0.9rem;
+          line-height: 1.5;
         }
 
-        .tech-reason-arrow {
-          color: #00d4ff;
+        .feature-arrow {
+          color: rgba(255, 255, 255, 0.3);
           opacity: 0;
           transform: translateX(-10px);
           transition: all 0.3s ease;
+          z-index: 1;
         }
 
-        .tech-reason-item:hover .tech-reason-arrow {
+        .feature-card:hover .feature-arrow {
           opacity: 1;
           transform: translateX(0);
-        }
-
-        /* Website Link */
-        .tech-website-link {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: #00d4ff;
-          margin-bottom: 50px;
-          padding: 15px 0;
-        }
-
-        .tech-link-icon {
-          font-size: 1.5rem;
+          color: var(--feature-color);
         }
 
         /* CTA Section */
-        .tech-cta-section {
-          background: linear-gradient(135deg, #6a00ff 0%, #00d4ff 100%);
-          border-radius: 20px;
-          padding: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 30px;
-          box-shadow: 0 20px 60px rgba(106, 0, 255, 0.4);
+        .banner-cta-wrapper {
+          text-align: left;
         }
 
-        .tech-cta-content h3 {
-          font-size: 1.4rem;
-          font-weight: 800;
-          margin: 0 0 10px;
-          line-height: 1.3;
-        }
-
-        .tech-cta-content p {
-          margin: 0;
-          opacity: 0.95;
-          font-size: 0.95rem;
-        }
-
-        .tech-cta-button {
-          background: #fff;
-          color: #6a00ff;
-          border: none;
-          padding: 16px 32px;
-          border-radius: 12px;
-          font-weight: 800;
-          font-size: 1rem;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          transition: all 0.3s ease;
-          white-space: nowrap;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .tech-cta-button:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Image Section */
-        .tech-image-section {
+        .banner-cta-button {
           position: relative;
-          height: 700px;
+          background: linear-gradient(135deg, #6a00ff 0%, #00d4ff 100%);
+          border: none;
+          padding: 20px 45px;
+          border-radius: 14px;
+          font-weight: 800;
+          font-size: 1.05rem;
+          color: #fff;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          overflow: hidden;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 10px 40px rgba(106, 0, 255, 0.3);
         }
 
-        .tech-image-wrapper {
+        .banner-cta-button:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 20px 60px rgba(106, 0, 255, 0.5);
+        }
+
+        .cta-icon {
+          transition: transform 0.3s ease;
+        }
+
+        .banner-cta-button:hover .cta-icon {
+          transform: translateX(5px);
+        }
+
+        .cta-shimmer {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            transparent 100%
+          );
+          transform: translateX(-100%);
+        }
+
+        .banner-cta-button:hover .cta-shimmer {
+          animation: shimmer 1.5s ease-in-out;
+        }
+
+        @keyframes shimmer {
+          to { transform: translateX(100%); }
+        }
+
+        .banner-cta-subtext {
+          margin-top: 15px;
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 0.9rem;
+          font-weight: 500;
+        }
+
+        /* Visual Section */
+        .banner-visual {
+          position: relative;
+          height: 650px;
+        }
+
+        .visual-main {
+          position: relative;
+          width: 100%;
+          height: 100%;
+        }
+
+        .visual-image-container {
           position: relative;
           width: 100%;
           height: 100%;
           border-radius: 24px;
           overflow: hidden;
+          box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
         }
 
-        .tech-main-image {
+        .visual-image {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          transition: transform 8s ease-out;
         }
 
-        .tech-image-overlay {
+        .visual-main:hover .visual-image {
+          transform: scale(1.05);
+        }
+
+        .visual-overlay {
           position: absolute;
           inset: 0;
           background: linear-gradient(
             135deg,
-            rgba(106, 0, 255, 0.3) 0%,
-            rgba(0, 212, 255, 0.3) 100%
+            rgba(106, 0, 255, 0.2) 0%,
+            rgba(0, 212, 255, 0.2) 100%
           );
+          mix-blend-mode: overlay;
+        }
+
+        /* Decorative Elements */
+        .visual-decoration {
+          position: absolute;
+          border-radius: 20px;
+          opacity: 0.1;
+        }
+
+        .visual-decoration-1 {
+          width: 200px;
+          height: 200px;
+          background: linear-gradient(135deg, #6a00ff, #00d4ff);
+          top: -50px;
+          right: -50px;
+          filter: blur(60px);
+          animation: float 6s ease-in-out infinite;
+        }
+
+        .visual-decoration-2 {
+          width: 150px;
+          height: 150px;
+          background: linear-gradient(135deg, #00d4ff, #06d6a0);
+          bottom: -30px;
+          left: -30px;
+          filter: blur(50px);
+          animation: float 6s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
         }
 
         /* Floating Stats */
-        .tech-floating-stat {
+        .floating-stat {
           position: absolute;
-          background: rgba(0, 0, 0, 0.8);
+          background: rgba(0, 0, 0, 0.85);
           backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          padding: 20px;
+          border-radius: 18px;
+          padding: 20px 24px;
           display: flex;
           align-items: center;
-          gap: 15px;
-          animation: techFloat 3s ease-in-out infinite;
+          gap: 16px;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
-        .tech-stat-1 {
-          top: 50px;
+        .stat-1 {
+          top: 40px;
+          left: -40px;
+          animation: floatStat 4s ease-in-out infinite;
+        }
+
+        .stat-2 {
+          top: 50%;
+          right: -50px;
+          transform: translateY(-50%);
+          animation: floatStat 4s ease-in-out infinite 1.3s;
+        }
+
+        .stat-3 {
+          bottom: 60px;
           left: -30px;
-          animation-delay: 0s;
+          animation: floatStat 4s ease-in-out infinite 2.6s;
         }
 
-        .tech-stat-2 {
-          bottom: 80px;
-          right: -30px;
-          animation-delay: 1.5s;
+        @keyframes floatStat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-15px); }
         }
 
-        @keyframes techFloat {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-20px);
-          }
-        }
-
-        .tech-stat-icon {
+        .stat-icon {
           font-size: 2rem;
-          filter: drop-shadow(0 4px 12px rgba(106, 0, 255, 0.5));
+          filter: drop-shadow(0 4px 12px rgba(106, 0, 255, 0.6));
         }
 
-        .tech-stat-number {
+        .stat-content {
+          min-width: 80px;
+        }
+
+        .stat-number {
           font-size: 1.8rem;
           font-weight: 900;
-          background: linear-gradient(90deg, #6a00ff 0%, #00d4ff 100%);
+          background: linear-gradient(135deg, #6a00ff 0%, #00d4ff 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           line-height: 1;
+          margin-bottom: 4px;
         }
 
-        .tech-stat-label {
+        .stat-label {
+          font-size: 0.8rem;
+          color: rgba(255, 255, 255, 0.6);
+          font-weight: 600;
+        }
+
+        .stat-pulse {
+          position: absolute;
+          inset: -2px;
+          border-radius: 18px;
+          border: 2px solid rgba(106, 0, 255, 0.5);
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 0; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        /* Quality Badge */
+        .quality-badge {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: rgba(255, 255, 255, 0.95);
+          color: #0a0a0f;
+          border-radius: 20px;
+          padding: 24px 32px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .quality-badge svg {
+          color: #6a00ff;
+        }
+
+        .badge-title {
+          font-size: 1.2rem;
+          font-weight: 900;
+          color: #0a0a0f;
+          line-height: 1;
+          margin-bottom: 4px;
+        }
+
+        .badge-subtitle {
           font-size: 0.85rem;
-          color: rgba(255, 255, 255, 0.7);
-          margin-top: 5px;
+          color: rgba(10, 10, 15, 0.6);
+          font-weight: 600;
         }
 
-        /* Scroll Animations */
+        /* Dots Pattern */
+        .dots-pattern {
+          position: absolute;
+          bottom: -50px;
+          right: -50px;
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 20px;
+          opacity: 0.3;
+        }
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          background: linear-gradient(135deg, #6a00ff, #00d4ff);
+          border-radius: 50%;
+          animation: dotPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes dotPulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.5); }
+        }
+
+        /* Animation States */
         [data-animate-id] {
           opacity: 0;
         }
 
-        /* Fade from Left */
-        @keyframes fadeLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-80px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        .animate-fade-left {
-          animation: fadeLeft 0.8s ease-out forwards;
-        }
-
-        /* Fade from Right */
-        @keyframes fadeRight {
-          from {
-            opacity: 0;
-            transform: translateX(80px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        .animate-fade-right {
-          animation: fadeRight 0.8s ease-out forwards;
-        }
-
-        /* Zoom In Effect */
-        @keyframes zoomIn {
-          from {
-            opacity: 0;
-            transform: scale(0.5);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        .animate-zoom-in {
-          animation: zoomIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-
-        /* Text Split Effect - Letters spreading from center */
-        @keyframes textSplit {
+        @keyframes revealZoom {
           from {
             opacity: 0;
             transform: scale(0.8);
-            letter-spacing: -0.5em;
             filter: blur(10px);
           }
           to {
             opacity: 1;
             transform: scale(1);
-            letter-spacing: normal;
             filter: blur(0);
           }
         }
 
-        .animate-text-split {
-          animation: textSplit 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        .reveal-zoom {
+          animation: revealZoom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        .animate-text-split span {
-          display: inline-block;
-          animation: textSplit 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-          animation-delay: 0.3s;
+        @keyframes revealSlideUp {
+          from {
+            opacity: 0;
+            transform: translateY(40px);
+            filter: blur(5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+          }
+        }
+
+        .reveal-slide-up {
+          animation: revealSlideUp 0.8s ease-out forwards;
+        }
+
+        @keyframes revealFade {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .reveal-fade {
+          animation: revealFade 0.8s ease-out forwards;
+        }
+
+        @keyframes revealSlideLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-60px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .reveal-slide-left {
+          animation: revealSlideLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes revealFloat {
+          from {
+            opacity: 0;
+            transform: translateY(40px) scale(0.8);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .reveal-float {
+          animation: revealFloat 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
         /* Responsive */
         @media (max-width: 1024px) {
-          .tech-banner-container {
+          .banner-container {
             grid-template-columns: 1fr;
             gap: 60px;
           }
 
-          .tech-image-section {
+          .banner-visual {
             height: 500px;
           }
 
-          .tech-cta-section {
-            flex-direction: column;
-            text-align: center;
+          .floating-stat {
+            padding: 16px 20px;
           }
 
-          .tech-stat-1 {
-            left: 20px;
+          .stat-1, .stat-2, .stat-3 {
+            position: relative;
+            left: auto;
+            right: auto;
+            top: auto;
+            bottom: auto;
+            transform: none !important;
           }
 
-          .tech-stat-2 {
-            right: 20px;
+          .quality-badge {
+            position: relative;
+            transform: none;
+            margin-top: 30px;
           }
         }
 
         @media (max-width: 768px) {
-          .tech-banner-root {
-            padding: 40px 20px;
+          .banner-root {
+            padding: 60px 20px;
           }
 
-          .tech-content-section {
-            padding: 20px;
+          .banner-content {
+            max-width: 100%;
           }
 
-          .tech-cta-section {
-            padding: 30px 20px;
+          .banner-badge {
+            font-size: 0.65rem;
+            padding: 10px 18px;
           }
 
-          .tech-cta-content h3 {
-            font-size: 1.1rem;
+          .banner-description {
+            font-size: 1rem;
           }
 
-          .tech-reason-item {
-            padding: 15px;
+          .feature-card {
+            padding: 18px;
           }
 
-          .tech-reason-icon {
-            width: 50px;
-            height: 50px;
+          .feature-icon-wrapper {
+            width: 48px;
+            height: 48px;
+          }
+
+          .banner-visual {
+            height: 400px;
+          }
+
+          .dots-pattern {
+            display: none;
+          }
+
+          .banner-cta-button {
+            width: 100%;
+            justify-content: center;
           }
         }
       `}</style>

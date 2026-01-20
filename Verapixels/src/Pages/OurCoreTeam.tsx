@@ -25,6 +25,8 @@ const OurCoreTeam = () => {
   const [activeCard, setActiveCard] = useState<number | null>(null);
   const [scrollY, setScrollY] = useState(0);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
+  const [isReady, setIsReady] = useState(false);
   
   const sectionRefs = {
     hero: useRef<HTMLDivElement>(null),
@@ -34,17 +36,54 @@ const OurCoreTeam = () => {
     join: useRef<HTMLDivElement>(null),
   };
 
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Force scroll to top and reset everything on mount
+  useEffect(() => {
+    // Immediate scroll reset
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
+    // Reset all state
+    setScrollY(0);
+    setVisibleSections(new Set());
+    setVisibleCards(new Set());
+    
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      setIsReady(true);
+    }, 10);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Reset all state when component mounts
+  useEffect(() => {
+    setScrollY(0);
+    setVisibleSections(new Set());
+    setVisibleCards(new Set());
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      requestAnimationFrame(() => {
+        setMousePosition({ x: e.clientX, y: e.clientY });
+      });
     };
     
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      requestAnimationFrame(() => {
+        setScrollY(window.scrollY);
+      });
     };
     
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
     
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
@@ -53,6 +92,8 @@ const OurCoreTeam = () => {
   }, []);
 
   useEffect(() => {
+    if (!isReady) return;
+
     const observers = Object.entries(sectionRefs).map(([key, ref]) => {
       const observer = new IntersectionObserver(
         (entries) => {
@@ -75,7 +116,34 @@ const OurCoreTeam = () => {
     return () => {
       observers.forEach((observer) => observer.disconnect());
     };
-  }, []);
+  }, [isReady]);
+
+  // Card viewport observer
+  useEffect(() => {
+    if (!isReady) return;
+
+    const cardObservers = cardRefs.current.map((card, index) => {
+      if (!card) return null;
+      
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setVisibleCards((prev) => new Set(prev).add(index));
+            }
+          });
+        },
+        { threshold: 0.2, rootMargin: "0px 0px -50px 0px" }
+      );
+
+      observer.observe(card);
+      return observer;
+    });
+
+    return () => {
+      cardObservers.forEach((observer) => observer?.disconnect());
+    };
+  }, [isReady]);
 
   const teamMembers = [
     {
@@ -301,10 +369,13 @@ const OurCoreTeam = () => {
             {teamMembers.map((member, i) => (
               <div
                 key={i}
-                className={`member-card ${activeCard === i ? "active" : ""}`}
+                ref={(el) => { cardRefs.current[i] = el; }}
+                className={`member-card ${activeCard === i ? "active" : ""} ${visibleCards.has(i) ? "card-visible" : ""}`}
                 onMouseEnter={() => setActiveCard(i)}
                 onMouseLeave={() => setActiveCard(null)}
-                style={{ animationDelay: `${i * 0.1}s` }}
+                style={{ 
+                  transitionDelay: visibleCards.has(i) ? `${i * 0.15}s` : '0s'
+                }}
               >
                 <div
                   className="card-glow"
@@ -376,7 +447,7 @@ const OurCoreTeam = () => {
         </div>
       </section>
 
-      {/* Group Photo Section - NEW */}
+      {/* Group Photo Section */}
       <section 
         className={`group-photo-section ${visibleSections.has('group') ? 'visible' : ''}`}
         ref={sectionRefs.group}
@@ -475,12 +546,20 @@ const OurCoreTeam = () => {
           box-sizing: border-box;
         }
 
+        html, body {
+          overflow-x: hidden;
+          width: 100%;
+          max-width: 100vw;
+        }
+
         .team-page {
           background: #000;
           color: #fff;
           min-height: 100vh;
           position: relative;
           overflow-x: hidden;
+          width: 100%;
+          max-width: 100vw;
         }
 
         /* Animated Background */
@@ -779,22 +858,14 @@ const OurCoreTeam = () => {
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 30px;
           overflow: hidden;
-          transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+          opacity: 0;
+          transform: translateX(100px);
+          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .team-grid-section.visible .member-card {
-          animation: fadeInScale 0.8s ease both;
-        }
-
-        @keyframes fadeInScale {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
+        .member-card.card-visible {
+          opacity: 1;
+          transform: translateX(0);
         }
 
         .member-card:hover {
@@ -1130,7 +1201,18 @@ const OurCoreTeam = () => {
         }
 
         .group-photo-section.visible .group-stat {
-          animation: slideInUp 0.8s ease both;
+          animation: slideInRight 0.8s ease both;
+        }
+
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(100px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
 
         .group-stat:nth-child(1) { animation-delay: 0.1s; }
@@ -1192,7 +1274,7 @@ const OurCoreTeam = () => {
         }
 
         .join-section.visible .join-content {
-          animation: fadeInScale 1s ease both;
+          animation: slideInRight 1s ease both;
         }
 
         .join-content::before {
@@ -1210,7 +1292,8 @@ const OurCoreTeam = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: fit-content;
+          width: 72px;
+          height: 72px;
           animation: bounce 2s ease infinite;
         }
 
@@ -1265,6 +1348,10 @@ const OurCoreTeam = () => {
             grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
             gap: 40px;
           }
+          
+          .bg-orb {
+            filter: blur(100px);
+          }
         }
 
         @media (max-width: 768px) {
@@ -1309,6 +1396,30 @@ const OurCoreTeam = () => {
           .group-title {
             font-size: 36px;
           }
+          
+          .join-icon {
+            font-size: 56px;
+            width: 56px;
+            height: 56px;
+          }
+          
+          .bg-orb {
+            filter: blur(80px);
+            opacity: 0.1;
+          }
+          
+          .floating-icons {
+            display: none;
+          }
+          
+          .hero-badge, .group-badge {
+            font-size: 0.85rem;
+            padding: 10px 18px;
+          }
+          
+          .stat-card {
+            padding: 30px 20px;
+          }
         }
 
         @media (max-width: 480px) {
@@ -1330,8 +1441,39 @@ const OurCoreTeam = () => {
           }
 
           .hero-badge, .group-badge {
-            font-size: 0.9rem;
-            padding: 10px 20px;
+            font-size: 0.8rem;
+            padding: 8px 16px;
+          }
+          
+          .join-icon {
+            font-size: 48px;
+            width: 48px;
+            height: 48px;
+          }
+          
+          .hero-title {
+            font-size: 36px;
+          }
+          
+          .section-title, .group-title {
+            font-size: 28px;
+          }
+          
+          .member-info {
+            padding: 25px 20px;
+          }
+          
+          .member-name {
+            font-size: 1.5rem;
+          }
+          
+          .join-content {
+            padding: 40px 20px;
+          }
+          
+          .join-button {
+            padding: 15px 35px;
+            font-size: 1rem;
           }
         }
       `}</style>

@@ -40,34 +40,34 @@ const ServicesSection = () => {
 
   const services = [
     { 
-      icon: Zap, 
-      title: 'Brand', 
-      subtitle: 'Creative Art & Design',
+      icon: Sparkles, 
+      title: 'Brand Identity', 
+      subtitle: 'Business Naming & Logo Design',
       gradient: 'linear-gradient(135deg, #6a00ff 0%, #a855f7 100%)'
     },
     { 
       icon: Cpu, 
-      title: 'Business', 
-      subtitle: 'Consulting Services', 
+      title: 'Web Development', 
+      subtitle: 'Custom Websites & Applications', 
       featured: true,
       gradient: 'linear-gradient(135deg, #00d4ff 0%, #06d6a0 100%)'
     },
     { 
-      icon: Shield, 
-      title: 'Security', 
-      subtitle: 'Cyber Security',
+      icon: Target, 
+      title: 'UI/UX Design', 
+      subtitle: 'Beautiful User Experiences',
       gradient: 'linear-gradient(135deg, #3ddc84 0%, #06d6a0 100%)'
     },
     { 
-      icon: Bot, 
-      title: 'Automation', 
-      subtitle: 'System Automation',
+      icon: Zap, 
+      title: 'Mobile Apps', 
+      subtitle: 'iOS & Android Development',
       gradient: 'linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%)'
     },
     { 
       icon: Settings, 
-      title: 'Support', 
-      subtitle: 'Quick Maintenance',
+      title: 'Maintenance', 
+      subtitle: 'Ongoing Support & Updates',
       gradient: 'linear-gradient(135deg, #ffb74d 0%, #ff8a65 100%)'
     }
   ];
@@ -189,7 +189,7 @@ const ServicesSection = () => {
   }, [statsInView]);
 
   const animateCounters = () => {
-    const targets = { projects: 500, clients: 50, members: 30, awards: 85 };
+    const targets = { projects: 15, clients: 12, members: 10, awards: 0 };
     const duration = 2000;
     const steps = 60;
     const interval = duration / steps;
@@ -285,20 +285,30 @@ const ServicesSection = () => {
           
           <div className="stats-grid-new">
             {[
-              { icon: Briefcase, value: counts.projects, label: 'Projects', suffix: 'K+' },
-              { icon: Smile, value: counts.clients, label: 'Happy Clients', suffix: 'K+' },
-              { icon: Users, value: counts.members, label: 'Team Members', suffix: 'K+' },
-              { icon: Trophy, value: counts.awards, label: 'Awards', suffix: '+' }
+              { icon: Briefcase, value: counts.projects, label: 'Projects Completed', suffix: '+' },
+              { icon: Smile, value: counts.clients, label: 'Happy Clients', suffix: '+' },
+              { icon: Users, value: counts.members, label: 'Team Members', suffix: '+' },
+              { icon: Trophy, value: counts.awards, label: 'Industry Awards', suffix: '', comment: 'Coming Soon' }
             ].map((stat, index) => (
-              <div key={index} className="stat-card-new">
+              <div 
+                key={index} 
+                className={`stat-card-new ${statsInView ? 'stat-visible' : ''}`}
+                style={{ animationDelay: `${index * 0.15}s` }}
+              >
                 <div className="stat-icon-wrapper">
                   <stat.icon size={32} strokeWidth={1.5} />
                   <div className="stat-icon-glow"></div>
                 </div>
                 <div className="stat-content">
                   <div className="stat-number">
-                    {stat.value}
-                    <span className="stat-suffix">{stat.suffix}</span>
+                    {stat.comment ? (
+                      <span className="coming-soon">{stat.comment}</span>
+                    ) : (
+                      <>
+                        {stat.value}
+                        <span className="stat-suffix">{stat.suffix}</span>
+                      </>
+                    )}
                   </div>
                   <div className="stat-label">{stat.label}</div>
                 </div>
@@ -483,8 +493,20 @@ const ServicesSection = () => {
           -webkit-text-fill-color: transparent;
           margin-bottom: 10px;
           opacity: 0;
-          transform: translateY(30px);
-          animation: titleReveal 0.8s ease-out forwards;
+          filter: blur(10px);
+          transform: translateX(-50px);
+        }
+
+        .services-title.revealed .title-gradient {
+          animation: gradientSlideReveal 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes gradientSlideReveal {
+          to {
+            opacity: 1;
+            filter: blur(0);
+            transform: translateX(0);
+          }
         }
 
         .title-sub {
@@ -581,6 +603,9 @@ const ServicesSection = () => {
           width: 60px;
           height: 60px;
           margin-bottom: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .icon-backdrop {
@@ -728,13 +753,26 @@ const ServicesSection = () => {
           display: flex;
           align-items: center;
           gap: 25px;
-          transition: all 0.3s ease;
           position: relative;
           overflow: hidden;
+          opacity: 0;
+          transform: translateX(-80px);
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-card-new.stat-visible {
+          animation: statFadeLeft 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes statFadeLeft {
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
         }
 
         .stat-card-new:hover {
-          transform: translateY(-5px);
+          transform: translateX(0) translateY(-5px);
           background: rgba(255, 255, 255, 0.03);
           border-color: rgba(255, 255, 255, 0.05);
         }
@@ -774,6 +812,13 @@ const ServicesSection = () => {
           margin-bottom: 5px;
           display: flex;
           align-items: baseline;
+        }
+
+        .coming-soon {
+          font-size: 1.2rem;
+          color: rgba(255, 255, 255, 0.5);
+          font-weight: 600;
+          font-style: italic;
         }
 
         .stat-suffix {
@@ -1271,6 +1316,25 @@ const ServicesSection = () => {
             gap: 20px;
           }
 
+          /* Enhanced mobile animations */
+          .stat-card-new.stat-visible {
+            animation: statFadeLeftMobile 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+          }
+
+          @keyframes statFadeLeftMobile {
+            0% {
+              opacity: 0;
+              transform: translateX(-100px) scale(0.95);
+            }
+            60% {
+              transform: translateX(5px) scale(1.02);
+            }
+            100% {
+              opacity: 1;
+              transform: translateX(0) scale(1);
+            }
+          }
+
           .case-studies-grid-redesign {
             grid-template-columns: 1fr;
             gap: 25px;
@@ -1304,11 +1368,33 @@ const ServicesSection = () => {
             padding: 60px 20px;
           }
 
+          /* Premium mobile stat card animations */
           .stat-card-new {
             flex-direction: column;
             text-align: center;
             gap: 15px;
             padding: 30px 20px;
+          }
+
+          .stat-card-new.stat-visible {
+            animation: statFadeLeftPremium 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          }
+
+          @keyframes statFadeLeftPremium {
+            0% {
+              opacity: 0;
+              transform: translateX(-120px) translateY(20px) rotate(-5deg);
+              filter: blur(5px);
+            }
+            50% {
+              transform: translateX(10px) translateY(-5px) rotate(2deg);
+              filter: blur(2px);
+            }
+            100% {
+              opacity: 1;
+              transform: translateX(0) translateY(0) rotate(0deg);
+              filter: blur(0);
+            }
           }
 
           .stat-number {
