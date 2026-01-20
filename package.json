@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist",
+    "deploy": "gh-pages -d dist --dotfiles",
     "server": "nodemon server.js",
     "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
     "start": "npm run dev:all"
