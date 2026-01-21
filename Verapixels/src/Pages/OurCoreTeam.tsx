@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import ocholiImage from "@/assets/ocholi founder.jpeg";
 import fredaImage from "@/assets/freeda team member.jpeg";
 import preciousImage from "@/assets/prech vera teem.jpeg";
+import ellaImage from "@/assets/ella1.jpeg";
 import {
   FiGithub,
   FiLinkedin,
@@ -219,7 +220,7 @@ const OurCoreTeam = () => {
     {
       name: "Ella",
       role: "UI/UX Designer",
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=600&fit=crop",
+      image: ellaImage,
       bio: "Creating intuitive, user-centered interfaces and meaningful digital experiences.",
       specialties: ["UI Design", "UX Research", "Prototyping"],
       social: {
