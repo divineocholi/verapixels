@@ -1313,298 +1313,8 @@ What would you like to do today?`,
     }
   };
 
-  /* --------------------------- Handle Send Message --------------------------- */
-  const handleSend = async () => {
-    const raw = inputValue.trim();
-    if (!raw || isTyping) return;
 
-    // CHECK: If admin has joined, skip AI processing
-    if (adminHasJoined) {
-      console.log('🛑 Admin is handling, sending directly to admin');
-      const userMsg: Message = { 
-        id: Date.now(), 
-        sender: "user", 
-        text: raw, 
-        timestamp: new Date() 
-      };
-      
-      setMessages((prev) => [...prev, userMsg]);
-      setInputValue("");
-      
-      // Save to database
-      await saveMessage(sessionId, userMsg);
-      
-      // Send via WebSocket for admin to see
-      if (socket && isSocketConnected) {
-        socket.emit('send_message', {
-          conversationId: sessionId,
-          message: raw,
-          sender: 'user',
-          messageType: 'text'
-        });
-      }
-      
-      return; // CRITICAL: Exit early when admin is handling
-    }
-
-    const userMsg: Message = { 
-      id: Date.now(), 
-      sender: "user", 
-      text: raw, 
-      timestamp: new Date() 
-    };
-    
-    setMessages((prev) => [...prev, userMsg]);
-    setInputValue("");
-    setIsTyping(true);
-
-    sendTypingIndicator(true);
-    
-    // Save user message to Supabase
-    await saveMessage(sessionId, userMsg);
-    
-    // Send via WebSocket if connected
-    if (socket && isSocketConnected) {
-      socket.emit('send_message', {
-        conversationId: sessionId,
-        message: raw,
-        sender: 'user',
-        messageType: 'text',
-        metadata: {
-          isBooking: bookingState.isBooking,
-          currentStep: bookingState.step
-        }
-      });
-    }
-    
-    // Clear typing timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    
-    typingTimeoutRef.current = setTimeout(() => {
-      sendTypingIndicator(false);
-    }, 1000);
-
-    // Handle bot response
-    setTimeout(async () => {
-      // DOUBLE CHECK: Admin might have joined while typing
-      if (adminHasJoined) {
-        console.log('🛑 Admin joined while typing, cancelling AI response');
-        setIsTyping(false);
-        return;
-      }
-
-      let response: any = { text: "" };
-      
-      // Check for recent responses to avoid duplicates
-      const recentResponses = messages.filter(msg => 
-        msg.sender === 'vee' && 
-        msg.timestamp.getTime() > Date.now() - 3000
-      );
-      
-      if (recentResponses.some(msg => msg.text.includes(raw.substring(0, 20)))) {
-        console.log('🔄 Recent similar response found, skipping');
-        setIsTyping(false);
-        return;
-      }
-
-      if (bookingState.isBooking) {
-        response = await handleBookingFlow(raw);
-      } else {
-        const match = findBestAnswer(raw);
-        
-        if (match && match.intent === 'booking') {
-          // Start booking flow
-          setBookingState({ 
-            isBooking: true, 
-            step: 'name' as const,
-            name: undefined,
-            email: undefined,
-            phone: undefined,
-            date: undefined,
-            dateDisplay: undefined,
-            time: undefined,
-            contactMethod: undefined,
-            datePage: 0
-          });
-          
-          response = {
-            text: "Great! I'll help you book a consultation. First, what's your full name?",
-            intent: 'booking_started'
-          };
-        } 
-        // Check if it's an immediate admin transfer request
-        else if (match && match.intent === 'immediate_admin_transfer') {
-          console.log('🚨 IMMEDIATE ADMIN TRANSFER REQUESTED');
-          
-          // Set admin joined flag immediately
-          setAdminHasJoined(true);
-          
-          const notification = await createAdminNotification(
-            sessionId, 
-            'Immediate admin request by user', 
-            'urgent', 
-            `User said: "${raw.substring(0, 100)}"`
-          );
-          
-          if (notification) {
-            response.text = `${match.text}\n\n✅ Admin notified with HIGH PRIORITY! They will join within 2 minutes.`;
-          } else {
-            response.text = `${match.text}\n\n⚠️ Emergency contact: Please call +234 707 1333 709 immediately.`;
-          }
-        } 
-        else if (match) {
-          response = {
-            text: match.text,
-            links: match.links,
-            intent: match.intent
-          };
-        } else {
-          // No match found - suggest options
-          response = {
-            text: "I want to make sure I understand you correctly. Could you:\n\n1. Rephrase your question?\n2. Or choose one of these options:",
-            links: [
-              { text: "👨‍💼 Talk to Human Team", url: "#", action: 'transfer_to_admin', data: { reason: 'User needed specialized help' } },
-              { text: "📅 Book Consultation", url: "#", action: 'start_booking' },
-              { text: "🛠️ View Services", url: "/services", action: 'navigate' },
-              { text: "💰 Get Pricing", url: "#", action: 'pricing_help' }
-            ]
-          };
-        }
-      }
-      
-      // Send bot response via WebSocket if no admin is present
-      if (socket && isSocketConnected && response && !adminHasJoined) {
-        socket.emit('send_message', {
-          conversationId: sessionId,
-          message: response.text,
-          sender: 'vee',
-          messageType: 'bot_response',
-          metadata: {
-            intent: response.intent,
-            hasLinks: !!response.links,
-            requiresAdmin: response.intent === 'immediate_admin_transfer'
-          }
-        });
-      }
-      
-      const veeMsg: Message = {
-        id: Date.now(),
-        sender: "vee",
-        text: response.text,
-        timestamp: new Date(),
-        links: response.links,
-        intent: response.intent,
-        options: response.options,
-        classification: response.intent === 'booking' ? 'BOOKING' : 'SIMPLE'
-      };
-      
-      setMessages((prev) => [...prev, veeMsg]);
-      
-      // Save bot message to Supabase
-      await saveMessage(sessionId, veeMsg);
-      
-      setIsTyping(false);
-      if (!isOpen) setUnreadCount((n) => n + 1);
-      
-      updateConversationActivity(sessionId);
-    }, 1000); // Reduced from 1500ms to 1000ms for faster responses
-  };
-
-const handleTransferToAdmin = async (reason = 'User requested human assistance') => {
-  console.log('🚀 Initiating admin transfer:', reason);
   
-  setIsTyping(false);
-  setAdminHasJoined(true);
-  
-  if (typingTimeoutRef.current) {
-    clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = null;
-  }
-  
-  try {
-    // STEP 1: Update conversation status
-    await supabase
-      .from('chat_conversations')
-      .update({ 
-        status: 'awaiting_admin',
-        is_admin_takeover: true,
-        is_complex: true,
-        last_activity: new Date().toISOString()
-      })
-      .eq('conversation_id', sessionId);
-    
-    // STEP 2: Create notification
-    const notificationData = {
-      notification_id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      conversation_id: sessionId,
-      notification_type: 'user_request',
-      message_preview: `User requested admin: ${reason}`,
-      reason: reason,
-      priority: 'urgent',
-      status: 'pending',
-      created_at: new Date().toISOString()
-    };
-
-    console.log('📝 Creating notification:', notificationData);
-
-    const { data: notification, error } = await supabase
-      .from('admin_notifications')
-      .insert(notificationData)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('❌ Notification error:', error);
-      throw error;
-    }
-
-    console.log('✅ Notification created:', notification);
-    
-    // STEP 3: Send via WebSocket if connected
-    if (socket && isSocketConnected) {
-      socket.emit('transfer_to_admin', {
-        conversationId: sessionId,
-        reason: reason,
-        notificationId: notification.notification_id,
-        userTimezone: userTimezone,
-        priority: 'urgent'
-      });
-      
-      console.log('📤 Transfer request sent via WebSocket');
-    }
-    
-    const transferMsg: Message = {
-      id: Date.now(),
-      sender: 'vee',
-      text: '✅ Admin has been notified with HIGH PRIORITY!\n\n⏳ An admin will join within 2 minutes.\n\nYou can continue describing your issue.',
-      timestamp: new Date(),
-      intent: 'transfer_confirmed'
-    };
-    setMessages(prev => [...prev, transferMsg]);
-    
-  } catch (error) {
-    console.error('❌ Transfer failed:', error);
-    
-    const errorMsg: Message = {
-      id: Date.now(),
-      sender: 'vee',
-      text: '⚠️ Unable to notify admin right now.\n\n📧 Email: info@verapixels.com\n📞 Call: +234 707 1333 709',
-      timestamp: new Date(),
-      intent: 'transfer_failed'
-    };
-    setMessages(prev => [...prev, errorMsg]);
-  }
-};
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   const handleBookingFlow = async (userInput: string): Promise<any> => {
     const { step, name, email, phone, contactMethod, date, time } = bookingState;
     let nextStep = step;
@@ -1803,29 +1513,30 @@ const handleTransferToAdmin = async (reason = 'User requested human assistance')
   };
 
   const checkAvailableSlots = async (date: string): Promise<string[]> => {
-    try {
-      // Check Supabase for booked slots
-      const { data: bookings, error } = await supabase
-        .from('consultations')
-        .select('booking_time, status')
-        .eq('booking_date', date)
-        .in('status', ['confirmed', 'pending']);
-      
-      if (error) {
-        console.error('Error checking availability:', error);
-        return timeSlots; // Return all slots as fallback
-      }
-      
-      const bookedTimes = bookings?.map(b => b.booking_time) || [];
-      
-      // Filter available slots (not booked)
-      return timeSlots.filter(slot => !bookedTimes.includes(slot));
-    } catch (error) {
-      console.error('Error checking available slots:', error);
+  try {
+    // Check Supabase for booked slots
+    const { data: bookings, error } = await supabase
+      .from('consultations')
+      .select('booking_time, status')
+      .eq('booking_date', date)
+      .in('status', ['confirmed', 'pending']);
+    
+    if (error) {
+      console.error('Error checking availability:', error);
       return timeSlots; // Return all slots as fallback
     }
-  };
+    
+    const bookedTimes = bookings?.map(b => b.booking_time) || [];
+    
+    // Filter available slots (not booked)
+    return timeSlots.filter(slot => !bookedTimes.includes(slot));
+  } catch (error) {
+    console.error('Error checking available slots:', error);
+    return timeSlots; // Return all slots as fallback
+  }
+};
 
+  
   const checkTimeAvailability = async (date: string, time: string): Promise<boolean> => {
     try {
       const { data: bookings, error } = await supabase
@@ -2055,6 +1766,365 @@ const handleTransferToAdmin = async (reason = 'User requested human assistance')
       setMessages(prev => [...prev, optionsMsg]);
     }
   };
+
+
+  /* --------------------------- Handle Send Message --------------------------- */
+  const handleSend = async () => {
+    const raw = inputValue.trim();
+    if (!raw || isTyping) return;
+
+    // CHECK: If admin has joined, skip AI processing
+    if (adminHasJoined) {
+      console.log('🛑 Admin is handling, sending directly to admin');
+      const userMsg: Message = { 
+        id: Date.now(), 
+        sender: "user", 
+        text: raw, 
+        timestamp: new Date() 
+      };
+      
+      setMessages((prev) => [...prev, userMsg]);
+      setInputValue("");
+      
+      // Save to database
+      await saveMessage(sessionId, userMsg);
+      
+      // Send via WebSocket for admin to see
+      if (socket && isSocketConnected) {
+        socket.emit('send_message', {
+          conversationId: sessionId,
+          message: raw,
+          sender: 'user',
+          messageType: 'text'
+        });
+      }
+      
+      return; // CRITICAL: Exit early when admin is handling
+    }
+
+    const userMsg: Message = { 
+      id: Date.now(), 
+      sender: "user", 
+      text: raw, 
+      timestamp: new Date() 
+    };
+    
+    setMessages((prev) => [...prev, userMsg]);
+    setInputValue("");
+    setIsTyping(true);
+
+    sendTypingIndicator(true);
+    
+    // Save user message to Supabase
+    await saveMessage(sessionId, userMsg);
+    
+    // Send via WebSocket if connected
+    if (socket && isSocketConnected) {
+      socket.emit('send_message', {
+        conversationId: sessionId,
+        message: raw,
+        sender: 'user',
+        messageType: 'text',
+        metadata: {
+          isBooking: bookingState.isBooking,
+          currentStep: bookingState.step
+        }
+      });
+    }
+    
+    // Clear typing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      sendTypingIndicator(false);
+    }, 1000);
+
+    // Handle bot response
+    setTimeout(async () => {
+      // DOUBLE CHECK: Admin might have joined while typing
+      if (adminHasJoined) {
+        console.log('🛑 Admin joined while typing, cancelling AI response');
+        setIsTyping(false);
+        return;
+      }
+
+      let response: any = { text: "" };
+      
+      // Check for recent responses to avoid duplicates
+      const recentResponses = messages.filter(msg => 
+        msg.sender === 'vee' && 
+        msg.timestamp.getTime() > Date.now() - 3000
+      );
+      
+      if (recentResponses.some(msg => msg.text.includes(raw.substring(0, 20)))) {
+        console.log('🔄 Recent similar response found, skipping');
+        setIsTyping(false);
+        return;
+      }
+
+      if (bookingState.isBooking) {
+        response = await handleBookingFlow(raw);
+      } else {
+        const match = findBestAnswer(raw);
+        
+        if (match && match.intent === 'booking') {
+          // Start booking flow
+          setBookingState({ 
+            isBooking: true, 
+            step: 'name' as const,
+            name: undefined,
+            email: undefined,
+            phone: undefined,
+            date: undefined,
+            dateDisplay: undefined,
+            time: undefined,
+            contactMethod: undefined,
+            datePage: 0
+          });
+          
+          response = {
+            text: "Great! I'll help you book a consultation. First, what's your full name?",
+            intent: 'booking_started'
+          };
+        } 
+        // Check if it's an immediate admin transfer request
+        else if (match && match.intent === 'immediate_admin_transfer') {
+          console.log('🚨 IMMEDIATE ADMIN TRANSFER REQUESTED');
+          
+          // Set admin joined flag immediately
+          setAdminHasJoined(true);
+          
+          const notification = await createAdminNotification(
+            sessionId, 
+            'Immediate admin request by user', 
+            'urgent', 
+            `User said: "${raw.substring(0, 100)}"`
+          );
+          
+          if (notification) {
+            response.text = `${match.text}\n\n✅ Admin notified with HIGH PRIORITY! They will join within 2 minutes.`;
+          } else {
+            response.text = `${match.text}\n\n⚠️ Emergency contact: Please call +234 707 1333 709 immediately.`;
+          }
+        } 
+        else if (match) {
+          response = {
+            text: match.text,
+            links: match.links,
+            intent: match.intent
+          };
+        } else {
+          // No match found - suggest options
+          response = {
+            text: "I want to make sure I understand you correctly. Could you:\n\n1. Rephrase your question?\n2. Or choose one of these options:",
+            links: [
+              { text: "👨‍💼 Talk to Human Team", url: "#", action: 'transfer_to_admin', data: { reason: 'User needed specialized help' } },
+              { text: "📅 Book Consultation", url: "#", action: 'start_booking' },
+              { text: "🛠️ View Services", url: "/services", action: 'navigate' },
+              { text: "💰 Get Pricing", url: "#", action: 'pricing_help' }
+            ]
+          };
+        }
+      }
+      
+      // Send bot response via WebSocket if no admin is present
+      if (socket && isSocketConnected && response && !adminHasJoined) {
+        socket.emit('send_message', {
+          conversationId: sessionId,
+          message: response.text,
+          sender: 'vee',
+          messageType: 'bot_response',
+          metadata: {
+            intent: response.intent,
+            hasLinks: !!response.links,
+            requiresAdmin: response.intent === 'immediate_admin_transfer'
+          }
+        });
+      }
+      
+      const veeMsg: Message = {
+        id: Date.now(),
+        sender: "vee",
+        text: response.text,
+        timestamp: new Date(),
+        links: response.links,
+        intent: response.intent,
+        options: response.options,
+        classification: response.intent === 'booking' ? 'BOOKING' : 'SIMPLE'
+      };
+      
+      setMessages((prev) => [...prev, veeMsg]);
+      
+      // Save bot message to Supabase
+      await saveMessage(sessionId, veeMsg);
+      
+      setIsTyping(false);
+      if (!isOpen) setUnreadCount((n) => n + 1);
+      
+      updateConversationActivity(sessionId);
+    }, 1000); // Reduced from 1500ms to 1000ms for faster responses
+  };
+
+  const handleTransferToAdmin = async (reason = 'User requested human assistance') => {
+  console.log('🚀 Initiating admin transfer:', reason);
+  
+  setIsTyping(false);
+  setAdminHasJoined(true);
+  
+  if (typingTimeoutRef.current) {
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = null;
+  }
+  
+  try {
+    console.log('📝 Step 1: Ensuring conversation exists...');
+    
+    // STEP 1: First, check if conversation exists
+    const { data: existingConv, error: checkError } = await supabase
+      .from('chat_conversations')
+      .select('conversation_id')
+      .eq('conversation_id', sessionId)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('❌ Error checking conversation:', checkError);
+    }
+    
+    // If conversation doesn't exist, create it
+    if (!existingConv) {
+      console.log('📝 Conversation not found, creating it...');
+      
+      const { error: createError } = await supabase
+        .from('chat_conversations')
+        .insert({
+          conversation_id: sessionId,
+          user_timezone: userTimezone,
+          status: 'awaiting_admin',
+          is_admin_takeover: true,
+          is_complex: true,
+          started_at: new Date().toISOString(),
+          last_activity: new Date().toISOString()
+        });
+      
+      if (createError) {
+        console.error('❌ Error creating conversation:', createError);
+        throw createError;
+      }
+      
+      console.log('✅ Conversation created');
+    } else {
+      // Update existing conversation
+      console.log('📝 Updating existing conversation...');
+      
+      const { error: updateError } = await supabase
+        .from('chat_conversations')
+        .update({ 
+          status: 'awaiting_admin',
+          is_admin_takeover: true,
+          is_complex: true,
+          last_activity: new Date().toISOString()
+        })
+        .eq('conversation_id', sessionId);
+      
+      if (updateError) {
+        console.error('❌ Error updating conversation:', updateError);
+      } else {
+        console.log('✅ Conversation updated');
+      }
+    }
+    
+    console.log('📝 Step 2: Creating notification...');
+    
+    // STEP 2: NOW create the notification (conversation exists)
+    const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const notificationData = {
+      notification_id: notificationId,
+      conversation_id: sessionId, // This now exists!
+      notification_type: 'user_request',
+      message_preview: `User requested admin: ${reason}`.substring(0, 200),
+      reason: reason,
+      priority: 'urgent',
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+
+    console.log('📝 Inserting notification:', notificationData);
+
+    const { data: notifications, error: notifError } = await supabase
+      .from('admin_notifications')
+      .insert([notificationData])
+      .select();
+
+    if (notifError) {
+      console.error('❌ Notification error:', notifError);
+      console.error('Full error:', JSON.stringify(notifError, null, 2));
+      throw notifError;
+    }
+
+    const createdNotification = notifications && notifications.length > 0 ? notifications[0] : null;
+    
+    if (createdNotification) {
+      console.log('✅ Notification created:', createdNotification);
+    } else {
+      console.warn('⚠️ Notification created but no data returned');
+    }
+    
+    console.log('📝 Step 3: Sending via WebSocket...');
+    
+    // STEP 3: Send via WebSocket
+    if (socket && isSocketConnected) {
+      socket.emit('transfer_to_admin', {
+        conversationId: sessionId,
+        reason: reason,
+        notificationId: createdNotification?.notification_id || notificationId,
+        userTimezone: userTimezone,
+        priority: 'urgent',
+        timestamp: new Date().toISOString()
+      });
+      
+      console.log('✅ WebSocket notification sent');
+    }
+    
+    // Success message
+    const transferMsg: Message = {
+      id: Date.now(),
+      sender: 'vee',
+      text: '✅ Admin has been notified with HIGH PRIORITY!\n\n⏳ An admin will join within 2 minutes.\n\nFeel free to continue describing your issue.',
+      timestamp: new Date(),
+      intent: 'transfer_confirmed'
+    };
+    
+        setMessages(prev => [...prev, transferMsg]);
+    await saveMessage(sessionId, transferMsg); // Add this if you want to save the message
+    
+  } catch (error: any) {
+    console.error('❌ Error in handleTransferToAdmin:', error);
+    
+    // Error message
+    const errorMsg: Message = {
+      id: Date.now(),
+      sender: 'vee',
+      text: '⚠️ Connection issue. Please call us directly at +234 707 1333 709',
+      timestamp: new Date(),
+      intent: 'transfer_error'
+    };
+    
+    setMessages(prev => [...prev, errorMsg]);
+  }
+};  // ← This closing brace was missing!
+
+// NOW handleKeyDown should be SEPARATE, not inside handleTransferToAdmin
+const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    handleSend();
+  }
+};
+ 
+  
 
   /* --------------------------- Cleanup on Unmount --------------------------- */
   useEffect(() => {
