@@ -27,6 +27,8 @@ const AboutPage = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
+  const [isReady, setIsReady] = useState(false);
 
   const sectionRefs = {
     hero: useRef<HTMLElement>(null),
@@ -41,19 +43,58 @@ const AboutPage = () => {
     cta: useRef<HTMLElement>(null),
   };
 
-  
+  const cardRefs = {
+    story: useRef<(HTMLDivElement | null)[]>([]),
+    service: useRef<(HTMLDivElement | null)[]>([]),
+    value: useRef<(HTMLDivElement | null)[]>([]),
+    mission: useRef<(HTMLDivElement | null)[]>([]),
+    timeline: useRef<(HTMLDivElement | null)[]>([]),
+    highlight: useRef<(HTMLDivElement | null)[]>([]),
+  };
+
+  // Initialize card refs arrays
+  useEffect(() => {
+    cardRefs.story.current = [];
+    cardRefs.service.current = [];
+    cardRefs.value.current = [];
+    cardRefs.mission.current = [];
+    cardRefs.timeline.current = [];
+    cardRefs.highlight.current = [];
+  }, []);
+
+  // Force scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
+    setScrollY(0);
+    setVisibleSections(new Set());
+    setVisibleCards(new Set());
+    
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      setIsReady(true);
+    }, 10);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      requestAnimationFrame(() => {
+        setMousePosition({ x: e.clientX, y: e.clientY });
+      });
     };
 
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      requestAnimationFrame(() => {
+        setScrollY(window.scrollY);
+      });
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
@@ -61,7 +102,10 @@ const AboutPage = () => {
     };
   }, []);
 
+  // Section visibility observer
   useEffect(() => {
+    if (!isReady) return;
+
     const observers = Object.entries(sectionRefs).map(([key, ref]) => {
       const observer = new IntersectionObserver(
         (entries) => {
@@ -84,7 +128,39 @@ const AboutPage = () => {
     return () => {
       observers.forEach((observer) => observer.disconnect());
     };
-  }, []);
+  }, [isReady]);
+
+  // Card visibility observer - similar to Core Team page
+  useEffect(() => {
+    if (!isReady) return;
+
+    const allCardObservers: IntersectionObserver[] = [];
+
+    Object.entries(cardRefs).forEach(([type, ref]) => {
+      ref.current.forEach((card, index) => {
+        if (!card) return;
+        
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                const cardId = `${type}-${index}`;
+                setVisibleCards((prev) => new Set(prev).add(parseInt(cardId.split('-')[1])));
+              }
+            });
+          },
+          { threshold: 0.2, rootMargin: "0px 0px -50px 0px" }
+        );
+
+        observer.observe(card);
+        allCardObservers.push(observer);
+      });
+    });
+
+    return () => {
+      allCardObservers.forEach((observer) => observer.disconnect());
+    };
+  }, [isReady]);
 
   const services = [
     {
@@ -282,44 +358,38 @@ const AboutPage = () => {
           </div>
 
           <div className="origin-story">
-            <div className="story-card">
-              <div className="story-number">01</div>
-              <div className="story-icon">
-                <FiBook />
+            {[
+              {
+                number: "01",
+                icon: <FiBook />,
+                title: "The Search Begins",
+                text: "It started with a simple question: \"What should I name my business?\" Late one night, scrolling through TikTok for inspiration, I searched \"how to name a business.\" That's when I discovered \"Vera\"—a word that resonated with truth and authenticity."
+              },
+              {
+                number: "02",
+                icon: <FiLayers />,
+                title: "The Pixel Moment",
+                text: "Then came the memory—my first day at tech school. A close friend asked our teacher about \"pixels,\" and that word stuck with me. Pixels are the building blocks of everything digital. They're what make designs come alive, what turn concepts into reality."
+              },
+              {
+                number: "03",
+                icon: <FiStar />,
+                title: "Perfect Fusion",
+                text: "I combined \"Vera\" with \"Pixels\" because that's what we do—we create truth through pixels. When you give a design element the right padding, the right spacing, the perfect 20px—and it looks absolutely flawless—that's the Verapixels standard."
+              }
+            ].map((story, i) => (
+              <div
+                key={i}
+                ref={(el) => { if (cardRefs.story.current) cardRefs.story.current[i] = el; }}
+                className={`story-card ${visibleCards.has(i) ? 'card-visible' : ''}`}
+                style={{ transitionDelay: visibleCards.has(i) ? `${i * 0.15}s` : '0s' }}
+              >
+                <div className="story-number">{story.number}</div>
+                <div className="story-icon">{story.icon}</div>
+                <h3 className="story-title">{story.title}</h3>
+                <p className="story-text">{story.text}</p>
               </div>
-              <h3 className="story-title">The Search Begins</h3>
-              <p className="story-text">
-                It started with a simple question: "What should I name my business?" 
-                Late one night, scrolling through TikTok for inspiration, I searched "how to name a business." 
-                That's when I discovered "Vera"—a word that resonated with truth and authenticity.
-              </p>
-            </div>
-
-            <div className="story-card">
-              <div className="story-number">02</div>
-              <div className="story-icon">
-                <FiLayers />
-              </div>
-              <h3 className="story-title">The Pixel Moment</h3>
-              <p className="story-text">
-                Then came the memory—my first day at tech school. A close friend asked our teacher about 
-                "pixels," and that word stuck with me. Pixels are the building blocks of everything digital. 
-                They're what make designs come alive, what turn concepts into reality.
-              </p>
-            </div>
-
-            <div className="story-card">
-              <div className="story-number">03</div>
-              <div className="story-icon">
-                <FiStar />
-              </div>
-              <h3 className="story-title">Perfect Fusion</h3>
-              <p className="story-text">
-                I combined "Vera" with "Pixels" because that's what we do—we create truth through pixels. 
-                When you give a design element the right padding, the right spacing, the perfect 20px—and 
-                it looks absolutely flawless—that's the Verapixels standard.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -337,9 +407,10 @@ const AboutPage = () => {
           <div className="services-grid">
             {services.map((service, i) => (
               <div 
-                key={i} 
-                className="service-card"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                key={i}
+                ref={(el) => { if (cardRefs.service.current) cardRefs.service.current[i] = el; }}
+                className={`service-card ${visibleCards.has(i) ? 'card-visible' : ''}`}
+                style={{ transitionDelay: visibleCards.has(i) ? `${i * 0.15}s` : '0s' }}
               >
                 <div 
                   className="service-icon"
@@ -428,33 +499,26 @@ const AboutPage = () => {
             </div>
 
             <div className="team-highlights">
-              <div className="highlight-card">
-                <div className="highlight-icon" style={{ color: "#0063f4" }}>
-                  <FiUsers />
+              {[
+                { icon: <FiUsers />, number: "10+", label: "Talented Members", color: "#0063f4" },
+                { icon: <FiHeart />, number: "100%", label: "Team Spirit", color: "#00ff88" },
+                { icon: <FiZap />, number: "24/7", label: "Innovation Drive", color: "#ffd700" }
+              ].map((highlight, i) => (
+                <div 
+                  key={i}
+                  ref={(el) => { if (cardRefs.highlight.current) cardRefs.highlight.current[i] = el; }}
+                  className={`highlight-card ${visibleCards.has(i) ? 'card-visible' : ''}`}
+                  style={{ transitionDelay: visibleCards.has(i) ? `${i * 0.15}s` : '0s' }}
+                >
+                  <div className="highlight-icon" style={{ color: highlight.color }}>
+                    {highlight.icon}
+                  </div>
+                  <div className="highlight-content">
+                    <div className="highlight-number">{highlight.number}</div>
+                    <div className="highlight-label">{highlight.label}</div>
+                  </div>
                 </div>
-                <div className="highlight-content">
-                  <div className="highlight-number">10+</div>
-                  <div className="highlight-label">Talented Members</div>
-                </div>
-              </div>
-              <div className="highlight-card">
-                <div className="highlight-icon" style={{ color: "#00ff88" }}>
-                  <FiHeart />
-                </div>
-                <div className="highlight-content">
-                  <div className="highlight-number">100%</div>
-                  <div className="highlight-label">Team Spirit</div>
-                </div>
-              </div>
-              <div className="highlight-card">
-                <div className="highlight-icon" style={{ color: "#ffd700" }}>
-                  <FiZap />
-                </div>
-                <div className="highlight-content">
-                  <div className="highlight-number">24/7</div>
-                  <div className="highlight-label">Innovation Drive</div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -466,29 +530,29 @@ const AboutPage = () => {
       >
         <div className="about-container">
           <div className="mission-grid">
-            <div className="mission-card">
-              <div className="mission-icon">
-                <FiTarget />
+            {[
+              {
+                icon: <FiTarget />,
+                title: "Our Mission",
+                text: "To empower businesses with cutting-edge digital solutions that drive growth, inspire innovation, and deliver measurable results. We're here to transform your vision into pixel-perfect reality."
+              },
+              {
+                icon: <FiZap />,
+                title: "Our Vision",
+                text: "To become the leading force in digital innovation, setting new standards for excellence in web development, design, and technology solutions. We envision a future where every business has access to world-class digital experiences."
+              }
+            ].map((mission, i) => (
+              <div 
+                key={i}
+                ref={(el) => { if (cardRefs.mission.current) cardRefs.mission.current[i] = el; }}
+                className={`mission-card ${visibleCards.has(i) ? 'card-visible' : ''}`}
+                style={{ transitionDelay: visibleCards.has(i) ? `${i * 0.15}s` : '0s' }}
+              >
+                <div className="mission-icon">{mission.icon}</div>
+                <h3 className="mission-title">{mission.title}</h3>
+                <p className="mission-text">{mission.text}</p>
               </div>
-              <h3 className="mission-title">Our Mission</h3>
-              <p className="mission-text">
-                To empower businesses with cutting-edge digital solutions that drive growth, inspire 
-                innovation, and deliver measurable results. We're here to transform your vision into 
-                pixel-perfect reality.
-              </p>
-            </div>
-
-            <div className="mission-card">
-              <div className="mission-icon">
-                <FiZap />
-              </div>
-              <h3 className="mission-title">Our Vision</h3>
-              <p className="mission-text">
-                To become the leading force in digital innovation, setting new standards for excellence 
-                in web development, design, and technology solutions. We envision a future where every 
-                business has access to world-class digital experiences.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -511,9 +575,10 @@ const AboutPage = () => {
           <div className="values-grid">
             {values.map((value, i) => (
               <div 
-                key={i} 
-                className="value-card"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                key={i}
+                ref={(el) => { if (cardRefs.value.current) cardRefs.value.current[i] = el; }}
+                className={`value-card ${visibleCards.has(i) ? 'card-visible' : ''}`}
+                style={{ transitionDelay: visibleCards.has(i) ? `${i * 0.15}s` : '0s' }}
               >
                 <div 
                   className="value-icon"
@@ -544,9 +609,10 @@ const AboutPage = () => {
             <div className="timeline-line"></div>
             {milestones.map((milestone, i) => (
               <div 
-                key={i} 
-                className="timeline-item"
-                style={{ animationDelay: `${i * 0.3}s` }}
+                key={i}
+                ref={(el) => { if (cardRefs.timeline.current) cardRefs.timeline.current[i] = el; }}
+                className={`timeline-item ${visibleCards.has(i) ? 'card-visible' : ''}`}
+                style={{ transitionDelay: visibleCards.has(i) ? `${i * 0.15}s` : '0s' }}
               >
                 <div className="timeline-connector" style={{ background: milestone.color }}></div>
                 <div className="timeline-dot" style={{ background: milestone.color }}></div>
@@ -602,6 +668,7 @@ const AboutPage = () => {
         html, body {
           overflow-x: hidden;
           width: 100%;
+          max-width: 100vw;
         }
 
         .about-page {
@@ -611,6 +678,7 @@ const AboutPage = () => {
           position: relative;
           min-height: 100vh;
           width: 100%;
+          max-width: 100vw;
         }
 
         .about-bg-particles {
@@ -953,38 +1021,22 @@ const AboutPage = () => {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.06);
           border-radius: 30px;
-          transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
           overflow: hidden;
-          transform-style: preserve-3d;
           opacity: 0;
-          transform: translateX(-100px) rotateY(-15deg);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+          transform: translateY(50px);
         }
 
-        .origin-section.visible .story-card {
+        .story-card.card-visible {
           opacity: 1;
-          transform: translateX(0) rotateY(0deg);
-        }
-
-        .story-card:nth-child(1) {
-          transition-delay: 0.3s;
-        }
-
-        .story-card:nth-child(2) {
-          transition-delay: 0.6s;
-        }
-
-        .story-card:nth-child(3) {
-          transition-delay: 0.9s;
+          transform: translateY(0);
         }
 
         .story-card:hover {
-          transform: translateY(-20px) rotateX(5deg) scale(1.02);
+          transform: translateY(-15px);
           border-color: rgba(0, 99, 244, 0.5);
           background: rgba(255, 255, 255, 0.04);
-          box-shadow: 0 25px 60px rgba(0, 99, 244, 0.3), 
-                      0 15px 30px rgba(0, 0, 0, 0.5),
-                      inset 0 0 40px rgba(0, 99, 244, 0.1);
+          box-shadow: 0 25px 60px rgba(0, 99, 244, 0.3);
         }
 
         .story-number {
@@ -1046,52 +1098,24 @@ const AboutPage = () => {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 30px;
-          transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
           overflow: hidden;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          transform-style: preserve-3d;
           opacity: 0;
-          transform: translateX(-100px) rotateY(-15deg);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+          transform: translateY(50px);
         }
 
-        .services-section.visible .service-card {
+        .service-card.card-visible {
           opacity: 1;
-          transform: translateX(0) rotateY(0deg);
-        }
-
-        .service-card:nth-child(1) {
-          transition-delay: 0.2s;
-        }
-
-        .service-card:nth-child(2) {
-          transition-delay: 0.4s;
-        }
-
-        .service-card:nth-child(3) {
-          transition-delay: 0.6s;
-        }
-
-        .service-card:nth-child(4) {
-          transition-delay: 0.8s;
-        }
-
-        .service-card:nth-child(5) {
-          transition-delay: 1s;
-        }
-
-        .service-card:nth-child(6) {
-          transition-delay: 1.2s;
+          transform: translateY(0);
         }
 
         .service-card:hover {
-          transform: translateY(-20px) rotateX(5deg) scale(1.02);
+          transform: translateY(-20px);
           border-color: rgba(0, 255, 136, 0.6);
-          box-shadow: 0 25px 60px rgba(0, 255, 136, 0.3), 
-                      0 15px 30px rgba(0, 0, 0, 0.5),
-                      inset 0 0 40px rgba(0, 255, 136, 0.1);
+          box-shadow: 0 25px 60px rgba(0, 255, 136, 0.3);
         }
 
         .service-glow {
@@ -1136,17 +1160,6 @@ const AboutPage = () => {
           color: rgba(255, 255, 255, 0.75);
         }
 
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
         .meaning-section {
           padding: 120px 0;
           background: linear-gradient(180deg, transparent, rgba(0, 191, 255, 0.03), transparent);
@@ -1176,6 +1189,17 @@ const AboutPage = () => {
 
         .meaning-section.visible .word-part {
           animation: scaleIn 1s ease both;
+        }
+
+        @keyframes scaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
         .word-part:nth-child(1) { animation-delay: 0.2s; }
@@ -1210,6 +1234,9 @@ const AboutPage = () => {
           color: #00bfff;
           opacity: 0.5;
           animation: pulse 2s ease infinite;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         @keyframes pulse {
@@ -1358,37 +1385,21 @@ const AboutPage = () => {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
-          transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-          transform-style: preserve-3d;
+          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
           opacity: 0;
-          transform: translateX(-100px) rotateY(-15deg);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+          transform: translateY(50px);
         }
 
-        .team-photo-section.visible .highlight-card {
+        .highlight-card.card-visible {
           opacity: 1;
-          transform: translateX(0) rotateY(0deg);
-        }
-
-        .highlight-card:nth-child(1) {
-          transition-delay: 0.3s;
-        }
-
-        .highlight-card:nth-child(2) {
-          transition-delay: 0.6s;
-        }
-
-        .highlight-card:nth-child(3) {
-          transition-delay: 0.9s;
+          transform: translateY(0);
         }
 
         .highlight-card:hover {
-          transform: translateY(-15px) rotateX(5deg) scale(1.02);
+          transform: translateY(-15px);
           background: rgba(255, 255, 255, 0.05);
           border-color: rgba(0, 191, 255, 0.5);
-          box-shadow: 0 20px 50px rgba(0, 191, 255, 0.3),
-                      0 10px 25px rgba(0, 0, 0, 0.5),
-                      inset 0 0 30px rgba(0, 191, 255, 0.1);
+          box-shadow: 0 20px 50px rgba(0, 191, 255, 0.3);
         }
 
         .highlight-icon {
@@ -1442,29 +1453,19 @@ const AboutPage = () => {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 30px;
-          transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
           position: relative;
           overflow: hidden;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          transform-style: preserve-3d;
           opacity: 0;
-          transform: translateX(-100px) rotateY(-15deg);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+          transform: translateY(50px);
         }
 
-        .mission-section.visible .mission-card {
+        .mission-card.card-visible {
           opacity: 1;
-          transform: translateX(0) rotateY(0deg);
-        }
-
-        .mission-card:nth-child(1) {
-          transition-delay: 0.3s;
-        }
-
-        .mission-card:nth-child(2) {
-          transition-delay: 0.7s;
+          transform: translateY(0);
         }
 
         .mission-card::before {
@@ -1484,11 +1485,9 @@ const AboutPage = () => {
         }
 
         .mission-card:hover {
-          transform: translateY(-20px) rotateX(5deg) scale(1.02);
+          transform: translateY(-20px);
           border-color: rgba(0, 99, 244, 0.6);
-          box-shadow: 0 30px 70px rgba(0, 99, 244, 0.4),
-                      0 15px 30px rgba(0, 0, 0, 0.5),
-                      inset 0 0 40px rgba(0, 99, 244, 0.1);
+          box-shadow: 0 30px 70px rgba(0, 99, 244, 0.4);
         }
 
         .mission-icon {
@@ -1563,44 +1562,24 @@ const AboutPage = () => {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 30px;
-          transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
           overflow: hidden;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          transform-style: preserve-3d;
           opacity: 0;
-          transform: translateX(-100px) rotateY(-15deg);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+          transform: translateY(50px);
         }
 
-        .values-section.visible .value-card {
+        .value-card.card-visible {
           opacity: 1;
-          transform: translateX(0) rotateY(0deg);
-        }
-
-        .value-card:nth-child(1) {
-          transition-delay: 0.2s;
-        }
-
-        .value-card:nth-child(2) {
-          transition-delay: 0.5s;
-        }
-
-        .value-card:nth-child(3) {
-          transition-delay: 0.8s;
-        }
-
-        .value-card:nth-child(4) {
-          transition-delay: 1.1s;
+          transform: translateY(0);
         }
 
         .value-card:hover {
-          transform: translateY(-20px) rotateX(5deg) scale(1.02);
+          transform: translateY(-20px);
           border-color: rgba(0, 99, 244, 0.6);
-          box-shadow: 0 25px 60px rgba(0, 99, 244, 0.4), 
-                      0 15px 30px rgba(0, 0, 0, 0.5),
-                      inset 0 0 40px rgba(0, 99, 244, 0.1);
+          box-shadow: 0 25px 60px rgba(0, 99, 244, 0.4);
         }
 
         .value-glow {
@@ -1670,29 +1649,13 @@ const AboutPage = () => {
           padding-left: 100px;
           margin-bottom: 60px;
           opacity: 0;
+          transform: translateY(50px);
+          transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .timeline-section.visible .timeline-item {
-          animation: slideFromRight 0.8s ease forwards;
-        }
-
-        .timeline-item:nth-child(1) { animation-delay: 0.3s; }
-        .timeline-item:nth-child(2) { animation-delay: 0.7s; }
-        .timeline-item:nth-child(3) { animation-delay: 1.1s; }
-
-        @keyframes slideFromRight {
-          0% {
-            opacity: 0;
-            transform: translateX(100px);
-          }
-          50% {
-            opacity: 0.5;
-            transform: translateX(-10px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateX(0);
-          }
+        .timeline-item.card-visible {
+          opacity: 1;
+          transform: translateY(0);
         }
 
         .timeline-connector {
@@ -1701,27 +1664,6 @@ const AboutPage = () => {
           top: 12px;
           width: 68px;
           height: 3px;
-          opacity: 0;
-          transform-origin: left;
-        }
-
-        .timeline-section.visible .timeline-connector {
-          animation: growLine 0.6s ease forwards;
-        }
-
-        .timeline-item:nth-child(1) .timeline-connector { animation-delay: 0.5s; }
-        .timeline-item:nth-child(2) .timeline-connector { animation-delay: 0.9s; }
-        .timeline-item:nth-child(3) .timeline-connector { animation-delay: 1.3s; }
-
-        @keyframes growLine {
-          from {
-            opacity: 0;
-            transform: scaleX(0);
-          }
-          to {
-            opacity: 1;
-            transform: scaleX(1);
-          }
         }
 
         .timeline-dot {
@@ -1752,18 +1694,15 @@ const AboutPage = () => {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 20px;
-          transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-          transform-style: preserve-3d;
+          transition: all 0.5s ease;
           box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .timeline-content:hover {
-          transform: translateX(15px) rotateX(3deg) scale(1.02);
+          transform: translateX(15px);
           background: rgba(255, 255, 255, 0.04);
           border-color: rgba(0, 191, 255, 0.5);
-          box-shadow: 0 20px 50px rgba(0, 191, 255, 0.3),
-                      0 10px 25px rgba(0, 0, 0, 0.5),
-                      inset 0 0 30px rgba(0, 191, 255, 0.1);
+          box-shadow: 0 20px 50px rgba(0, 191, 255, 0.3);
         }
 
         .timeline-year {
@@ -1930,6 +1869,7 @@ const AboutPage = () => {
           border-color: #00bfff;
         }
 
+        /* Responsive Styles */
         @media (max-width: 1024px) {
           .founder-grid {
             grid-template-columns: 1fr;
@@ -1946,7 +1886,9 @@ const AboutPage = () => {
           }
 
           .plus-sign {
-            transform: rotate(90deg);
+            transform: rotate(0deg);
+            font-size: 3rem;
+            padding: 20px 0;
           }
 
           .mission-grid {
@@ -2007,6 +1949,40 @@ const AboutPage = () => {
           .founder-stats {
             grid-template-columns: 1fr;
           }
+
+          .meaning-breakdown {
+            gap: 30px;
+          }
+
+          .word-part {
+            padding: 40px 30px;
+          }
+
+          .word-title {
+            font-size: 2.5rem;
+          }
+
+          .plus-sign {
+            font-size: 2.5rem;
+            padding: 15px 0;
+          }
+
+          .meaning-result {
+            padding: 40px 30px;
+          }
+
+          .team-highlights {
+            grid-template-columns: 1fr;
+          }
+
+          .highlight-card {
+            justify-content: center;
+          }
+
+          .particle {
+            filter: blur(100px);
+            opacity: 0.1;
+          }
         }
 
         @media (max-width: 480px) {
@@ -2015,18 +1991,40 @@ const AboutPage = () => {
             gap: 30px;
           }
 
-          .team-highlights {
-            grid-template-columns: 1fr;
-          }
-
-          .highlight-card {
-            flex-direction: column;
-            text-align: center;
-          }
-
           .cta-content {
             padding: 50px 30px;
           }
+
+          .story-number {
+            font-size: 4rem;
+            top: 20px;
+            right: 20px;
+          }
+
+          .story-icon,
+          .service-icon,
+          .value-icon {
+            font-size: 3rem;
+          }
+
+          .mission-grid {
+            grid-template-columns: 1fr;
+            gap: 40px;
+          }
+
+          .mission-card {
+            padding: 40px 30px;
+          }
+
+          .mission-icon {
+            font-size: 3rem;
+          }
+        }
+
+        /* Card visibility class */
+        .card-visible {
+          opacity: 1 !important;
+          transform: translateY(0) !important;
         }
       `}</style>
     </div>

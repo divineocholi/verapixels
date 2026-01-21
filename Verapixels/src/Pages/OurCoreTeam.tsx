@@ -5,6 +5,8 @@ import ocholiImage from "@/assets/ocholi founder.jpeg";
 import fredaImage from "@/assets/freeda team member.jpeg";
 import preciousImage from "@/assets/prech vera teem.jpeg";
 import ellaImage from "@/assets/ella1.jpeg";
+import emmaImage from "@/assets/emmaImage.jpeg";
+import favourImage from "@/assets/favourImage.jpeg";
 import {
   FiGithub,
   FiLinkedin,
@@ -192,7 +194,7 @@ const OurCoreTeam = () => {
     {
       name: "Emmanuel Sanusi",
       role: "Full Stack Developer",
-      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=600&fit=crop",
+      image: emmaImage,
       bio: "Building complete web applications from frontend interfaces to backend logic.",
       specialties: ["React", "Node.js", "Databases"],
       social: {
@@ -206,7 +208,7 @@ const OurCoreTeam = () => {
     {
       name: "Favour",
       role: "Backend Engineer (Python)",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&h=600&fit=crop",
+      image: favourImage,
       bio: "Building reliable APIs, business logic, and data-driven systems.",
       specialties: ["Python", "APIs", "Databases"],
       social: {
