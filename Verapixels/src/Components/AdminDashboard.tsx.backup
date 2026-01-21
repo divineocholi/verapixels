@@ -43,7 +43,6 @@ import {
   FiLock,
   FiLogIn
 } from 'react-icons/fi';
-import io, { Socket } from 'socket.io-client';
 
 // ========== CONFIGURATION ==========
 const EMAILJS_CONFIG = {
@@ -59,13 +58,6 @@ const TIMEZONES = [
   'Africa/Lagos', 'America/New_York', 'America/Los_Angeles', 'Europe/London',
   'Europe/Paris', 'Asia/Tokyo', 'Asia/Singapore', 'Australia/Sydney'
 ];
-
-// WebSocket Configuration
-   const SOCKET_URL = import.meta.env.PROD 
-     ? 'https://verapixels-server.onrender.com'
-     : 'http://localhost:5001';
-   
-   console.log('🔌 Admin Socket URL:', SOCKET_URL);
 
 const CONTACT_METHODS = [
   { id: 'video', label: 'Video Call', icon: <FiVideo />, color: '#0063f4' },
@@ -334,7 +326,6 @@ const LoginComponent: React.FC<{
               placeholder="Enter admin email"
               style={{
                 width: '100%',
-                color: '#333',
                 padding: '12px 16px',
                 border: '1px solid #ddd',
                 borderRadius: '10px',
@@ -379,7 +370,7 @@ const LoginComponent: React.FC<{
               background: loading ? '#aaa' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               border: 'none',
               borderRadius: '10px',
-              color: 'black',
+              color: 'white',
               fontSize: '16px',
               fontWeight: '600',
               cursor: loading ? 'not-allowed' : 'pointer',
@@ -4367,57 +4358,12 @@ const AdminDashboard: React.FC = () => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
   // Check authentication on mount
   useEffect(() => {
     checkAuth();
   }, []);
-
-  // Initialize socket connection when authenticated
-useEffect(() => {
-  if (!isAuthenticated || !adminData) return;
-
-  console.log('🔌 Initializing admin socket connection...');
-  
-  const socketInstance = io(SOCKET_URL, {
-    transports: ['websocket', 'polling'],
-    query: {
-      dashboard: 'admin',
-      adminId: adminData.id,
-      adminName: adminData.name
-    }
-  });
-
-  socketInstance.on('connect', () => {
-    console.log('✅ Admin socket connected:', socketInstance.id);
-    setIsSocketConnected(true);
-  });
-
-  socketInstance.on('disconnect', () => {
-    console.log('❌ Admin socket disconnected');
-    setIsSocketConnected(false);
-  });
-
-  socketInstance.on('new_message', (message) => {
-    console.log('📨 New message received:', message);
-    fetchConversations();
-  });
-
-  socketInstance.on('new_notification', (notification) => {
-    console.log('🔔 New notification:', notification);
-    setNotifications(prev => [notification, ...prev]);
-  });
-
-  setSocket(socketInstance);
-
-  return () => {
-    console.log('🔌 Cleaning up socket connection...');
-    socketInstance.disconnect();
-  };
-}, [isAuthenticated, adminData]);
 
  const checkAuth = async () => {
   try {
