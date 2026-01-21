@@ -914,8 +914,56 @@ const createAdminNotification = async (conversationId: string, reason: string, p
   try {
     console.log('📢 Creating admin notification:', { conversationId, reason, priority, messagePreview });
     
+    // STEP 1: Ensure the conversation exists first
+    const { data: existingConv, error: convCheckError } = await supabase
+      .from('chat_conversations')
+      .select('conversation_id, is_complex')
+      .eq('conversation_id', conversationId)
+      .maybeSingle();
+    
+    if (convCheckError) {
+      console.error('❌ Error checking conversation:', convCheckError);
+    }
+    
+    // If conversation doesn't exist, create it
+    if (!existingConv) {
+      console.log('📝 Conversation not found, creating it...');
+      
+      const { error: createConvError } = await supabase
+        .from('chat_conversations')
+        .insert({
+          conversation_id: conversationId,
+          user_timezone: 'Africa/Lagos',
+          status: 'awaiting_admin',
+          is_admin_takeover: true,
+          is_complex: true,
+          started_at: new Date().toISOString(),
+          last_activity: new Date().toISOString()
+        });
+      
+      if (createConvError) {
+        console.error('❌ Error creating conversation:', createConvError);
+      } else {
+        console.log('✅ Conversation created successfully');
+      }
+    } else {
+      // Update existing conversation
+      console.log('📝 Updating existing conversation...');
+      
+      await supabase
+        .from('chat_conversations')
+        .update({
+          status: 'awaiting_admin',
+          is_admin_takeover: true,
+          is_complex: true,
+          last_activity: new Date().toISOString()
+        })
+        .eq('conversation_id', conversationId);
+    }
+    
+    // STEP 2: Create the notification
     const notificationData = {
-      notification_id: `notif_${Date.now()}`,
+      notification_id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       conversation_id: conversationId,
       notification_type: 'user_request',
       message_preview: messagePreview.substring(0, 200),
@@ -925,6 +973,8 @@ const createAdminNotification = async (conversationId: string, reason: string, p
       created_at: new Date().toISOString()
     };
 
+    console.log('📝 Inserting notification:', notificationData);
+
     const { data, error } = await supabase
       .from('admin_notifications')
       .insert(notificationData)
@@ -932,22 +982,25 @@ const createAdminNotification = async (conversationId: string, reason: string, p
       .single();
 
     if (error) {
-      console.error('❌ Supabase notification error:', error);
-      // Try alternative method - send email notification
+      console.error('❌ Supabase notification insert error:', error);
+      
+      // Fallback to email
       await sendEmailNotification(conversationId, reason, messagePreview);
-      return { success: true, method: 'email' };
+      return { success: true, method: 'email_fallback', error: error.message };
     }
 
     console.log('✅ Admin notification created successfully:', data);
     return data;
-  } catch (error) {
-    console.error('❌ Error creating notification in Supabase:', error);
-    // Try email as fallback
+    
+  } catch (error: any) {
+    console.error('❌ Unexpected error in createAdminNotification:', error);
+    
+    // Fallback to email
     await sendEmailNotification(conversationId, reason, messagePreview);
-    return { success: true, method: 'email' };
+    return { success: true, method: 'email_fallback', error: error.message };
   }
 };
-
+     
 const sendEmailNotification = async (conversationId: string, reason: string, messagePreview: string) => {
   try {
     const serviceId = 'service_w8wwd8e';
@@ -1459,48 +1512,64 @@ What would you like to do today?`,
     }, 1000); // Reduced from 1500ms to 1000ms for faster responses
   };
 
-  /* --------------------------- Transfer to Admin --------------------------- */
-  const handleTransferToAdmin = async (reason = 'User requested human assistance') => {
-    console.log('🚀 Initiating admin transfer:', reason);
+const handleTransferToAdmin = async (reason = 'User requested human assistance') => {
+  console.log('🚀 Initiating admin transfer:', reason);
+  
+  setIsTyping(false);
+  setAdminHasJoined(true);
+  
+  if (typingTimeoutRef.current) {
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = null;
+  }
+  
+  try {
+    // STEP 1: Update conversation status
+    await supabase
+      .from('chat_conversations')
+      .update({ 
+        status: 'awaiting_admin',
+        is_admin_takeover: true,
+        is_complex: true,
+        last_activity: new Date().toISOString()
+      })
+      .eq('conversation_id', sessionId);
     
-    // Clear any pending typing or responses
-    setIsTyping(false);
-    
-    // Mark admin as joined immediately
-    setAdminHasJoined(true);
-    
-    // Clear any pending timeouts
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = null;
+    // STEP 2: Create notification
+    const notificationData = {
+      notification_id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      conversation_id: sessionId,
+      notification_type: 'user_request',
+      message_preview: `User requested admin: ${reason}`,
+      reason: reason,
+      priority: 'urgent',
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+
+    console.log('📝 Creating notification:', notificationData);
+
+    const { data: notification, error } = await supabase
+      .from('admin_notifications')
+      .insert(notificationData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Notification error:', error);
+      throw error;
     }
+
+    console.log('✅ Notification created:', notification);
     
-    const notification = await createAdminNotification(
-      sessionId, 
-      reason, 
-      'urgent', 
-      `User requested admin assistance: ${reason}`
-    );
-    
-    if (!notification) {
-      console.error('❌ Failed to create notification');
-      const errorMsg: Message = {
-        id: Date.now(),
-        sender: 'vee',
-        text: '⚠️ Unable to notify admin at the moment. Please try again or email us at info@verapixels.com.',
-        timestamp: new Date(),
-        intent: 'transfer_failed'
-      };
-      setMessages(prev => [...prev, errorMsg]);
-      return;
-    }
-    
-    // Send via WebSocket if connected
+    // STEP 3: Send via WebSocket if connected
     if (socket && isSocketConnected) {
       socket.emit('transfer_to_admin', {
         conversationId: sessionId,
         reason: reason,
-        notificationId: notification.notification_id || 'email_notification'
+        notificationId: notification.notification_id,
+        userTimezone: userTimezone,
+        priority: 'urgent'
       });
       
       console.log('📤 Transfer request sent via WebSocket');
@@ -1509,12 +1578,25 @@ What would you like to do today?`,
     const transferMsg: Message = {
       id: Date.now(),
       sender: 'vee',
-      text: '✅ I\'ve notified our team with HIGH PRIORITY! An admin will join the conversation shortly!',
+      text: '✅ Admin has been notified with HIGH PRIORITY!\n\n⏳ An admin will join within 2 minutes.\n\nYou can continue describing your issue.',
       timestamp: new Date(),
       intent: 'transfer_confirmed'
     };
     setMessages(prev => [...prev, transferMsg]);
-  };
+    
+  } catch (error) {
+    console.error('❌ Transfer failed:', error);
+    
+    const errorMsg: Message = {
+      id: Date.now(),
+      sender: 'vee',
+      text: '⚠️ Unable to notify admin right now.\n\n📧 Email: info@verapixels.com\n📞 Call: +234 707 1333 709',
+      timestamp: new Date(),
+      intent: 'transfer_failed'
+    };
+    setMessages(prev => [...prev, errorMsg]);
+  }
+};
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
