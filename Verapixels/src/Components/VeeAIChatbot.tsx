@@ -53,7 +53,7 @@ interface BookingState {
 /* --------------------------- WebSocket Configuration --------------------------- */
 const SOCKET_CONFIG = {
   url: import.meta.env.PROD 
-    ? window.location.origin
+    ? 'https://verapixels-server.onrender.com'
     : 'http://localhost:5001',
   options: {
     transports: ['websocket', 'polling'],
