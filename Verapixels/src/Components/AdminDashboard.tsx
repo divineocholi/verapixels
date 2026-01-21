@@ -4376,49 +4376,74 @@ const AdminDashboard: React.FC = () => {
     checkAuth();
   }, []);
 
-  // Initialize socket connection when authenticated
 useEffect(() => {
-  if (!isAuthenticated || !adminData) return;
+    if (!isAuthenticated || !adminData) return;
 
-  console.log('🔌 Initializing admin socket connection...');
+    console.log('🔌 Initializing admin socket connection...');
+    
+    const socketInstance = io(SOCKET_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      query: {
+        dashboard: 'admin',
+        adminId: adminData.id,
+        adminName: adminData.name
+      }
+    });
+
+    socketInstance.on('connect', () => {
+      console.log('✅ Admin socket connected:', socketInstance.id);
+      setIsSocketConnected(true);
+      
+      // Rejoin all active conversations
+      conversations.forEach(conv => {
+        if (conv.status === 'active' || conv.status === 'awaiting_admin') {
+          socketInstance.emit('admin_join', {
+            conversationId: conv.conversation_id,
+            adminId: adminData.id,
+            adminName: adminData.name
+          });
+        }
+      });
+    });
+
+    socketInstance.on('disconnect', (reason) => {
+      console.log('❌ Admin socket disconnected:', reason);
+      setIsSocketConnected(false);
+    });
+
+    socketInstance.on('reconnect', (attemptNumber) => {
+      console.log('🔄 Admin socket reconnected after', attemptNumber, 'attempts');
+      setIsSocketConnected(true);
+    });
+
+    socketInstance.on('new_message', (message) => {
+      console.log('📨 New message received:', message);
+      fetchConversations();
+    });
+
+    socketInstance.on('new_notification', (notification) => {
+      console.log('🔔 New notification:', notification);
+      setNotifications(prev => [notification, ...prev]);
+      fetchConversations(); // Refresh conversations when new notification arrives
+    });
+
+    socketInstance.on('transfer_to_admin', (data) => {
+      console.log('🔄 Transfer request received:', data);
+      fetchConversations();
+      fetchNotifications();
+    });
+
+    setSocket(socketInstance);
+
+    return () => {
+      console.log('🔌 Cleaning up socket connection...');
+      socketInstance.disconnect();
+    };
+  }, [isAuthenticated, adminData]);
   
-  const socketInstance = io(SOCKET_URL, {
-    transports: ['websocket', 'polling'],
-    query: {
-      dashboard: 'admin',
-      adminId: adminData.id,
-      adminName: adminData.name
-    }
-  });
-
-  socketInstance.on('connect', () => {
-    console.log('✅ Admin socket connected:', socketInstance.id);
-    setIsSocketConnected(true);
-  });
-
-  socketInstance.on('disconnect', () => {
-    console.log('❌ Admin socket disconnected');
-    setIsSocketConnected(false);
-  });
-
-  socketInstance.on('new_message', (message) => {
-    console.log('📨 New message received:', message);
-    fetchConversations();
-  });
-
-  socketInstance.on('new_notification', (notification) => {
-    console.log('🔔 New notification:', notification);
-    setNotifications(prev => [notification, ...prev]);
-  });
-
-  setSocket(socketInstance);
-
-  return () => {
-    console.log('🔌 Cleaning up socket connection...');
-    socketInstance.disconnect();
-  };
-}, [isAuthenticated, adminData]);
-
  const checkAuth = async () => {
   try {
     console.log('🔒 Checking authentication...');

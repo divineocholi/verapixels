@@ -1076,7 +1076,7 @@ const VeeAISmartChatbot: React.FC = () => {
     'Asia/Dubai'
   ];
 
-  /* --------------------------- WebSocket Connection --------------------------- */
+/* --------------------------- WebSocket Connection --------------------------- */
   useEffect(() => {
     if (socketRef.current) {
       console.log('🔄 Socket already exists, reusing...');
@@ -1119,9 +1119,13 @@ const VeeAISmartChatbot: React.FC = () => {
       setIsSocketConnected(false);
       setConnectionStatus('disconnected');
       
-      if (reason === 'io server disconnect') {
-        socketInstance.connect();
-      }
+      // CRITICAL: Auto-reconnect on all disconnections
+      console.log('🔄 Attempting to reconnect...');
+      setTimeout(() => {
+        if (!socketInstance.connected) {
+          socketInstance.connect();
+        }
+      }, 1000);
     });
     
     socketInstance.on('connect_error', (error: Error) => {
@@ -1129,7 +1133,7 @@ const VeeAISmartChatbot: React.FC = () => {
       setConnectionStatus('error');
       
       setTimeout(() => {
-        socketInstance.io.opts.transports = ['polling'];
+        socketInstance.io.opts.transports = ['polling', 'websocket'];
         socketInstance.connect();
       }, 2000);
     });
@@ -1138,6 +1142,17 @@ const VeeAISmartChatbot: React.FC = () => {
       console.log(`🔄 WebSocket reconnected after ${attemptNumber} attempts`);
       setIsSocketConnected(true);
       setConnectionStatus('connected');
+      
+      // Rejoin conversation after reconnect
+      socketInstance.emit('join_conversation', {
+        conversationId: sessionId,
+        userId: `user_${sessionId}`,
+        userInfo: {
+          timezone: userTimezone,
+          isBooking: bookingState.isBooking,
+          name: 'Chat User'
+        }
+      });
     });
     
     socketInstance.on('new_message', (message: SocketMessage) => {
@@ -1232,7 +1247,7 @@ const VeeAISmartChatbot: React.FC = () => {
       }
     };
   }, [sessionId, userTimezone]);
-
+  
   /* --------------------------- Initialize Conversation --------------------------- */
   useEffect(() => {
     const initConversation = async () => {
