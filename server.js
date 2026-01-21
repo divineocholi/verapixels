@@ -6,49 +6,66 @@ import cors from "cors";
 const app = express();
 const server = createServer(app);
 
-// CORS setup
-app.use(
-  cors({
-    origin: [
+// Environment-based configuration
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const PORT = process.env.PORT || 5001;
+
+// Dynamic CORS origins
+const allowedOrigins = isDevelopment
+  ? [
       "http://localhost:5173",
       "http://localhost:3000",
       "http://localhost:5177",
-    ],
+    ]
+  : process.env.CLIENT_URL 
+    ? process.env.CLIENT_URL.split(',') 
+    : [];
+
+console.log('🌍 Environment:', process.env.NODE_ENV || 'development');
+console.log('🔐 Allowed origins:', allowedOrigins);
+
+// CORS setup
+app.use(
+  cors({
+    origin: allowedOrigins,
     credentials: true,
   })
 );
 
-// Security headers to fix CSP
+// Security headers with dynamic CSP
 app.use((req, res, next) => {
+  const protocol = isDevelopment ? 'ws:' : 'wss:';
+  const httpProtocol = isDevelopment ? 'http:' : 'https:';
+  const serverDomain = process.env.SERVER_DOMAIN || `localhost:${PORT}`;
+  
   res.setHeader('Content-Security-Policy', 
     "default-src 'self'; " +
-    "connect-src 'self' ws://localhost:5001 http://localhost:5001; " +
+    `connect-src 'self' ${protocol}//${serverDomain} ${httpProtocol}//${serverDomain}; ` +
     "script-src 'self' 'unsafe-inline'; " +
     "style-src 'self' 'unsafe-inline';"
   );
   next();
 });
 
-// Socket.IO setup
+// Socket.IO setup with dynamic CORS
 const io = new Server(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:5177",
-    ],
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
   transports: ['websocket', 'polling']
 });
 
-// Chrome DevTools endpoint (to fix CSP error)
+// Chrome DevTools endpoint
 app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
   console.log('📊 Chrome DevTools connection attempt');
+  const protocol = isDevelopment ? 'ws:' : 'wss:';
+  const serverDomain = process.env.SERVER_DOMAIN || `localhost:${PORT}`;
+  
   res.json({
     manifest: {
-      debugger_websocket_url: "ws://localhost:5001/socket.io/",
+      debugger_websocket_url: `${protocol}//${serverDomain}/socket.io/`,
       description: "Chat WebSocket Server DevTools",
       title: "Chat Server Debugger",
       type: "node"
@@ -239,30 +256,35 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     connections: io.engine.clientsCount,
     server: "Chat WebSocket Server",
-    version: "1.0.0"
+    version: "1.0.0",
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
 // Test endpoint
 app.get("/test", (req, res) => {
+  const protocol = isDevelopment ? 'ws:' : 'wss:';
+  const serverDomain = process.env.SERVER_DOMAIN || `localhost:${PORT}`;
+  
   res.json({
     message: "Server is running!",
+    environment: process.env.NODE_ENV || 'development',
     endpoints: {
       health: "/health",
-      websocket: "ws://localhost:5001",
+      websocket: `${protocol}//${serverDomain}`,
       devtools: "/.well-known/appspecific/com.chrome.devtools.json"
-    }
+    },
+    allowedOrigins: allowedOrigins
   });
 });
 
-const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`🚀 WebSocket server running on port ${PORT}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/health`);
   console.log(`🌐 Test endpoint: http://localhost:${PORT}/test`);
-  console.log(`📡 WebSocket URL: ws://localhost:${PORT}`);
+  console.log(`📡 WebSocket URL: ${isDevelopment ? 'ws' : 'wss'}://localhost:${PORT}`);
   console.log(`🔧 DevTools endpoint: http://localhost:${PORT}/.well-known/appspecific/com.chrome.devtools.json`);
   console.log(`✅ Server ready for connections!`);
 });
 
-export { app, server, io }; // Optional: Export if needed elsewhere
+export { app, server, io };
