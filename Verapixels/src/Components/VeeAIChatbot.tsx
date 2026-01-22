@@ -1165,7 +1165,8 @@ const VeeAISmartChatbot: React.FC = () => {
           const isSameSender = msg.sender_type === message.sender_type;
           const isRecent = Math.abs(new Date(msg.timestamp).getTime() - new Date(message.timestamp).getTime()) < 1000;
           
-          return (isSameText && isSameSender) || (isSameText && isRecent);
+          // ✅ CORRECT VERSION:
+         return isSameSender && (isSameText || isRecent);
         });
         
         if (alreadyExists) {
@@ -1247,7 +1248,7 @@ const VeeAISmartChatbot: React.FC = () => {
       }
     };
   }, [sessionId, userTimezone]);
-  
+
   /* --------------------------- Initialize Conversation --------------------------- */
   useEffect(() => {
     const initConversation = async () => {
