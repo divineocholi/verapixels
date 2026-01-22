@@ -105,15 +105,37 @@ io.on("connection", (socket) => {
   
   console.log("Client type:", { adminId, dashboard, clientType, sessionId });
 
-  // Admin connection
+  // ========== ADMIN CONNECTION ==========
   if (dashboard === 'admin') {
     console.log(`👨‍💼 Admin connected: ${adminId}`);
     
+    // ========== ADMIN JOINS CONVERSATION ==========
     socket.on('admin_join', (data) => {
-      console.log('👥 Admin joined conversation:', data.conversationId);
+      console.log('👥 Admin joining conversation:', data.conversationId);
+      console.log('👤 Admin name:', data.adminName);
+      
+      // Join the conversation room
       socket.join(data.conversationId);
       
-      // Notify user that admin joined
+      // ✅ SEND JOIN MESSAGE: "Junior has joined the conversation"
+      const joinMessage = {
+        id: `system_msg_${Date.now()}`,
+        message_id: `system_msg_${Date.now()}`,
+        conversation_id: data.conversationId,
+        sender_type: 'admin',
+        sender_name: 'System',
+        message_text: `${data.adminName} has joined the conversation. How can I help you today?`,
+        timestamp: new Date().toISOString(),
+        read_by_admin: true,
+        read_by_user: false,
+        intent_detected: 'admin_joined',
+        classification: 'SYSTEM'
+      };
+      
+      // Send join message to conversation
+      io.to(data.conversationId).emit('new_message', joinMessage);
+      
+      // Also emit admin_joined event
       io.to(data.conversationId).emit('admin_joined', {
         adminId: data.adminId,
         adminName: data.adminName,
@@ -122,13 +144,18 @@ io.on("connection", (socket) => {
       });
       
       console.log(`✅ Admin ${data.adminName} joined conversation ${data.conversationId}`);
+      console.log(`📍 Room size:`, io.sockets.adapter.rooms.get(data.conversationId)?.size || 0);
     });
     
-    socket.on('admin_message', (data) => {
+    // ========== ADMIN SENDS MESSAGE ==========
+    // Handle BOTH 'admin_message' AND 'send_message' for compatibility
+    const handleAdminMessage = (data) => {
       console.log('📤 Admin message to conversation:', data.conversationId);
+      console.log('📝 Message preview:', data.message.substring(0, 50) + '...');
       
       // Create admin message object
       const adminMessage = {
+        id: `admin_msg_${Date.now()}`,
         message_id: `admin_msg_${Date.now()}`,
         conversation_id: data.conversationId,
         sender_type: 'admin',
@@ -137,59 +164,97 @@ io.on("connection", (socket) => {
         timestamp: new Date().toISOString(),
         read_by_admin: true,
         read_by_user: false,
-        intent_detected: 'admin_response'
+        intent_detected: 'admin_response',
+        classification: 'ADMIN_RESPONSE'
       };
       
-      // Send to conversation room
+      console.log('📍 Emitting to conversation room:', data.conversationId);
+      console.log('📍 Room size:', io.sockets.adapter.rooms.get(data.conversationId)?.size || 0);
+      console.log('📍 Sockets in room:', Array.from(io.sockets.adapter.rooms.get(data.conversationId) || []));
+      
+      // ✅ CRITICAL: Send to conversation room
       io.to(data.conversationId).emit('new_message', adminMessage);
+      
       console.log('✅ Admin message sent to conversation:', data.conversationId);
-    });
+    };
     
+    // Listen to BOTH event names for maximum compatibility
+    socket.on('admin_message', handleAdminMessage);
+    socket.on('send_message', handleAdminMessage); // ✅ AdminDashboard uses this
+    
+    // ========== ADMIN STATUS CHANGE ==========
     socket.on('admin_status_change', (data) => {
       console.log('🔄 Admin status change:', data);
       io.to(data.conversationId).emit('status_updated', data);
     });
     
+    // ========== TRANSFER TO ADMIN ==========
     socket.on('transfer_to_admin', (data) => {
-      console.log('🔄 Transfer to admin:', data);
+      console.log('🔄 Transfer to admin requested:', data);
       
       // Create notification for all admins
       const notification = {
-        notification_id: `notif_${Date.now()}`,
+        notification_id: data.notificationId || `notif_${Date.now()}`,
         conversation_id: data.conversationId,
         notification_type: 'user_request',
         message_preview: data.reason || 'User requested assistance',
         reason: data.reason,
-        priority: 'high',
+        priority: data.priority || 'high',
         status: 'pending',
         created_at: new Date().toISOString()
       };
       
       // Send to all admin clients
       io.emit('new_notification', notification);
-      console.log('🔔 Notification sent to all admins:', data.conversationId);
+      console.log('🔔 Notification sent to all admins');
+      
+      // Confirm to user
+      socket.to(data.conversationId).emit('transfer_confirmed', {
+        conversationId: data.conversationId,
+        status: 'Admin notified',
+        timestamp: new Date().toISOString()
+      });
     });
     
+    // ========== ADMIN TYPING INDICATOR ==========
+    socket.on('typing', (data) => {
+      console.log('⌨️ Admin typing in:', data.conversationId);
+      
+      // Send typing indicator to user (but not back to admin)
+      socket.to(data.conversationId).emit('admin_typing', {
+        conversationId: data.conversationId,
+        isTyping: data.isTyping,
+        timestamp: new Date().toISOString()
+      });
+    });
+    
+    console.log(`✅ Admin ${adminId} event handlers registered`);
   } 
-  // Chatbot/User connection
+  // ========== CHATBOT/USER CONNECTION ==========
   else if (clientType === 'chatbot') {
     console.log(`🤖 Chatbot connected for session: ${sessionId}`);
     
     socket.join(sessionId);
     activeConnections.set(socket.id, { sessionId });
     
+    // ========== USER JOINS CONVERSATION ==========
     socket.on('join_conversation', (data) => {
-      console.log('👤 User joined conversation:', data.conversationId);
+      console.log('👤 User joining conversation:', data.conversationId);
       socket.join(data.conversationId);
+      console.log('✅ User joined room:', data.conversationId);
+      console.log('📍 Room size:', io.sockets.adapter.rooms.get(data.conversationId)?.size || 0);
     });
     
+    // ========== USER SENDS MESSAGE ==========
     socket.on('send_message', (data) => {
       console.log('💬 User message to conversation:', data.conversationId);
+      console.log('📝 Message preview:', data.message.substring(0, 50) + '...');
       
       const classification = classifyQuery(data.message);
       
       // Create user message object
       const userMessage = {
+        id: `msg_${Date.now()}`,
         message_id: `msg_${Date.now()}`,
         conversation_id: data.conversationId,
         sender_type: 'user',
@@ -201,6 +266,9 @@ io.on("connection", (socket) => {
         intent_detected: classification,
         classification: classification
       };
+      
+      console.log('📍 Emitting to conversation room:', data.conversationId);
+      console.log('📍 Room size:', io.sockets.adapter.rooms.get(data.conversationId)?.size || 0);
       
       // Send to conversation room
       io.to(data.conversationId).emit('new_message', userMessage);
@@ -227,24 +295,57 @@ io.on("connection", (socket) => {
       }
     });
     
+    // ========== USER TYPING INDICATOR ==========
     socket.on('typing', (data) => {
       if (data.userType === 'user') {
-        io.to(data.conversationId).emit('admin_typing', {
+        console.log('⌨️ User typing in:', data.conversationId);
+        
+        // Send typing indicator to admin
+        socket.to(data.conversationId).emit('user_typing', {
           conversationId: data.conversationId,
-          isTyping: data.isTyping
+          isTyping: data.isTyping,
+          timestamp: new Date().toISOString()
         });
       }
     });
+    
+    // ========== TRANSFER TO ADMIN (from chatbot) ==========
+    socket.on('transfer_to_admin', (data) => {
+      console.log('🔄 User requested transfer to admin:', data);
+      
+      // Create notification for all admins
+      const notification = {
+        notification_id: data.notificationId || `notif_${Date.now()}`,
+        conversation_id: data.conversationId,
+        notification_type: 'user_request',
+        message_preview: data.reason || 'User requested assistance',
+        reason: data.reason,
+        priority: data.priority || 'urgent',
+        status: 'pending',
+        created_at: new Date().toISOString()
+      };
+      
+      // Send to all admin clients
+      io.emit('new_notification', notification);
+      console.log('🔔 Transfer notification sent to all admins');
+    });
   }
   
-  // Health check
+  // ========== HEALTH CHECK ==========
   socket.on("ping", () => {
     socket.emit("pong", { timestamp: new Date().toISOString() });
   });
   
-  // Disconnect
-  socket.on("disconnect", () => {
+  // ========== DISCONNECT ==========
+  socket.on("disconnect", (reason) => {
     console.log("❌ Client disconnected:", socket.id);
+    console.log("   Reason:", reason);
+    
+    const clientInfo = activeConnections.get(socket.id);
+    if (clientInfo) {
+      console.log("   Session:", clientInfo.sessionId);
+    }
+    
     activeConnections.delete(socket.id);
   });
 });
@@ -256,7 +357,7 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     connections: io.engine.clientsCount,
     server: "Chat WebSocket Server",
-    version: "1.0.0",
+    version: "2.0.0",
     environment: process.env.NODE_ENV || 'development'
   });
 });
@@ -274,7 +375,8 @@ app.get("/test", (req, res) => {
       websocket: `${protocol}//${serverDomain}`,
       devtools: "/.well-known/appspecific/com.chrome.devtools.json"
     },
-    allowedOrigins: allowedOrigins
+    allowedOrigins: allowedOrigins,
+    activeConnections: io.engine.clientsCount
   });
 });
 
