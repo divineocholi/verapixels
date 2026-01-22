@@ -1679,13 +1679,26 @@ const handleSubmit = async (e: React.FormEvent) => {
   );
 };
 
-// ========== LIVE CHATS COMPONENT ==========
-const LiveChatsComponent: React.FC<{
+// In LiveChatsComponent.tsx, update the interface:
+interface LiveChatsComponentProps {
   conversations: Conversation[];
   theme: 'light' | 'dark';
   onSelectConversation: (conversation: Conversation) => void;
   selectedConversation: Conversation | null;
-}> = ({ conversations, theme, onSelectConversation, selectedConversation }) => {
+  adminData: AdminData | null; // ✅ ADD THIS
+  socket: Socket | null; // ✅ ADD THIS
+  isSocketConnected: boolean; // ✅ ADD THIS
+}
+
+const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({ 
+  conversations, 
+  theme, 
+  onSelectConversation, 
+  selectedConversation,
+  adminData, // ✅ ADD THIS
+  socket, // ✅ ADD THIS
+  isSocketConnected // ✅ ADD THIS
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'unread' | 'complex'>('all');
@@ -1752,42 +1765,74 @@ const LiveChatsComponent: React.FC<{
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
+  if (!newMessage.trim() || !selectedConversation) return;
 
-    try {
-      const messageData = {
-        message_id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+  try {
+    const messageData = {
+      conversationId: selectedConversation.conversation_id,
+      message: newMessage,
+      adminName: adminData?.name || 'Admin'
+    };
+
+    // ✅ CRITICAL: Send with BOTH event names for compatibility
+    if (socket && socket.connected) {
+      console.log('📤 Sending admin message via WebSocket:', {
+        conversationId: selectedConversation.conversation_id,
+        adminName: adminData?.name
+      });
+      
+      // Try primary event name first
+      socket.emit('admin_message', messageData);
+      
+      // Also send as backup event name
+      socket.emit('send_message', {
         conversation_id: selectedConversation.conversation_id,
-        sender_type: 'admin' as const,
-        sender_name: 'Admin',
+        message_text: newMessage,
+        adminName: adminData?.name,
+        sender: 'admin',
+        messageType: 'text'
+      });
+    }
+
+    // Save to database
+    const messageId = `admin_msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const { error } = await supabase
+      .from('chat_messages')
+      .insert([{
+        message_id: messageId,
+        conversation_id: selectedConversation.conversation_id,
+        sender_type: 'admin',
+        sender_name: adminData?.name || 'Admin',
         message_text: newMessage,
         timestamp: new Date().toISOString(),
         read_by_admin: true,
-        read_by_user: false
-      };
+        read_by_user: false,
+        intent_detected: 'admin_response',
+        classification: 'ADMIN_RESPONSE'
+      }]);
 
-      const { error } = await supabase
-        .from('chat_messages')
-        .insert([messageData]);
+    if (error) throw error;
 
-      if (error) throw error;
+    // Update UI immediately
+    setMessages(prev => [...prev, {
+      id: messageId,
+      message_id: messageId,
+      conversation_id: selectedConversation.conversation_id,
+      sender_type: 'admin',
+      sender_name: adminData?.name || 'Admin',
+      message_text: newMessage,
+      timestamp: new Date().toISOString(),
+      read_by_admin: true,
+      read_by_user: false
+    }]);
+    
+    setNewMessage('');
 
-      setMessages(prev => [...prev, messageData]);
-      setNewMessage('');
-
-      // Update conversation last activity
-      await supabase
-        .from('chat_conversations')
-        .update({ 
-          last_activity: new Date().toISOString(),
-          last_message: newMessage
-        })
-        .eq('conversation_id', selectedConversation.conversation_id);
-
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
-  };
+  } catch (error) {
+    console.error('❌ Error sending admin message:', error);
+  }
+};
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('en-US', {
@@ -4376,73 +4421,76 @@ const AdminDashboard: React.FC = () => {
     checkAuth();
   }, []);
 
+  // In your AdminDashboard useEffect for socket connection:
 useEffect(() => {
-    if (!isAuthenticated || !adminData) return;
+  if (!isAuthenticated || !adminData) return;
 
-    console.log('🔌 Initializing admin socket connection...');
+  console.log('🔌 Initializing admin socket connection...');
+  
+  const socketInstance = io(SOCKET_URL, {
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000,
+    query: {
+      dashboard: 'admin',
+      adminId: adminData.id,
+      adminName: adminData.name
+    }
+  });
+
+   // ✅ ADD THIS HERE (right after creating socketInstance):
+  socketInstance.onAny((eventName, ...args) => {
+    if (eventName !== 'ping' && eventName !== 'pong') {
+      console.log(`📡 [ADMIN] WebSocket event: ${eventName}`, 
+        args[0] ? JSON.stringify(args[0]).substring(0, 100) : '');
+    }
+  });
+
+  socketInstance.on('connect', () => {
+    console.log('✅ Admin socket connected:', socketInstance.id);
+    setIsSocketConnected(true);
     
-    const socketInstance = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      query: {
-        dashboard: 'admin',
-        adminId: adminData.id,
-        adminName: adminData.name
+    // Join active conversations
+    conversations.forEach(conv => {
+      if (conv.status === 'active' || conv.status === 'awaiting_admin') {
+        console.log('👥 Auto-joining conversation:', conv.conversation_id);
+        socketInstance.emit('admin_join', {
+          conversationId: conv.conversation_id,
+          adminId: adminData.id,
+          adminName: adminData.name
+        });
       }
     });
+  });
 
-    socketInstance.on('connect', () => {
-      console.log('✅ Admin socket connected:', socketInstance.id);
-      setIsSocketConnected(true);
-      
-      // Rejoin all active conversations
-      conversations.forEach(conv => {
-        if (conv.status === 'active' || conv.status === 'awaiting_admin') {
-          socketInstance.emit('admin_join', {
-            conversationId: conv.conversation_id,
-            adminId: adminData.id,
-            adminName: adminData.name
-          });
-        }
-      });
+  // Add this new event listener for connection confirmation
+  socketInstance.on('connected', (data) => {
+    console.log('🔗 Server connection confirmed:', data);
+  });
+
+  // Enhanced message logging
+  socketInstance.on('new_message', (message) => {
+    console.log('📨 New message received in admin:', {
+      id: message.id,
+      sender: message.sender_type,
+      text: message.message_text.substring(0, 50),
+      conversation: message.conversation_id
     });
+    
+    // Check if message is from admin (to avoid duplicates)
+    if (message.sender_type === 'admin') {
+      console.log('👤 This is my own message, checking for duplicates...');
+    }
+  });
 
-    socketInstance.on('disconnect', (reason) => {
-      console.log('❌ Admin socket disconnected:', reason);
-      setIsSocketConnected(false);
-    });
+  setSocket(socketInstance);
 
-    socketInstance.on('reconnect', (attemptNumber) => {
-      console.log('🔄 Admin socket reconnected after', attemptNumber, 'attempts');
-      setIsSocketConnected(true);
-    });
-
-    socketInstance.on('new_message', (message) => {
-      console.log('📨 New message received:', message);
-      fetchConversations();
-    });
-
-    socketInstance.on('new_notification', (notification) => {
-      console.log('🔔 New notification:', notification);
-      setNotifications(prev => [notification, ...prev]);
-      fetchConversations(); // Refresh conversations when new notification arrives
-    });
-
-    socketInstance.on('transfer_to_admin', (data) => {
-      console.log('🔄 Transfer request received:', data);
-      fetchConversations();
-      fetchNotifications();
-    });
-
-    setSocket(socketInstance);
-
-    return () => {
-      console.log('🔌 Cleaning up socket connection...');
-      socketInstance.disconnect();
-    };
-  }, [isAuthenticated, adminData]);
+  return () => {
+    console.log('🔌 Cleaning up admin socket connection...');
+    socketInstance.disconnect();
+  };
+}, [isAuthenticated, adminData]);
   
  const checkAuth = async () => {
   try {
@@ -5442,14 +5490,18 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
         />
       )}
 
-      {activeSection === 'conversations' && (
-        <LiveChatsComponent
-          conversations={conversations}
-          theme={theme}
-          onSelectConversation={setSelectedConversation}
-          selectedConversation={selectedConversation}
-        />
-      )}
+         // In AdminDashboard.tsx, where you render LiveChatsComponent:
+{activeSection === 'conversations' && (
+  <LiveChatsComponent
+    conversations={conversations}
+    theme={theme}
+    onSelectConversation={setSelectedConversation}
+    selectedConversation={selectedConversation}
+    adminData={adminData} // ✅ PASS adminData
+    socket={socket} // ✅ PASS socket
+    isSocketConnected={isSocketConnected} // ✅ PASS isSocketConnected
+  />
+)}
 
       {activeSection === 'consultations' && (
         <ConsultationsManagement
