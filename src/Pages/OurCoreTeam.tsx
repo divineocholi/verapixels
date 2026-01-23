@@ -21,6 +21,7 @@ import {
   FiHeart,
   FiZap,
   FiCamera,
+  FiX,
 } from "react-icons/fi";
 
 const OurCoreTeam = () => {
@@ -30,6 +31,11 @@ const OurCoreTeam = () => {
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
   const [visibleCards, setVisibleCards] = useState<Set<number>>(new Set());
   const [isReady, setIsReady] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalAnimation, setModalAnimation] = useState(""); // 'opening', 'closing', ''
+
+  const modalRef = useRef<HTMLDivElement>(null);
   
   const sectionRefs = {
     hero: useRef<HTMLDivElement>(null),
@@ -43,17 +49,14 @@ const OurCoreTeam = () => {
 
   // Force scroll to top and reset everything on mount
   useEffect(() => {
-    // Immediate scroll reset
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
     
-    // Reset all state
     setScrollY(0);
     setVisibleSections(new Set());
     setVisibleCards(new Set());
     
-    // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
@@ -63,6 +66,27 @@ const OurCoreTeam = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isModalOpen) {
+        closeModal();
+      }
+    };
+
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+      document.addEventListener('keydown', handleEscape);
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
+    };
+  }, [isModalOpen]);
 
   // Reset all state when component mounts
   useEffect(() => {
@@ -147,6 +171,27 @@ const OurCoreTeam = () => {
       cardObservers.forEach((observer) => observer?.disconnect());
     };
   }, [isReady]);
+
+  const openModal = (member: any) => {
+    setSelectedMember(member);
+    setModalAnimation('opening');
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalAnimation('closing');
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setSelectedMember(null);
+      setModalAnimation('');
+    }, 300); // Match animation duration
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      closeModal();
+    }
+  };
 
   const teamMembers = [
     {
@@ -332,6 +377,85 @@ const OurCoreTeam = () => {
         </script>
       </head>
 
+      {/* Member Modal */}
+      {isModalOpen && selectedMember && (
+        <div 
+          className={`modal-overlay ${modalAnimation}`}
+          onClick={handleOverlayClick}
+          ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
+        >
+          <div className="modal-content">
+            <button 
+              className="modal-close" 
+              onClick={closeModal}
+              aria-label="Close modal"
+            >
+              <FiX />
+            </button>
+            
+            <div className="modal-header">
+              <div className="modal-image-container">
+                <img 
+                  src={selectedMember.image} 
+                  alt={`${selectedMember.name} - ${selectedMember.role} at Verapixels`}
+                  className="modal-image"
+                />
+                <div 
+                  className="modal-image-overlay"
+                  style={{ background: `linear-gradient(135deg, ${selectedMember.color}33, transparent)` }}
+                ></div>
+              </div>
+              
+              <div className="modal-info">
+                <h2 id="modal-title" className="modal-name">{selectedMember.name}</h2>
+                <div className="modal-role" style={{ color: selectedMember.color }}>
+                  {selectedMember.role}
+                </div>
+                
+                <div className="modal-social">
+                  <a href={selectedMember.social.github} className="modal-social-icon" target="_blank" rel="noopener noreferrer" aria-label={`Visit ${selectedMember.name}'s GitHub`}>
+                    <FiGithub />
+                  </a>
+                  <a href={selectedMember.social.linkedin} className="modal-social-icon" target="_blank" rel="noopener noreferrer" aria-label={`Visit ${selectedMember.name}'s LinkedIn`}>
+                    <FiLinkedin />
+                  </a>
+                  <a href={selectedMember.social.twitter} className="modal-social-icon" target="_blank" rel="noopener noreferrer" aria-label={`Visit ${selectedMember.name}'s Twitter`}>
+                    <FiTwitter />
+                  </a>
+                  <a href={`mailto:${selectedMember.social.email}`} className="modal-social-icon" aria-label={`Email ${selectedMember.name}`}>
+                    <FiMail />
+                  </a>
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-body">
+              <h3 className="modal-section-title">About</h3>
+              <p className="modal-bio">{selectedMember.bio}</p>
+              
+              <h3 className="modal-section-title">Specialties</h3>
+              <div className="modal-specialties">
+                {selectedMember.specialties.map((specialty: string, idx: number) => (
+                  <span
+                    key={idx}
+                    className="modal-specialty"
+                    style={{
+                      borderColor: selectedMember.color,
+                      color: selectedMember.color,
+                    }}
+                  >
+                    {specialty}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Animated Background */}
       <div className="team-bg">
         <div
@@ -474,13 +598,13 @@ const OurCoreTeam = () => {
                   ></div>
 
                   <div className="social-overlay">
-                    <a href={member.social.github} className="social-icon" aria-label={`${member.name} GitHub profile`}>
+                    <a href={member.social.github} className="social-icon" aria-label={`${member.name} GitHub profile`} target="_blank" rel="noopener noreferrer">
                       <FiGithub />
                     </a>
-                    <a href={member.social.linkedin} className="social-icon" aria-label={`${member.name} LinkedIn profile`}>
+                    <a href={member.social.linkedin} className="social-icon" aria-label={`${member.name} LinkedIn profile`} target="_blank" rel="noopener noreferrer">
                       <FiLinkedin />
                     </a>
-                    <a href={member.social.twitter} className="social-icon" aria-label={`${member.name} Twitter profile`}>
+                    <a href={member.social.twitter} className="social-icon" aria-label={`${member.name} Twitter profile`} target="_blank" rel="noopener noreferrer">
                       <FiTwitter />
                     </a>
                     <a
@@ -498,10 +622,19 @@ const OurCoreTeam = () => {
                   <div className="member-role" style={{ color: member.color }}>
                     {member.role}
                   </div>
-                  <p className="member-bio" itemProp="description">{member.bio}</p>
+                  <p className="member-bio" itemProp="description">
+                    {member.bio.substring(0, 120)}...
+                    <button 
+                      className="read-more-btn" 
+                      onClick={() => openModal(member)}
+                      style={{ color: member.color }}
+                    >
+                      Read Full Bio →
+                    </button>
+                  </p>
 
                   <div className="specialties">
-                    {member.specialties.map((specialty, idx) => (
+                    {member.specialties.slice(0, 3).map((specialty, idx) => (
                       <span
                         key={idx}
                         className="specialty-tag"
@@ -514,6 +647,11 @@ const OurCoreTeam = () => {
                         {specialty}
                       </span>
                     ))}
+                    {member.specialties.length > 3 && (
+                      <span className="specialty-more" style={{ color: member.color }}>
+                        +{member.specialties.length - 3} more
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -1082,6 +1220,25 @@ const OurCoreTeam = () => {
           line-height: 1.7;
           color: rgba(255, 255, 255, 0.7);
           margin-bottom: 20px;
+          position: relative;
+        }
+
+        .read-more-btn {
+          background: none;
+          border: none;
+          color: #00bfff;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 4px 0 4px 8px;
+          font-size: 1rem;
+          transition: all 0.3s ease;
+          display: inline;
+          margin-left: 4px;
+        }
+
+        .read-more-btn:hover {
+          text-decoration: underline;
+          transform: translateX(4px);
         }
 
         /* Specialties */
@@ -1089,6 +1246,7 @@ const OurCoreTeam = () => {
           display: flex;
           flex-wrap: wrap;
           gap: 10px;
+          align-items: center;
         }
 
         .specialty-tag {
@@ -1104,6 +1262,12 @@ const OurCoreTeam = () => {
         .specialty-tag:hover {
           background: rgba(255, 255, 255, 0.1);
           transform: translateY(-2px);
+        }
+
+        .specialty-more {
+          font-size: 0.85rem;
+          font-weight: 600;
+          opacity: 0.8;
         }
 
         /* Card Corner Decoration */
@@ -1124,6 +1288,218 @@ const OurCoreTeam = () => {
           opacity: 1;
           width: 60px;
           height: 60px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.9);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 20px;
+          animation: modalOverlayIn 0.3s ease-out;
+        }
+
+        .modal-overlay.closing {
+          animation: modalOverlayOut 0.3s ease-in forwards;
+        }
+
+        @keyframes modalOverlayIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes modalOverlayOut {
+          to {
+            opacity: 0;
+          }
+        }
+
+        .modal-content {
+          background: rgba(20, 20, 25, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 24px;
+          width: 100%;
+          max-width: 900px;
+          max-height: 90vh;
+          overflow-y: auto;
+          position: relative;
+          animation: modalContentIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          transform-origin: center center;
+        }
+
+        .modal-overlay.closing .modal-content {
+          animation: modalContentOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes modalContentIn {
+          from {
+            opacity: 0;
+            transform: scale(0.9) translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        @keyframes modalContentOut {
+          to {
+            opacity: 0;
+            transform: scale(0.95) translateY(-20px);
+          }
+        }
+
+        .modal-close {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          width: 44px;
+          height: 44px;
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 50%;
+          color: white;
+          font-size: 24px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+          transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+          background: rgba(255, 255, 255, 0.2);
+          transform: rotate(90deg) scale(1.1);
+          border-color: rgba(0, 191, 255, 0.5);
+        }
+
+        .modal-header {
+          padding: 60px 60px 40px;
+          display: flex;
+          gap: 40px;
+          align-items: center;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-image-container {
+          position: relative;
+          width: 200px;
+          height: 240px;
+          flex-shrink: 0;
+          border-radius: 20px;
+          overflow: hidden;
+          border: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center top;
+        }
+
+        .modal-image-overlay {
+          position: absolute;
+          inset: 0;
+          opacity: 0.7;
+        }
+
+        .modal-info {
+          flex: 1;
+        }
+
+        .modal-name {
+          font-size: 2.5rem;
+          font-weight: 800;
+          margin-bottom: 10px;
+          line-height: 1.2;
+        }
+
+        .modal-role {
+          font-size: 1.3rem;
+          font-weight: 700;
+          margin-bottom: 25px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+
+        .modal-social {
+          display: flex;
+          gap: 15px;
+          margin-top: 20px;
+        }
+
+        .modal-social-icon {
+          width: 48px;
+          height: 48px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 50%;
+          color: white;
+          font-size: 20px;
+          text-decoration: none;
+          transition: all 0.3s ease;
+        }
+
+        .modal-social-icon:hover {
+          background: rgba(0, 191, 255, 0.2);
+          border-color: #00bfff;
+          transform: translateY(-3px) scale(1.1);
+        }
+
+        .modal-body {
+          padding: 40px 60px 60px;
+        }
+
+        .modal-section-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin-bottom: 20px;
+          color: #00bfff;
+        }
+
+        .modal-bio {
+          font-size: 1.15rem;
+          line-height: 1.8;
+          color: rgba(255, 255, 255, 0.9);
+          margin-bottom: 40px;
+        }
+
+        .modal-specialties {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .modal-specialty {
+          padding: 10px 20px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid;
+          border-radius: 20px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+
+        .modal-specialty:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: translateY(-2px);
         }
 
         /* Group Photo Section */
@@ -1437,6 +1813,23 @@ const OurCoreTeam = () => {
           }
         }
 
+        @media (max-width: 992px) {
+          .modal-header {
+            flex-direction: column;
+            text-align: center;
+            padding: 50px 30px 30px;
+          }
+          
+          .modal-image-container {
+            width: 180px;
+            height: 220px;
+          }
+          
+          .modal-body {
+            padding: 30px;
+          }
+        }
+
         @media (max-width: 768px) {
           .team-container {
             padding: 0 20px;
@@ -1503,6 +1896,23 @@ const OurCoreTeam = () => {
           .stat-card {
             padding: 30px 20px;
           }
+          
+          .modal-content {
+            max-height: 95vh;
+            margin: 10px;
+          }
+          
+          .modal-name {
+            font-size: 2rem;
+          }
+          
+          .modal-role {
+            font-size: 1.1rem;
+          }
+          
+          .modal-bio {
+            font-size: 1.05rem;
+          }
         }
 
         @media (max-width: 480px) {
@@ -1558,6 +1968,31 @@ const OurCoreTeam = () => {
           .join-button {
             padding: 15px 35px;
             font-size: 1rem;
+          }
+          
+          .modal-header {
+            padding: 40px 20px 20px;
+          }
+          
+          .modal-body {
+            padding: 20px;
+          }
+          
+          .modal-close {
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            font-size: 20px;
+          }
+          
+          .modal-image-container {
+            width: 150px;
+            height: 180px;
+          }
+          
+          .modal-name {
+            font-size: 1.8rem;
           }
         }
       `}</style>
