@@ -1,5 +1,5 @@
-// AdminDashboard.tsx - COMPLETE WORKING VERSION WITH AUTHENTICATION
-import React, { useEffect, useState } from 'react';
+// AdminDashboard.tsx - COMPLETE WORKING VERSION WITH ALL FIXES
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from './supabase';
 import emailjs from '@emailjs/browser';
 import {
@@ -41,7 +41,8 @@ import {
   FiUserCheck,
   FiUserX,
   FiLock,
-  FiLogIn
+  FiLogIn,
+  FiMenu
 } from 'react-icons/fi';
 import io, { Socket } from 'socket.io-client';
 
@@ -60,13 +61,10 @@ const TIMEZONES = [
   'Europe/Paris', 'Asia/Tokyo', 'Asia/Singapore', 'Australia/Sydney'
 ];
 
-// WebSocket Configuration
-   const SOCKET_URL = import.meta.env.PROD 
-     ? 'https://verapixels-server.onrender.com'
-     : 'http://localhost:5001';
-   
-   console.log('🔌 Admin Socket URL:', SOCKET_URL);
-
+const SOCKET_URL = import.meta.env.PROD
+  ? 'https://verapixels-server.onrender.com'
+  : 'http://localhost:5001';
+  
 const CONTACT_METHODS = [
   { id: 'video', label: 'Video Call', icon: <FiVideo />, color: '#0063f4' },
   { id: 'audio', label: 'Audio Call', icon: <FiPhone />, color: '#00bfff' },
@@ -430,6 +428,155 @@ const LoginComponent: React.FC<{
           100% { transform: rotate(360deg); }
         }
       `}</style>
+    </div>
+  );
+};
+
+// ========== TOP NAVIGATION COMPONENT ==========
+const TopNavigation: React.FC<{
+  activeSection: string;
+  setActiveSection: (section: any) => void;
+  theme: 'light' | 'dark';
+  adminData: AdminData | null;
+  unreadNotifications: number;
+  unreadChats: number;
+}> = ({ activeSection, setActiveSection, theme, adminData, unreadNotifications, unreadChats }) => {
+  const styles = {
+    background: theme === 'dark' ? '#1e293b' : '#ffffff',
+    text: theme === 'dark' ? '#f1f5f9' : '#0f172a',
+    border: theme === 'dark' ? '#334155' : '#e2e8f0',
+    primary: '#6366f1',
+    hoverBg: theme === 'dark' ? '#2d3748' : '#f1f5f9',
+  };
+
+  const navItems = [
+    { id: 'dashboard', icon: <FiHome />, label: 'Dashboard' },
+    { id: 'conversations', icon: <FiMessageCircle />, label: `Live Chats ${unreadChats > 0 ? `(${unreadChats})` : ''}` },
+    { id: 'consultations', icon: <FiCalendar />, label: 'Consultations' },
+    { id: 'notifications', icon: <FiBell />, label: `Notifications ${unreadNotifications > 0 ? `(${unreadNotifications})` : ''}` },
+    { id: 'analytics', icon: <FiBarChart2 />, label: 'Analytics' },
+    { id: 'notes', icon: <FiBook />, label: 'Notes' },
+    { id: 'settings', icon: <FiSettings />, label: 'Settings' },
+  ];
+
+  return (
+    <div style={{
+      position: 'sticky',
+      top: 0,
+      zIndex: 1000,
+      background: styles.background,
+      borderBottom: `1px solid ${styles.border}`,
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+      padding: '0 20px'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        height: '70px',
+        maxWidth: '1400px',
+        margin: '0 auto'
+      }}>
+        {/* Logo and Brand */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            background: `linear-gradient(135deg, ${styles.primary}, #8b5cf6)`,
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '18px'
+          }}>
+            V
+          </div>
+          <div>
+            <h1 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: styles.text }}>
+              Admin Dashboard
+            </h1>
+            <p style={{ margin: 0, fontSize: '12px', color: theme === 'dark' ? '#94a3b8' : '#64748b' }}>
+              {adminData?.name || 'Admin'} • {adminData?.role || 'Admin'}
+            </p>
+          </div>
+        </div>
+
+        {/* Navigation Items */}
+        <div style={{ display: 'flex', gap: '5px' }}>
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveSection(item.id)}
+              style={{
+                padding: '10px 20px',
+                background: activeSection === item.id ? styles.primary : 'transparent',
+                border: 'none',
+                borderRadius: '8px',
+                color: activeSection === item.id ? 'white' : styles.text,
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 500,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.3s',
+                position: 'relative'
+              }}
+              onMouseEnter={(e) => {
+                if (activeSection !== item.id) {
+                  e.currentTarget.style.background = styles.hoverBg;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeSection !== item.id) {
+                  e.currentTarget.style.background = 'transparent';
+                }
+              }}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {/* User Profile */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <button
+            onClick={() => setActiveSection('settings')}
+            style={{
+              width: '45px',
+              height: '45px',
+              borderRadius: '50%',
+              background: adminData?.profile_picture_url ? `url(${adminData.profile_picture_url})` : `linear-gradient(135deg, ${styles.primary}, #8b5cf6)`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              border: 'none',
+              cursor: 'pointer',
+              overflow: 'hidden',
+              padding: 0,
+              position: 'relative'
+            }}
+            title="Settings"
+          >
+            {!adminData?.profile_picture_url && (
+              <div style={{ 
+                width: '100%', 
+                height: '100%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: 'white',
+                fontSize: '18px',
+                fontWeight: 'bold'
+              }}>
+                {adminData?.name?.charAt(0) || 'A'}
+              </div>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -1163,6 +1310,7 @@ const BookingModal: React.FC<{
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
 
   const styles = {
     background: theme === 'dark' ? '#0f172a' : '#f8fafc',
@@ -1178,42 +1326,35 @@ const BookingModal: React.FC<{
     info: '#3b82f6',
   };
 
-  // In BookingModal component, add state for booked slots
-const [bookedSlots, setBookedSlots] = useState<string[]>([]);
-
-// Add useEffect to fetch booked slots when date changes
-useEffect(() => {
-  const fetchBookedSlots = async () => {
-    if (!formData.booking_date) {
-      setBookedSlots([]);
-      return;
-    }
+  useEffect(() => {
+    const fetchBookedSlots = async () => {
+      if (!formData.booking_date) {
+        setBookedSlots([]);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('consultations')
+          .select('booking_time')
+          .eq('booking_date', formData.booking_date)
+          .in('status', ['confirmed', 'pending']);
+        
+        if (error) throw error;
+        
+        const bookedTimes = data?.map(item => item.booking_time) || [];
+        setBookedSlots(bookedTimes);
+      } catch (error) {
+        console.error('Error fetching booked slots:', error);
+        setBookedSlots([]);
+      }
+    };
     
-    try {
-      const { data, error } = await supabase
-        .from('consultations')
-        .select('booking_time')
-        .eq('booking_date', formData.booking_date)
-        .in('status', ['confirmed', 'pending']);
-      
-      if (error) throw error;
-      
-      const bookedTimes = data?.map(item => item.booking_time) || [];
-      console.log('Booked slots for', formData.booking_date, ':', bookedTimes);
-      setBookedSlots(bookedTimes);
-    } catch (error) {
-      console.error('Error fetching booked slots:', error);
-      setBookedSlots([]);
-    }
-  };
-  
-  fetchBookedSlots();
-}, [formData.booking_date]);
+    fetchBookedSlots();
+  }, [formData.booking_date]);
 
-// Then update your time selector to show booked slots
-const isTimeBooked = (time: string) => bookedSlots.includes(time);
+  const isTimeBooked = (time: string) => bookedSlots.includes(time);
 
-  // Calculate business time based on user timezone
   useEffect(() => {
     if (formData.booking_time && formData.user_timezone) {
       try {
@@ -1238,84 +1379,80 @@ const isTimeBooked = (time: string) => bookedSlots.includes(time);
     }
   }, [formData.booking_time, formData.user_timezone]);
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsSubmitting(true);
-  setError(null);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
-  try {
-    // FIXED: Properly check for double booking with correct column names
-    const { data: existingBookings, error: bookingError } = await supabase
-      .from('consultations')
-      .select('*')
-      .eq('booking_date', formData.booking_date)
-      .eq('booking_time', formData.booking_time)
-      .in('status', ['confirmed', 'pending']);
+    try {
+      const { data: existingBookings, error: bookingError } = await supabase
+        .from('consultations')
+        .select('*')
+        .eq('booking_date', formData.booking_date)
+        .eq('booking_time', formData.booking_time)
+        .in('status', ['confirmed', 'pending']);
 
-    if (bookingError) {
-      console.error('Error checking bookings:', bookingError);
-      throw new Error('Failed to check availability. Please try again.');
-    }
+      if (bookingError) {
+        console.error('Error checking bookings:', bookingError);
+        throw new Error('Failed to check availability. Please try again.');
+      }
 
-    if (existingBookings && existingBookings.length > 0) {
-      throw new Error('This time slot is already booked! Please choose another time.');
-    }
+      if (existingBookings && existingBookings.length > 0) {
+        throw new Error('This time slot is already booked! Please choose another time.');
+      }
 
-    // Generate consultation ID
-    const consultationId = `CONS_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const consultationId = `CONS_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Prepare booking data with proper typing
-    const bookingData: Consultation = {
-      id: '', // Will be generated by Supabase
-      consultation_id: consultationId,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      contact_method: formData.contact_method,
-      booking_date: formData.booking_date,
-      booking_time: formData.booking_time,
-      user_timezone: formData.user_timezone,
-      business_time: formData.business_time || '',
-      message: formData.message,
-      status: 'pending',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      admin_notes: '',
-      admin_reply_sent: false,
-      assigned_admin_id: undefined,
-      is_complex: false,
-      reply_timestamp: undefined,
-      booked_by: 'admin'
-    };
-
-    await onSubmit(bookingData);
-    setSuccess(true);
-    
-    // Reset form after successful submission
-    setTimeout(() => {
-      setSuccess(false);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        contact_method: 'Video Call',
-        booking_date: '',
-        booking_time: TIME_SLOTS[0],
-        user_timezone: TIMEZONES[0],
-        message: '',
-        business_time: '',
+      const bookingData: Consultation = {
+        id: '',
+        consultation_id: consultationId,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        contact_method: formData.contact_method,
+        booking_date: formData.booking_date,
+        booking_time: formData.booking_time,
+        user_timezone: formData.user_timezone,
+        business_time: formData.business_time || '',
+        message: formData.message,
         status: 'pending',
-        booked_by: 'admin',
-      });
-      onClose();
-    }, 2000);
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        admin_notes: '',
+        admin_reply_sent: false,
+        assigned_admin_id: undefined,
+        is_complex: false,
+        reply_timestamp: undefined,
+        booked_by: 'admin'
+      };
 
-  } catch (err: any) {
-    setError(err.message || 'Failed to book consultation');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      await onSubmit(bookingData);
+      setSuccess(true);
+      
+      setTimeout(() => {
+        setSuccess(false);
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          contact_method: 'Video Call',
+          booking_date: '',
+          booking_time: TIME_SLOTS[0],
+          user_timezone: TIMEZONES[0],
+          message: '',
+          business_time: '',
+          status: 'pending',
+          booked_by: 'admin',
+        });
+        onClose();
+      }, 2000);
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to book consultation');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -1330,7 +1467,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      zIndex: 1000,
+      zIndex: 2000,
       padding: '20px'
     }}>
       <div style={{
@@ -1342,7 +1479,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         overflowY: 'auto',
         position: 'relative'
       }}>
-        {/* Header */}
         <div style={{
           padding: '20px',
           borderBottom: `1px solid ${styles.border}`,
@@ -1369,7 +1505,6 @@ const handleSubmit = async (e: React.FormEvent) => {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
           {error && (
             <CustomAlert
@@ -1389,7 +1524,6 @@ const handleSubmit = async (e: React.FormEvent) => {
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '20px' }}>
-            {/* Name */}
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: styles.text }}>
                 <FiUser style={{ marginRight: '6px' }} />
@@ -1413,7 +1547,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
             </div>
 
-            {/* Email */}
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: styles.text }}>
                 <FiMail style={{ marginRight: '6px' }} />
@@ -1437,7 +1570,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
             </div>
 
-            {/* Phone */}
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: styles.text }}>
                 <FiPhone style={{ marginRight: '6px' }} />
@@ -1461,7 +1593,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
             </div>
 
-            {/* Contact Method */}
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: styles.text }}>
                 <FiVideo style={{ marginRight: '6px' }} />
@@ -1488,7 +1619,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               </select>
             </div>
 
-            {/* Booking Date */}
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: styles.text }}>
                 <FiCalendar style={{ marginRight: '6px' }} />
@@ -1512,7 +1642,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
             </div>
 
-            {/* Booking Time */}
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: styles.text }}>
                 <FiClock style={{ marginRight: '6px' }} />
@@ -1532,14 +1661,16 @@ const handleSubmit = async (e: React.FormEvent) => {
                 }}
               >
                 {TIME_SLOTS.map(time => (
-                  <option key={time} value={time}>
-                    {time}
+                  <option key={time} value={time} style={{ 
+                    color: isTimeBooked(time) ? styles.danger : styles.text,
+                    background: isTimeBooked(time) ? styles.danger + '10' : 'transparent'
+                  }}>
+                    {time} {isTimeBooked(time) ? '(Booked)' : ''}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* User Timezone */}
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: styles.text }}>
                 <FiGlobe style={{ marginRight: '6px' }} />
@@ -1566,7 +1697,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               </select>
             </div>
 
-            {/* Business Time (Read-only) */}
             <div>
               <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: styles.text }}>
                 <FiClock style={{ marginRight: '6px' }} />
@@ -1589,7 +1719,6 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           </div>
 
-          {/* Message */}
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: styles.text }}>
               <FiMessageCircle style={{ marginRight: '6px' }} />
@@ -1613,7 +1742,6 @@ const handleSubmit = async (e: React.FormEvent) => {
             />
           </div>
 
-          {/* Form Actions */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '20px' }}>
             <button
               type="button"
@@ -1679,15 +1807,15 @@ const handleSubmit = async (e: React.FormEvent) => {
   );
 };
 
-// In LiveChatsComponent.tsx, update the interface:
+// ========== LIVE CHATS COMPONENT ==========
 interface LiveChatsComponentProps {
   conversations: Conversation[];
   theme: 'light' | 'dark';
   onSelectConversation: (conversation: Conversation) => void;
   selectedConversation: Conversation | null;
-  adminData: AdminData | null; // ✅ ADD THIS
-  socket: Socket | null; // ✅ ADD THIS
-  isSocketConnected: boolean; // ✅ ADD THIS
+  adminData: AdminData | null;
+  socket: Socket | null;
+  isSocketConnected: boolean;
 }
 
 const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({ 
@@ -1695,14 +1823,15 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
   theme, 
   onSelectConversation, 
   selectedConversation,
-  adminData, // ✅ ADD THIS
-  socket, // ✅ ADD THIS
-  isSocketConnected // ✅ ADD THIS
+  adminData,
+  socket,
+  isSocketConnected
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'unread' | 'complex'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const styles = {
     background: theme === 'dark' ? '#0f172a' : '#f8fafc',
@@ -1726,6 +1855,10 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
     }
   }, [selectedConversation]);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const fetchMessages = async (conversationId: string) => {
     setIsLoading(true);
     try {
@@ -1743,14 +1876,12 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
       
       setMessages(data || []);
       
-      // Mark messages as read
       await supabase
         .from('chat_messages')
         .update({ read_by_admin: true })
         .eq('conversation_id', conversationId)
         .eq('read_by_admin', false);
         
-      // Update conversation unread count
       await supabase
         .from('chat_conversations')
         .update({ unread_count: 0 })
@@ -1765,41 +1896,48 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
   };
 
   const handleSendMessage = async () => {
-  if (!newMessage.trim() || !selectedConversation) return;
+    if (!newMessage.trim() || !selectedConversation) return;
 
-  try {
-    const messageData = {
-      conversationId: selectedConversation.conversation_id,
-      message: newMessage,
-      adminName: adminData?.name || 'Admin'
-    };
-
-    // ✅ CRITICAL: Send with BOTH event names for compatibility
-    if (socket && socket.connected) {
-      console.log('📤 Sending admin message via WebSocket:', {
+    try {
+      const messageData = {
         conversationId: selectedConversation.conversation_id,
-        adminName: adminData?.name
-      });
-      
-      // Try primary event name first
-      socket.emit('admin_message', messageData);
-      
-      // Also send as backup event name
-      socket.emit('send_message', {
-        conversation_id: selectedConversation.conversation_id,
-        message_text: newMessage,
-        adminName: adminData?.name,
-        sender: 'admin',
-        messageType: 'text'
-      });
-    }
+        message: newMessage,
+        adminName: adminData?.name || 'Admin'
+      };
 
-    // Save to database
-    const messageId = `admin_msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    const { error } = await supabase
-      .from('chat_messages')
-      .insert([{
+      if (socket && socket.connected) {
+        console.log('📤 Sending admin message via WebSocket');
+        socket.emit('admin_message', messageData);
+        socket.emit('send_message', {
+          conversation_id: selectedConversation.conversation_id,
+          message_text: newMessage,
+          adminName: adminData?.name,
+          sender: 'admin',
+          messageType: 'text'
+        });
+      }
+
+      const messageId = `admin_msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert([{
+          message_id: messageId,
+          conversation_id: selectedConversation.conversation_id,
+          sender_type: 'admin',
+          sender_name: adminData?.name || 'Admin',
+          message_text: newMessage,
+          timestamp: new Date().toISOString(),
+          read_by_admin: true,
+          read_by_user: false,
+          intent_detected: 'admin_response',
+          classification: 'ADMIN_RESPONSE'
+        }]);
+
+      if (error) throw error;
+
+      setMessages(prev => [...prev, {
+        id: messageId,
         message_id: messageId,
         conversation_id: selectedConversation.conversation_id,
         sender_type: 'admin',
@@ -1807,32 +1945,15 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
         message_text: newMessage,
         timestamp: new Date().toISOString(),
         read_by_admin: true,
-        read_by_user: false,
-        intent_detected: 'admin_response',
-        classification: 'ADMIN_RESPONSE'
+        read_by_user: false
       }]);
+      
+      setNewMessage('');
 
-    if (error) throw error;
-
-    // Update UI immediately
-    setMessages(prev => [...prev, {
-      id: messageId,
-      message_id: messageId,
-      conversation_id: selectedConversation.conversation_id,
-      sender_type: 'admin',
-      sender_name: adminData?.name || 'Admin',
-      message_text: newMessage,
-      timestamp: new Date().toISOString(),
-      read_by_admin: true,
-      read_by_user: false
-    }]);
-    
-    setNewMessage('');
-
-  } catch (error) {
-    console.error('❌ Error sending admin message:', error);
-  }
-};
+    } catch (error) {
+      console.error('❌ Error sending admin message:', error);
+    }
+  };
 
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('en-US', {
@@ -1853,12 +1974,11 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Filter conversations based on complexity
   const filteredConversations = conversations.filter(conv => {
     if (filter === 'active') return conv.status === 'active' && conv.is_complex;
     if (filter === 'unread') return conv.unread_count > 0 && conv.is_complex;
     if (filter === 'complex') return conv.is_complex;
-    return conv.is_complex; // Only show complex conversations by default
+    return conv.is_complex;
   });
 
   return (
@@ -1873,7 +1993,7 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', height: 'calc(100% - 80px)' }}>
+      <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
         {/* Conversation List */}
         <div style={{
           flex: '0 0 350px',
@@ -1881,7 +2001,8 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
           borderRadius: '12px',
           border: `1px solid ${styles.border}`,
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          height: '100%'
         }}>
           <div style={{ padding: '20px', borderBottom: `1px solid ${styles.border}` }}>
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
@@ -2007,21 +2128,27 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
           </div>
         </div>
 
-        {/* Chat Area */}
+        {/* Chat Area - FIXED POSITIONING */}
         <div style={{
           flex: 1,
           background: styles.cardBg,
           borderRadius: '12px',
           border: `1px solid ${styles.border}`,
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          height: '100%',
+          position: 'relative'
         }}>
           {selectedConversation ? (
             <>
+              {/* Chat Header - Fixed at top */}
               <div style={{
                 padding: '20px',
                 borderBottom: `1px solid ${styles.border}`,
-                background: styles.hoverBg
+                background: styles.hoverBg,
+                position: 'sticky',
+                top: 0,
+                zIndex: 10
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
@@ -2089,8 +2216,14 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
                 </div>
               </div>
 
-              {/* Messages */}
-              <div style={{ flex: 1, padding: '20px', overflowY: 'auto' }}>
+              {/* Messages Container - Scrollable */}
+              <div style={{ 
+                flex: 1, 
+                padding: '20px', 
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
                 {isLoading ? (
                   <div style={{ textAlign: 'center', padding: '40px' }}>
                     <div style={{
@@ -2109,7 +2242,7 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
                     <p>No messages yet. Start the conversation!</p>
                   </div>
                 ) : (
-                  <div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     {messages.map((msg, index) => (
                       <div
                         key={msg.id || index}
@@ -2143,12 +2276,21 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
                         </div>
                       </div>
                     ))}
+                    <div ref={messagesEndRef} />
                   </div>
                 )}
               </div>
 
-              {/* Message Input */}
-              <div style={{ padding: '20px', borderTop: `1px solid ${styles.border}` }}>
+              {/* Message Input - Fixed at bottom */}
+              <div style={{
+                padding: '20px',
+                borderTop: `1px solid ${styles.border}`,
+                background: styles.cardBg,
+                position: 'sticky',
+                bottom: 0,
+                zIndex: 10,
+                flexShrink: 0
+              }}>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <input
                     type="text"
@@ -2179,7 +2321,8 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
                       cursor: newMessage.trim() ? 'pointer' : 'not-allowed',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '8px'
+                      gap: '8px',
+                      flexShrink: 0
                     }}
                   >
                     <FiSend />
@@ -2205,13 +2348,6 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 };
@@ -2295,7 +2431,7 @@ const ConsultationsManagement: React.FC<{
         default:
           aValue = new Date(a.booking_date + 'T' + a.booking_time).getTime();
           bValue = new Date(b.booking_date + 'T' + b.booking_time).getTime();
-    }
+      }
     
       if (sortOrder === 'asc') {
         return aValue > bValue ? 1 : -1;
@@ -2912,7 +3048,6 @@ const AnalyticsDashboard: React.FC<{
     info: '#3b82f6',
   };
 
-  // Calculate metrics
   const calculateMetrics = () => {
     const now = new Date();
     let startDate: Date;
@@ -2934,7 +3069,6 @@ const AnalyticsDashboard: React.FC<{
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     }
 
-    // Filter data based on time period
     const periodConsultations = consultations.filter(c => 
       new Date(c.created_at) >= startDate
     );
@@ -2947,7 +3081,6 @@ const AnalyticsDashboard: React.FC<{
       new Date(a.start_time) >= startDate
     );
 
-    // Calculate hours worked
     const hoursWorked = periodAnalytics.reduce((total, session) => {
       if (session.end_time && session.duration_seconds) {
         return total + (session.duration_seconds / 3600);
@@ -2955,15 +3088,10 @@ const AnalyticsDashboard: React.FC<{
       return total;
     }, 0);
 
-    // Calculate active sessions (sessions without end_time)
     const activeSessions = periodAnalytics.filter(a => !a.end_time).length;
-
-    // Calculate consultation stats
     const pendingConsultations = periodConsultations.filter(c => c.status === 'pending').length;
     const confirmedConsultations = periodConsultations.filter(c => c.status === 'confirmed').length;
     const completedConsultations = periodConsultations.filter(c => c.status === 'completed' || c.status === 'finished').length;
-
-    // Calculate chat stats
     const activeChats = periodConversations.filter(c => c.status === 'active' || c.status === 'awaiting_admin' || c.status === 'admin_handling').length;
     const resolvedChats = periodConversations.filter(c => c.status === 'resolved').length;
     const complexChats = periodConversations.filter(c => c.is_complex).length;
@@ -2996,7 +3124,6 @@ const AnalyticsDashboard: React.FC<{
 
   return (
     <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto' }}>
-      {/* Header */}
       <div style={{ marginBottom: '30px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: 700, color: styles.text }}>
@@ -3028,7 +3155,6 @@ const AnalyticsDashboard: React.FC<{
         </p>
       </div>
 
-      {/* Summary Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
         <div style={{
           background: styles.cardBg,
@@ -3095,9 +3221,7 @@ const AnalyticsDashboard: React.FC<{
         </div>
       </div>
 
-      {/* Detailed Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-        {/* Consultation Breakdown */}
         <div style={{
           background: styles.cardBg,
           borderRadius: '16px',
@@ -3133,7 +3257,6 @@ const AnalyticsDashboard: React.FC<{
           </div>
         </div>
 
-        {/* Chat Breakdown */}
         <div style={{
           background: styles.cardBg,
           borderRadius: '16px',
@@ -3169,7 +3292,6 @@ const AnalyticsDashboard: React.FC<{
           </div>
         </div>
 
-        {/* Session Timeline */}
         <div style={{
           background: styles.cardBg,
           borderRadius: '16px',
@@ -3214,7 +3336,6 @@ const AnalyticsDashboard: React.FC<{
         </div>
       </div>
 
-      {/* Activity Graph (Placeholder) */}
       <div style={{
         background: styles.cardBg,
         borderRadius: '16px',
@@ -3235,7 +3356,6 @@ const AnalyticsDashboard: React.FC<{
           background: styles.background,
           borderRadius: '12px'
         }}>
-          {/* Placeholder bars for activity graph */}
           {[30, 50, 70, 90, 60, 40, 80].map((height, index) => (
             <div key={index} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{
@@ -3253,11 +3373,9 @@ const AnalyticsDashboard: React.FC<{
         </div>
       </div>
 
-      {/* Export Button */}
       <div style={{ textAlign: 'right' }}>
         <button
           onClick={() => {
-            // Export functionality
             const data = {
               period: getPeriodLabel(),
               metrics,
@@ -3328,25 +3446,79 @@ const SettingsComponent: React.FC<{
     info: '#3b82f6',
   };
 
+  const handleNotificationToggle = async (enabled: boolean) => {
+    if (enabled) {
+      if (!("Notification" in window)) {
+        setMessage({ type: 'error', text: 'This browser does not support notifications' });
+        return false;
+      }
+
+      if (Notification.permission === "granted") {
+        return true;
+      }
+
+      if (Notification.permission !== "denied") {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+          setMessage({ type: 'success', text: 'Notification permission granted!' });
+          
+          if (adminData) {
+            new Notification("Verapixels Admin", {
+              body: `Welcome back, ${adminData.name}! Notifications are now enabled.`,
+              icon: adminData.profile_picture_url || undefined
+            });
+          }
+          return true;
+        } else {
+          setMessage({ type: 'error', text: 'Notification permission denied' });
+          return false;
+        }
+      }
+    }
+    return enabled;
+  };
+
+  const handleNotificationChange = async (enabled: boolean) => {
+    const success = await handleNotificationToggle(enabled);
+    if (success || !enabled) {
+      setSettings({ ...settings, notifications: enabled });
+    }
+  };
+
   const handleProfileUpload = async () => {
     if (!profilePicture || !adminData) return;
 
     setUploading(true);
     try {
-      // In a real implementation, upload to Supabase Storage
-      // For now, simulate upload
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const reader = new FileReader();
       
-      const fakeUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData.name)}&background=${styles.primary.slice(1)}&color=fff`;
-      
-      await onUpdateSettings({
-        profile_picture_url: fakeUrl,
-        settings
-      });
+      reader.onload = async (e) => {
+        try {
+          const base64String = e.target?.result as string;
+          
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          await onUpdateSettings({
+            profile_picture_url: base64String,
+            settings
+          });
 
-      setMessage({ type: 'success', text: 'Profile picture updated successfully!' });
-      setProfilePicture(null);
+          setMessage({ type: 'success', text: 'Profile picture updated successfully!' });
+          setProfilePicture(null);
+          
+          if (adminData) {
+            adminData.profile_picture_url = base64String;
+          }
+        } catch (error) {
+          console.error('Error processing image:', error);
+          setMessage({ type: 'error', text: 'Failed to process image' });
+        }
+      };
+      
+      reader.readAsDataURL(profilePicture);
+      
     } catch (error) {
+      console.error('Upload error:', error);
       setMessage({ type: 'error', text: 'Failed to upload profile picture' });
     } finally {
       setUploading(false);
@@ -3388,7 +3560,6 @@ const SettingsComponent: React.FC<{
       )}
 
       <div style={{ display: 'grid', gap: '30px' }}>
-        {/* Profile Section */}
         <div style={{
           background: styles.cardBg,
           borderRadius: '16px',
@@ -3405,7 +3576,9 @@ const SettingsComponent: React.FC<{
               width: '100px',
               height: '100px',
               borderRadius: '50%',
-              background: `linear-gradient(135deg, ${styles.primary}, ${styles.info})`,
+              background: adminData?.profile_picture_url ? `url(${adminData.profile_picture_url})` : `linear-gradient(135deg, ${styles.primary}, ${styles.info})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -3415,13 +3588,7 @@ const SettingsComponent: React.FC<{
               overflow: 'hidden',
               position: 'relative'
             }}>
-              {adminData?.profile_picture_url ? (
-                <img 
-                  src={adminData.profile_picture_url} 
-                  alt="Profile" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
+              {!adminData?.profile_picture_url && (
                 adminData?.name?.charAt(0) || 'A'
               )}
             </div>
@@ -3499,7 +3666,6 @@ const SettingsComponent: React.FC<{
           </div>
         </div>
 
-        {/* Appearance Section */}
         <div style={{
           background: styles.cardBg,
           borderRadius: '16px',
@@ -3582,7 +3748,6 @@ const SettingsComponent: React.FC<{
           </div>
         </div>
 
-        {/* Notifications Section */}
         <div style={{
           background: styles.cardBg,
           borderRadius: '16px',
@@ -3605,7 +3770,7 @@ const SettingsComponent: React.FC<{
                 </div>
               </div>
               <button
-                onClick={() => setSettings({ ...settings, notifications: !settings.notifications })}
+                onClick={() => handleNotificationChange(!settings.notifications)}
                 style={{
                   width: '50px',
                   height: '28px',
@@ -3665,7 +3830,6 @@ const SettingsComponent: React.FC<{
           </div>
         </div>
 
-        {/* Actions */}
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
           <button
             onClick={onLogout}
@@ -3689,7 +3853,6 @@ const SettingsComponent: React.FC<{
           <div style={{ display: 'flex', gap: '15px' }}>
             <button
               onClick={() => {
-                // Reset to default settings
                 setSettings({
                   theme: theme,
                   notifications: true,
@@ -3748,13 +3911,6 @@ const SettingsComponent: React.FC<{
           </div>
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 };
@@ -3809,67 +3965,111 @@ const NotesComponent: React.FC<{
   }, [adminData]);
 
   const fetchNotes = async () => {
-    if (!adminData) return;
+  if (!adminData) return;
+  
+  setLoading(true);
+  try {
+    console.log('Fetching notes for admin:', adminData.id);
     
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('admin_notes')
-        .select('*')
-        .eq('admin_id', adminData.id)
-        .eq('is_deleted', false)
-        .order('updated_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('admin_notes')
+      .select('*')
+      .eq('admin_id', adminData.id)
+      .eq('is_deleted', false)
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setNotes(data || []);
-    } catch (error) {
+    if (error) {
       console.error('Error fetching notes:', error);
-    } finally {
-      setLoading(false);
+      throw error;
     }
-  };
+    
+    console.log('Fetched notes:', data?.length || 0);
+    setNotes(data || []);
+    
+  } catch (error) {
+    console.error('Error in fetchNotes:', error);
+    // Fallback to localStorage if database fails
+    const localNotes = JSON.parse(localStorage.getItem('admin_notes') || '[]');
+    const userNotes = localNotes.filter((note: AdminNote) => 
+      note.admin_id === adminData.id && !note.is_deleted
+    );
+    setNotes(userNotes);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleCreateNote = async () => {
-    if (!adminData || !newNote.title.trim() || !newNote.content.trim()) return;
+const handleCreateNote = async () => {
+  if (!adminData || !newNote.title.trim() || !newNote.content.trim()) {
+    alert('Please fill in both title and content');
+    return;
+  }
 
-    try {
-      const noteData = {
-        note_id: `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        admin_id: adminData.id,
-        title: newNote.title,
-        content: newNote.content,
-        color: newNote.color,
-        font_style: newNote.font_style,
-        font_size: newNote.font_size,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        is_deleted: false
+  try {
+    const noteData = {
+      note_id: `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      admin_id: adminData.id,
+      title: newNote.title,
+      content: newNote.content,
+      color: newNote.color,
+      font_style: newNote.font_style,
+      font_size: newNote.font_size,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_deleted: false
+    };
+
+    console.log('Creating note with data:', noteData);
+
+    // Insert and return the data
+    const { data, error } = await supabase
+      .from('admin_notes')
+      .insert([noteData])
+      .select() // Add this to get the inserted data back
+      .single(); // Use single() to get one row
+
+    if (error) {
+      console.error('Supabase insert error:', error);
+      throw error;
+    }
+
+    console.log('Note created successfully:', data);
+
+    if (data) {
+      // Update state with the returned data (includes auto-generated id)
+      setNotes(prev => [data, ...prev]);
+    } else {
+      // Fallback: create note object manually
+      const newNoteItem: AdminNote = {
+        id: noteData.note_id, // Use note_id as id temporarily
+        ...noteData
       };
-
-      const { error } = await supabase
-        .from('admin_notes')
-        .insert([noteData]);
-
-      if (error) throw error;
-
-      setNotes(prev => [noteData as AdminNote, ...prev]);
-      setIsCreating(false);
-      setNewNote({
-        title: '',
-        content: '',
-        color: '#ffd700',
-        font_style: 'normal',
-        font_size: '14px'
-      });
-    } catch (error) {
-      console.error('Error creating note:', error);
+      setNotes(prev => [newNoteItem, ...prev]);
     }
-  };
+    
+    setIsCreating(false);
+    setNewNote({
+      title: '',
+      content: '',
+      color: '#ffd700',
+      font_style: 'normal',
+      font_size: '14px'
+    });
+    
+    alert('Note created successfully!');
+    
+  } catch (error: any) {
+    console.error('Error creating note:', error);
+    alert(`Failed to create note: ${error.message}`);
+  }
+};
 
   const handleUpdateNote = async () => {
     if (!editingNote) return;
 
     try {
+      console.log('Updating note:', editingNote.note_id);
+
       const { error } = await supabase
         .from('admin_notes')
         .update({
@@ -3882,14 +4082,19 @@ const NotesComponent: React.FC<{
         })
         .eq('note_id', editingNote.note_id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
+      }
 
-      setNotes(prev => prev.map(note => 
-        note.note_id === editingNote.note_id ? editingNote : note
-      ));
+      console.log('Note updated successfully');
+      
+      await fetchNotes();
       setEditingNote(null);
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Error updating note:', error);
+      alert(`Failed to update note: ${error.message}`);
     }
   };
 
@@ -3964,7 +4169,6 @@ const NotesComponent: React.FC<{
         </p>
       </div>
 
-      {/* Filters */}
       <div style={{
         background: styles.cardBg,
         borderRadius: '12px',
@@ -4024,7 +4228,6 @@ const NotesComponent: React.FC<{
         </div>
       </div>
 
-      {/* Create/Edit Modal */}
       {(isCreating || editingNote) && (
         <div style={{
           position: 'fixed',
@@ -4036,7 +4239,7 @@ const NotesComponent: React.FC<{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000,
+          zIndex: 2000,
           padding: '20px'
         }}>
           <div style={{
@@ -4273,7 +4476,6 @@ const NotesComponent: React.FC<{
         </div>
       )}
 
-      {/* Notes Grid */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px' }}>
           <div style={{
@@ -4320,7 +4522,6 @@ const NotesComponent: React.FC<{
                 flexDirection: 'column'
               }}
             >
-              {/* Actions */}
               <div style={{ position: 'absolute', top: '15px', right: '15px', display: 'flex', gap: '8px' }}>
                 <button
                   onClick={() => setEditingNote(note)}
@@ -4356,7 +4557,6 @@ const NotesComponent: React.FC<{
                 </button>
               </div>
 
-              {/* Note Content */}
               <div style={{ flex: 1, marginBottom: '15px' }}>
                 <h3 style={{
                   margin: 0,
@@ -4382,7 +4582,6 @@ const NotesComponent: React.FC<{
                 </div>
               </div>
 
-              {/* Note Footer */}
               <div style={{
                 fontSize: '12px',
                 color: styles.mutedText,
@@ -4416,198 +4615,194 @@ const AdminDashboard: React.FC = () => {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
-  // Check authentication on mount
   useEffect(() => {
     checkAuth();
   }, []);
 
-  // In your AdminDashboard useEffect for socket connection:
-useEffect(() => {
-  if (!isAuthenticated || !adminData) return;
+  useEffect(() => {
+    if (!isAuthenticated || !adminData) return;
 
-  console.log('🔌 Initializing admin socket connection...');
-  
-  const socketInstance = io(SOCKET_URL, {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 1000,
-    query: {
-      dashboard: 'admin',
-      adminId: adminData.id,
-      adminName: adminData.name
-    }
-  });
-
-   // ✅ ADD THIS HERE (right after creating socketInstance):
-  socketInstance.onAny((eventName, ...args) => {
-    if (eventName !== 'ping' && eventName !== 'pong') {
-      console.log(`📡 [ADMIN] WebSocket event: ${eventName}`, 
-        args[0] ? JSON.stringify(args[0]).substring(0, 100) : '');
-    }
-  });
-
-  socketInstance.on('connect', () => {
-    console.log('✅ Admin socket connected:', socketInstance.id);
-    setIsSocketConnected(true);
+    console.log('🔌 Initializing admin socket connection...');
     
-    // Join active conversations
-    conversations.forEach(conv => {
-      if (conv.status === 'active' || conv.status === 'awaiting_admin') {
-        console.log('👥 Auto-joining conversation:', conv.conversation_id);
-        socketInstance.emit('admin_join', {
-          conversationId: conv.conversation_id,
-          adminId: adminData.id,
-          adminName: adminData.name
-        });
+    const socketInstance = io(SOCKET_URL, {
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      query: {
+        dashboard: 'admin',
+        adminId: adminData.id,
+        adminName: adminData.name
       }
     });
-  });
 
-  // Add this new event listener for connection confirmation
-  socketInstance.on('connected', (data) => {
-    console.log('🔗 Server connection confirmed:', data);
-  });
-
-  // Enhanced message logging
-  socketInstance.on('new_message', (message) => {
-    console.log('📨 New message received in admin:', {
-      id: message.id,
-      sender: message.sender_type,
-      text: message.message_text.substring(0, 50),
-      conversation: message.conversation_id
+    socketInstance.onAny((eventName, ...args) => {
+      if (eventName !== 'ping' && eventName !== 'pong') {
+        console.log(`📡 [ADMIN] WebSocket event: ${eventName}`, 
+          args[0] ? JSON.stringify(args[0]).substring(0, 100) : '');
+      }
     });
-    
-    // Check if message is from admin (to avoid duplicates)
-    if (message.sender_type === 'admin') {
-      console.log('👤 This is my own message, checking for duplicates...');
-    }
-  });
 
-  setSocket(socketInstance);
-
-  return () => {
-    console.log('🔌 Cleaning up admin socket connection...');
-    socketInstance.disconnect();
-  };
-}, [isAuthenticated, adminData]);
-  
- const checkAuth = async () => {
-  try {
-    console.log('🔒 Checking authentication...');
-    
-    // Check localStorage for admin session
-    const storedSession = localStorage.getItem('admin_session');
-    
-    if (!storedSession) {
-      setIsAuthenticated(false);
-      setLoading(false);
-      return;
-    }
-    
-    const sessionData = JSON.parse(storedSession);
-    
-    // Check if session expired (24 hours)
-    if (Date.now() - sessionData.timestamp > 24 * 60 * 60 * 1000) {
-      localStorage.removeItem('admin_session');
-      setIsAuthenticated(false);
-      setLoading(false);
-      return;
-    }
-
-    
-    
-    // Verify admin still exists
-    const { data: adminData, error } = await supabase
-      .from('admins')
-      .select('id, name, email, role, settings, is_active')
-      .eq('id', sessionData.id)
-      .eq('is_active', true)
-      .single();
+    socketInstance.on('connect', () => {
+      console.log('✅ Admin socket connected:', socketInstance.id);
+      setIsSocketConnected(true);
       
-    if (error || !adminData) {
-      localStorage.removeItem('admin_session');
-      setIsAuthenticated(false);
-      setLoading(false);
-      return;
-    }
-    
-    // Set admin data
-    setAdminData({
-      id: adminData.id,
-      auth_user_id: '', // Leave empty since we're not using Supabase Auth
-      name: adminData.name || 'Admin',
-      email: adminData.email,
-      role: adminData.role || 'admin',
-      last_login: sessionData.timestamp,
-      profile_picture_url: '',
-      settings: adminData.settings || {
-        theme: 'light',
-        notifications: true,
-        email_notifications: true,
-        timezone: 'Africa/Lagos'
+      conversations.forEach(conv => {
+        if (conv.status === 'active' || conv.status === 'awaiting_admin') {
+          console.log('👥 Auto-joining conversation:', conv.conversation_id);
+          socketInstance.emit('admin_join', {
+            conversationId: conv.conversation_id,
+            adminId: adminData.id,
+            adminName: adminData.name
+          });
+        }
+      });
+    });
+
+    socketInstance.on('connected', (data) => {
+      console.log('🔗 Server connection confirmed:', data);
+    });
+
+    socketInstance.on('new_message', (message) => {
+      console.log('📨 New message received in admin:', {
+        id: message.id,
+        sender: message.sender_type,
+        text: message.message_text.substring(0, 50),
+        conversation: message.conversation_id
+      });
+      
+      if (message.sender_type === 'admin') {
+        console.log('👤 This is my own message, checking for duplicates...');
       }
     });
-    
-    setIsAuthenticated(true);
-    
-    // Load data
-    await Promise.all([
-      fetchConversations(),
-      fetchConsultations(),
-      fetchNotifications(),
-      fetchAnalytics()
-    ]);
-    
-  } catch (error) {
-    console.error('Auth check error:', error);
-    localStorage.removeItem('admin_session');
-    setIsAuthenticated(false);
-  } finally {
-    setLoading(false);
-  }
-};
 
-  // Update theme based on admin settings
+    setSocket(socketInstance);
+
+    return () => {
+      console.log('🔌 Cleaning up admin socket connection...');
+      socketInstance.disconnect();
+    };
+  }, [isAuthenticated, adminData]);
+  
+  const checkAuth = async () => {
+    try {
+      console.log('🔒 Checking authentication...');
+      
+      const storedSession = localStorage.getItem('admin_session');
+      
+      if (!storedSession) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+      
+      const sessionData = JSON.parse(storedSession);
+      
+      if (Date.now() - sessionData.timestamp > 24 * 60 * 60 * 1000) {
+        localStorage.removeItem('admin_session');
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      const { data: adminData, error } = await supabase
+        .from('admins')
+        .select('id, name, email, role, settings, is_active')
+        .eq('id', sessionData.id)
+        .eq('is_active', true)
+        .single();
+        
+      if (error || !adminData) {
+        localStorage.removeItem('admin_session');
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+      
+      setAdminData({
+        id: adminData.id,
+        auth_user_id: '',
+        name: adminData.name || 'Admin',
+        email: adminData.email,
+        role: adminData.role || 'admin',
+        last_login: sessionData.timestamp,
+        profile_picture_url: '',
+        settings: adminData.settings || {
+          theme: 'light',
+          notifications: true,
+          email_notifications: true,
+          timezone: 'Africa/Lagos'
+        }
+      });
+      
+      setIsAuthenticated(true);
+      
+      await Promise.all([
+        fetchConversations(),
+        fetchConsultations(),
+        fetchNotifications(),
+        fetchAnalytics()
+      ]);
+      
+    } catch (error) {
+      console.error('Auth check error:', error);
+      localStorage.removeItem('admin_session');
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (adminData?.settings?.theme) {
       setTheme(adminData.settings.theme);
     }
   }, [adminData]);
 
-// Fetch all consultations
-const fetchConsultations = async () => {
+  const fetchConsultations = async () => {
   try {
+    console.log('📅 Starting to fetch consultations...');
+    
     const { data, error } = await supabase
       .from('consultations')
-      .select(`
-        *,
-        admin_notes,
-        admin_reply_sent,
-        reply_timestamp,
-        assigned_admin_id,
-        is_complex,
-        booked_by
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching consultations:', error);
+      console.error('❌ Supabase error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       throw error;
     }
     
-    console.log(`✅ Fetched ${data?.length || 0} consultations`);
+    console.log('📊 Raw data from Supabase:', {
+      count: data?.length || 0,
+      firstItem: data?.[0] || 'No data'
+    });
+    
+    if (!data || data.length === 0) {
+      console.warn('⚠️ No consultations found in database');
+    } else {
+      console.log(`✅ Successfully fetched ${data.length} consultations`);
+    }
+    
     setConsultations(data || []);
-  } catch (error) {
-    console.error('❌ Error in fetchConsultations:', error);
+  } catch (error: any) {
+    console.error('❌ Error in fetchConsultations:', {
+      name: error?.name,
+      message: error?.message,
+      stack: error?.stack
+    });
     setConsultations([]);
   }
 };
 
-// Fetch conversations (complex only)
 const fetchConversations = async () => {
   try {
-    console.log('💬 Fetching conversations...');
+    console.log('💬 Starting to fetch conversations...');
     
     const { data, error } = await supabase
       .from('chat_conversations')
@@ -4616,20 +4811,36 @@ const fetchConversations = async () => {
       .order('last_activity', { ascending: false });
 
     if (error) {
-      console.error('❌ Error fetching conversations:', error);
+      console.error('❌ Supabase error fetching conversations:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       throw error;
     }
     
-    console.log(`✅ Fetched ${data?.length || 0} complex conversations`);
+    console.log('📊 Raw conversation data:', {
+      count: data?.length || 0,
+      firstItem: data?.[0] || 'No data'
+    });
+    
+    if (!data || data.length === 0) {
+      console.warn('⚠️ No complex conversations found');
+    } else {
+      console.log(`✅ Successfully fetched ${data.length} complex conversations`);
+    }
+    
     setConversations(data || []);
-  } catch (error) {
-    console.error('❌ Error in fetchConversations:', error);
+  } catch (error: any) {
+    console.error('❌ Error in fetchConversations:', {
+      name: error?.name,
+      message: error?.message
+    });
     setConversations([]);
   }
 };
- 
 
-  // Fetch notifications
   const fetchNotifications = async () => {
     try {
       const { data, error } = await supabase
@@ -4645,7 +4856,6 @@ const fetchConversations = async () => {
     }
   };
 
-  // Fetch analytics
   const fetchAnalytics = async () => {
     try {
       const { data, error } = await supabase
@@ -4660,9 +4870,7 @@ const fetchConversations = async () => {
     }
   };
 
-  // Setup real-time subscriptions
   const setupRealTimeSubscriptions = () => {
-    // Subscribe to new conversations
     const conversationsSubscription = supabase
       .channel('conversations_changes')
       .on('postgres_changes', {
@@ -4677,7 +4885,6 @@ const fetchConversations = async () => {
       })
       .subscribe();
 
-    // Subscribe to conversation updates
     const conversationsUpdateSubscription = supabase
       .channel('conversations_updates')
       .on('postgres_changes', {
@@ -4696,7 +4903,6 @@ const fetchConversations = async () => {
       })
       .subscribe();
 
-    // Subscribe to new consultations
     const consultationsSubscription = supabase
       .channel('consultations_changes')
       .on('postgres_changes', {
@@ -4709,7 +4915,6 @@ const fetchConversations = async () => {
       })
       .subscribe();
 
-    // Subscribe to consultation updates
     const consultationsUpdateSubscription = supabase
       .channel('consultations_updates')
       .on('postgres_changes', {
@@ -4728,7 +4933,6 @@ const fetchConversations = async () => {
       })
       .subscribe();
 
-    // Subscribe to new notifications
     const notificationsSubscription = supabase
       .channel('notifications_changes')
       .on('postgres_changes', {
@@ -4741,7 +4945,6 @@ const fetchConversations = async () => {
       })
       .subscribe();
 
-    // Subscribe to notification updates
     const notificationsUpdateSubscription = supabase
       .channel('notifications_updates')
       .on('postgres_changes', {
@@ -4770,7 +4973,6 @@ const fetchConversations = async () => {
     };
   };
 
-  // Track session start
   const trackSessionStart = async (): Promise<string> => {
     if (!adminData) return '';
     
@@ -4792,7 +4994,6 @@ const fetchConversations = async () => {
     return sessionId;
   };
 
-  // Track session end
   const trackSessionEnd = async (sessionId: string) => {
     try {
       const { data: session } = await supabase
@@ -4817,125 +5018,114 @@ const fetchConversations = async () => {
     }
   };
 
-const handleLogin = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
-  try {
-    console.log('🔐 Login attempt for:', email);
-    
-    // 1. Query admin directly from your admins table
-    const { data: adminData, error: adminError } = await supabase
-      .from('admins')
-      .select(`
-        id,
-        name,
-        email,
-        password_hash,
-        role,
-        last_login,
-        is_active,
-        auth_user_id,
-        settings,
-        profile_picture_url
-      `)
-      .eq('email', email.toLowerCase().trim())
-      .eq('is_active', true)
-      .maybeSingle(); // Use maybeSingle instead of single
+  const handleLogin = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      console.log('🔐 Login attempt for:', email);
+      
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select(`
+          id,
+          name,
+          email,
+          password_hash,
+          role,
+          last_login,
+          is_active,
+          auth_user_id,
+          settings,
+          profile_picture_url
+        `)
+        .eq('email', email.toLowerCase().trim())
+        .eq('is_active', true)
+        .maybeSingle();
 
-    console.log('Admin query result:', { adminData, adminError });
+      console.log('Admin query result:', { adminData, adminError });
 
-    if (adminError) {
-      console.error('Database error:', adminError);
+      if (adminError) {
+        console.error('Database error:', adminError);
+        return { 
+          success: false, 
+          message: 'Database error. Please try again.' 
+        };
+      }
+
+      if (!adminData) {
+        return { success: false, message: 'Invalid email or password' };
+      }
+
+      const isPasswordValid = adminData.password_hash === password;
+      
+      if (!isPasswordValid) {
+        return { success: false, message: 'Invalid email or password' };
+      }
+
+      const { error: updateError } = await supabase
+        .from('admins')
+        .update({ 
+          last_login: new Date().toISOString(),
+          is_online: true
+        })
+        .eq('id', adminData.id);
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+      }
+
+      const adminInfo = {
+        id: adminData.id,
+        auth_user_id: adminData.auth_user_id || '',
+        name: adminData.name || 'Admin',
+        email: adminData.email || email,
+        role: adminData.role || 'admin',
+        last_login: new Date().toISOString(),
+        profile_picture_url: adminData.profile_picture_url || '',
+        settings: adminData.settings || {
+          theme: 'light',
+          notifications: true,
+          email_notifications: true,
+          timezone: 'Africa/Lagos'
+        }
+      };
+
+      setAdminData(adminInfo);
+      setTheme(adminInfo.settings.theme || 'light');
+      setIsAuthenticated(true);
+      
+      const sessionData = {
+        id: adminData.id,
+        email: adminData.email,
+        name: adminData.name,
+        role: adminData.role,
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem('admin_session', JSON.stringify(sessionData));
+
+      const sessionId = await trackSessionStart();
+      setCurrentSessionId(sessionId);
+      
+      await Promise.all([
+        fetchConversations(),
+        fetchConsultations(),
+        fetchNotifications(),
+        fetchAnalytics()
+      ]);
+
+      return { 
+        success: true, 
+        message: 'Login successful! Loading dashboard...' 
+      };
+      
+    } catch (error: any) {
+      console.error('Login error:', error);
       return { 
         success: false, 
-        message: 'Database error. Please try again.' 
+        message: error.message || 'Login failed. Please try again.' 
       };
     }
+  };
 
-    if (!adminData) {
-      return { success: false, message: 'Invalid email or password' };
-    }
-
-    // 2. Verify password using your password_hash column
-    // IMPORTANT: This assumes plain text for now. For production, use bcrypt!
-    const isPasswordValid = adminData.password_hash === password;
-    
-    if (!isPasswordValid) {
-      return { success: false, message: 'Invalid email or password' };
-    }
-
-    // 3. Update last login
-    const { error: updateError } = await supabase
-      .from('admins')
-      .update({ 
-        last_login: new Date().toISOString(),
-        is_online: true
-      })
-      .eq('id', adminData.id);
-
-    if (updateError) {
-      console.error('Update error:', updateError);
-      // Continue anyway - don't block login
-    }
-
-    // 4. Prepare admin data
-    const adminInfo = {
-      id: adminData.id,
-      auth_user_id: adminData.auth_user_id || '', // This might be null/empty
-      name: adminData.name || 'Admin',
-      email: adminData.email || email,
-      role: adminData.role || 'admin',
-      last_login: new Date().toISOString(),
-      profile_picture_url: adminData.profile_picture_url || '',
-      settings: adminData.settings || {
-        theme: 'light',
-        notifications: true,
-        email_notifications: true,
-        timezone: 'Africa/Lagos'
-      }
-    };
-
-    // 5. Set admin data
-    setAdminData(adminInfo);
-    setTheme(adminInfo.settings.theme || 'light');
-    setIsAuthenticated(true);
-    
-    // 6. Store session in localStorage
-    const sessionData = {
-      id: adminData.id,
-      email: adminData.email,
-      name: adminData.name,
-      role: adminData.role,
-      timestamp: Date.now()
-    };
-    
-    localStorage.setItem('admin_session', JSON.stringify(sessionData));
-
-    // 7. Start session tracking
-    const sessionId = await trackSessionStart();
-    setCurrentSessionId(sessionId);
-    
-    // 8. Load initial data
-    await Promise.all([
-      fetchConversations(),
-      fetchConsultations(),
-      fetchNotifications(),
-      fetchAnalytics()
-    ]);
-
-    return { 
-      success: true, 
-      message: 'Login successful! Loading dashboard...' 
-    };
-    
-  } catch (error: any) {
-    console.error('Login error:', error);
-    return { 
-      success: false, 
-      message: error.message || 'Login failed. Please try again.' 
-    };
-  }
-};
-
-  // Handle logout
   const handleLogout = async () => {
     try {
       if (currentSessionId) {
@@ -4951,217 +5141,199 @@ const handleLogin = async (email: string, password: string): Promise<{ success: 
     }
   };
 
-  // Handle booking consultation - UPDATED
-const handleBookConsultation = async (bookingData: Consultation): Promise<void> => {
-  try {
-    console.log('📅 Checking availability for:', bookingData.booking_date, bookingData.booking_time);
-
-    // IMPORTANT: Check ALL bookings at this date/time regardless of email
-    const { data: existingBookings, error: checkError } = await supabase
-      .from('consultations')
-      .select('*')
-      .eq('booking_date', bookingData.booking_date)
-      .eq('booking_time', bookingData.booking_time)
-      .in('status', ['confirmed', 'pending']);
-
-    if (checkError) {
-      console.error('Error checking existing bookings:', checkError);
-      throw new Error('Failed to check availability. Please try again.');
+  const calculateBusinessTime = (userTime: string, date: string, userTimezone: string): string => {
+    try {
+      const [time, period] = userTime.split(' ');
+      const [hours, minutes] = time.split(':');
+      
+      let hour = parseInt(hours);
+      if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
+      if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
+      
+      const userDateString = `${date}T${hour.toString().padStart(2, '0')}:${minutes}:00`;
+      
+      const userDate = new Date(userDateString);
+      const lagosDate = new Date(userDate.toLocaleString('en-US', { timeZone: 'Africa/Lagos' }));
+      
+      let lagosHours = lagosDate.getHours();
+      const lagosMinutes = lagosDate.getMinutes();
+      const lagosPeriod = lagosHours >= 12 ? 'PM' : 'AM';
+      
+      lagosHours = lagosHours % 12;
+      lagosHours = lagosHours === 0 ? 12 : lagosHours;
+      
+      return `${lagosHours.toString().padStart(2, '0')}:${lagosMinutes.toString().padStart(2, '0')} ${lagosPeriod}`;
+    } catch (error) {
+      console.error('Error calculating business time:', error);
+      return userTime;
     }
+  };
 
-    console.log('Found existing bookings:', existingBookings?.length || 0);
+  const handleBookConsultation = async (bookingData: Consultation): Promise<void> => {
+    try {
+      console.log('📅 Checking availability for:', bookingData.booking_date, bookingData.booking_time);
 
-    if (existingBookings && existingBookings.length > 0) {
-      const bookedEmails = existingBookings.map(b => b.email).join(', ');
-      throw new Error(`This time slot is already booked by: ${bookedEmails}. Please choose another time.`);
+      const { data: existingBookings, error: checkError } = await supabase
+        .from('consultations')
+        .select('*')
+        .eq('booking_date', bookingData.booking_date)
+        .eq('booking_time', bookingData.booking_time)
+        .in('status', ['confirmed', 'pending']);
+
+      if (checkError) {
+        console.error('Error checking existing bookings:', checkError);
+        throw new Error('Failed to check availability. Please try again.');
+      }
+
+      console.log('Found existing bookings:', existingBookings?.length || 0);
+
+      if (existingBookings && existingBookings.length > 0) {
+        const bookedEmails = existingBookings.map(b => b.email).join(', ');
+        throw new Error(`This time slot is already booked by: ${bookedEmails}. Please choose another time.`);
+      }
+
+      const businessTime = calculateBusinessTime(
+        bookingData.booking_time,
+        bookingData.booking_date,
+        bookingData.user_timezone
+      );
+
+      const { error } = await supabase
+        .from('consultations')
+        .insert({
+          consultation_id: bookingData.consultation_id,
+          name: bookingData.name,
+          email: bookingData.email,
+          phone: bookingData.phone,
+          contact_method: bookingData.contact_method,
+          booking_date: bookingData.booking_date,
+          booking_time: bookingData.booking_time,
+          user_timezone: bookingData.user_timezone,
+          business_time: businessTime,
+          message: bookingData.message || 'No additional message provided',
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          admin_notes: '',
+          admin_reply_sent: false,
+          assigned_admin_id: null,
+          is_complex: false,
+          reply_timestamp: null,
+          booked_by: 'admin'
+        });
+
+      if (error) {
+        console.error('Supabase insert error:', error);
+        throw error;
+      }
+
+      console.log('✅ Booking saved successfully');
+
+      await sendUserConfirmationEmail(bookingData);
+
+      await fetchConsultations();
+
+    } catch (error: any) {
+      console.error('❌ Error booking consultation:', error);
+      throw error;
     }
+  };
 
-    // Calculate proper business time (fix the NaN bug)
-    const businessTime = calculateBusinessTime(
-      bookingData.booking_time,
-      bookingData.booking_date,
-      bookingData.user_timezone
-    );
+  const handleUpdateConsultation = async (consultationId: string, updates: Partial<Consultation>) => {
+    try {
+      console.log('🔄 Updating consultation:', consultationId, updates);
+      
+      const { error } = await supabase
+        .from('consultations')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('consultation_id', consultationId);
 
-    // Save to database with CORRECT business_time
-    const { error } = await supabase
-      .from('consultations')
-      .insert({
-        consultation_id: bookingData.consultation_id,
-        name: bookingData.name,
-        email: bookingData.email,
+      if (error) {
+        console.error('❌ Error updating consultation:', error);
+        throw error;
+      }
+
+      console.log('✅ Consultation updated');
+      
+      await fetchConsultations();
+      
+    } catch (error) {
+      console.error('❌ Error in handleUpdateConsultation:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteConsultation = async (consultationId: string) => {
+    if (!confirm('Are you sure you want to delete this consultation?')) return;
+
+    try {
+      console.log('🗑️ Deleting consultation:', consultationId);
+      
+      const { error } = await supabase
+        .from('consultations')
+        .delete()
+        .eq('consultation_id', consultationId);
+
+      if (error) {
+        console.error('❌ Error deleting consultation:', error);
+        throw error;
+      }
+
+      console.log('✅ Consultation deleted');
+      
+      await fetchConsultations();
+      
+    } catch (error) {
+      console.error('❌ Error in handleDeleteConsultation:', error);
+      alert('Failed to delete consultation. Please try again.');
+      throw error;
+    }
+  };
+
+  const sendUserConfirmationEmail = async (bookingData: Consultation) => {
+    try {
+      if (!bookingData.email || !bookingData.email.includes('@')) {
+        console.warn('❌ Invalid email address:', bookingData.email);
+        return;
+      }
+
+      const params = {
+        from_name: 'Verapixels Team',
+        from_email: 'info@verapixels.com',
+        user_name: bookingData.name,
+        user_email: bookingData.email,
+        to_email: bookingData.email,
         phone: bookingData.phone,
         contact_method: bookingData.contact_method,
-        booking_date: bookingData.booking_date,
-        booking_time: bookingData.booking_time,
+        preferred_date: bookingData.booking_date,
+        preferred_time: bookingData.booking_time,
+        business_time: bookingData.business_time,
         user_timezone: bookingData.user_timezone,
-        business_time: businessTime, // Use calculated value
+        business_timezone: BUSINESS_TIMEZONE,
         message: bookingData.message || 'No additional message provided',
-        status: 'pending',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        admin_notes: '',
-        admin_reply_sent: false,
-        assigned_admin_id: null,
-        is_complex: false,
-        reply_timestamp: null,
-        booked_by: 'admin'
-      });
+        consultation_id: bookingData.consultation_id
+      };
 
-    if (error) {
-      console.error('Supabase insert error:', error);
-      throw error;
+      console.log('📧 Sending confirmation email to:', bookingData.email);
+      
+      const result = await emailjs.send(
+        EMAILJS_CONFIG.serviceId,
+        EMAILJS_CONFIG.userTemplateId,
+        params,
+        EMAILJS_CONFIG.publicKey
+      );
+      
+      console.log('✅ Confirmation email sent:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Error sending confirmation email:', error);
+      return null;
     }
+  };
 
-    console.log('✅ Booking saved successfully');
-
-    // Send confirmation email
-    await sendUserConfirmationEmail(bookingData);
-
-    // Refresh consultations list
-    await fetchConsultations();
-
-  } catch (error: any) {
-    console.error('❌ Error booking consultation:', error);
-    throw error;
-  }
-};
-
-// Add this helper function to fix business_time calculation
-const calculateBusinessTime = (userTime: string, date: string, userTimezone: string): string => {
-  try {
-    // Parse the time (format: "03:00 PM")
-    const [time, period] = userTime.split(' ');
-    const [hours, minutes] = time.split(':');
-    
-    let hour = parseInt(hours);
-    if (period.toUpperCase() === 'PM' && hour !== 12) hour += 12;
-    if (period.toUpperCase() === 'AM' && hour === 12) hour = 0;
-    
-    // Create date string in user's timezone
-    const userDateString = `${date}T${hour.toString().padStart(2, '0')}:${minutes}:00`;
-    
-    // Convert to Lagos time
-    const userDate = new Date(userDateString);
-    const lagosDate = new Date(userDate.toLocaleString('en-US', { timeZone: 'Africa/Lagos' }));
-    
-    // Format back to "HH:MM AM/PM"
-    let lagosHours = lagosDate.getHours();
-    const lagosMinutes = lagosDate.getMinutes();
-    const lagosPeriod = lagosHours >= 12 ? 'PM' : 'AM';
-    
-    lagosHours = lagosHours % 12;
-    lagosHours = lagosHours === 0 ? 12 : lagosHours;
-    
-    return `${lagosHours.toString().padStart(2, '0')}:${lagosMinutes.toString().padStart(2, '0')} ${lagosPeriod}`;
-  } catch (error) {
-    console.error('Error calculating business time:', error);
-    return userTime; // Fallback to user time if calculation fails
-  }
-};
-
-// Update consultation
-const handleUpdateConsultation = async (consultationId: string, updates: Partial<Consultation>) => {
-  try {
-    console.log('🔄 Updating consultation:', consultationId, updates);
-    
-    const { error } = await supabase
-      .from('consultations')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('consultation_id', consultationId);
-
-    if (error) {
-      console.error('❌ Error updating consultation:', error);
-      throw error;
-    }
-
-    console.log('✅ Consultation updated');
-    
-    // Refresh consultations list
-    await fetchConsultations();
-    
-  } catch (error) {
-    console.error('❌ Error in handleUpdateConsultation:', error);
-    throw error;
-  }
-};
-
-// Delete consultation
-const handleDeleteConsultation = async (consultationId: string) => {
-  if (!confirm('Are you sure you want to delete this consultation?')) return;
-
-  try {
-    console.log('🗑️ Deleting consultation:', consultationId);
-    
-    const { error } = await supabase
-      .from('consultations')
-      .delete()
-      .eq('consultation_id', consultationId);
-
-    if (error) {
-      console.error('❌ Error deleting consultation:', error);
-      throw error;
-    }
-
-    console.log('✅ Consultation deleted');
-    
-    // Refresh consultations list
-    await fetchConsultations();
-    
-  } catch (error) {
-    console.error('❌ Error in handleDeleteConsultation:', error);
-    alert('Failed to delete consultation. Please try again.');
-    throw error;
-  }
-};
-
-// Send user confirmation email - FIXED
-const sendUserConfirmationEmail = async (bookingData: Consultation) => {
-  try {
-    // Validate email
-    if (!bookingData.email || !bookingData.email.includes('@')) {
-      console.warn('❌ Invalid email address:', bookingData.email);
-      return; // Don't try to send email if invalid
-    }
-
-    const params = {
-      from_name: 'Verapixels Team',
-      from_email: 'info@verapixels.com',
-      user_name: bookingData.name,
-      user_email: bookingData.email,
-      to_email: bookingData.email, // ADD THIS - recipient email
-      phone: bookingData.phone,
-      contact_method: bookingData.contact_method,
-      preferred_date: bookingData.booking_date,
-      preferred_time: bookingData.booking_time,
-      business_time: bookingData.business_time,
-      user_timezone: bookingData.user_timezone,
-      business_timezone: BUSINESS_TIMEZONE,
-      message: bookingData.message || 'No additional message provided',
-      consultation_id: bookingData.consultation_id
-    };
-
-    console.log('📧 Sending confirmation email to:', bookingData.email);
-    
-    const result = await emailjs.send(
-      EMAILJS_CONFIG.serviceId,
-      EMAILJS_CONFIG.userTemplateId,
-      params,
-      EMAILJS_CONFIG.publicKey
-    );
-    
-    console.log('✅ Confirmation email sent:', result);
-    return result;
-  } catch (error) {
-    console.error('❌ Error sending confirmation email:', error);
-    // Don't throw - booking should succeed even if email fails
-    return null;
-  }
-};
-  // Update admin settings
   const handleUpdateSettings = async (settings: any) => {
     if (!adminData) return;
 
@@ -5177,24 +5349,29 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
 
       if (error) throw error;
 
-      // Update local state
-      setAdminData(prev => prev ? {
-        ...prev,
+      const updatedAdminData = {
+        ...adminData,
         ...settings,
         settings: settings.settings || settings
-      } : null);
+      };
+      
+      setAdminData(updatedAdminData);
 
-      // Update theme if changed
       if (settings.theme) {
         setTheme(settings.theme);
+        localStorage.setItem('admin_theme', settings.theme);
       }
+
+      const sessionData = JSON.parse(localStorage.getItem('admin_session') || '{}');
+      sessionData.settings = updatedAdminData.settings;
+      localStorage.setItem('admin_session', JSON.stringify(sessionData));
+
     } catch (error) {
       console.error('Error updating settings:', error);
       throw error;
     }
   };
 
-  // Mark notification as read
   const handleMarkNotificationAsRead = async (notificationId: string) => {
     try {
       const { error } = await supabase
@@ -5204,7 +5381,6 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
 
       if (error) throw error;
 
-      // Update local state
       setNotifications(prev => 
         prev.map(notif => 
           notif.notification_id === notificationId 
@@ -5217,7 +5393,6 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
     }
   };
 
-  // Mark all notifications as read
   const handleMarkAllNotificationsAsRead = async () => {
     try {
       const { error } = await supabase
@@ -5227,7 +5402,6 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
 
       if (error) throw error;
 
-      // Update local state
       setNotifications(prev => 
         prev.map(notif => ({ ...notif, status: 'acknowledged' }))
       );
@@ -5236,7 +5410,6 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
     }
   };
 
-  // Calculate dashboard metrics
   const calculateMetrics = () => {
     const unreadChats = conversations.filter(conv => 
       conv.unread_count > 0 && conv.is_complex
@@ -5264,7 +5437,6 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
 
   const metrics = calculateMetrics();
 
-  // Setup real-time subscriptions after authentication
   useEffect(() => {
     if (isAuthenticated) {
       const cleanup = setupRealTimeSubscriptions();
@@ -5272,7 +5444,6 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
     }
   }, [isAuthenticated]);
 
-  // Track session end on unmount
   useEffect(() => {
     return () => {
       if (currentSessionId) {
@@ -5318,6 +5489,16 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
       color: theme === 'dark' ? '#f1f5f9' : '#0f172a',
       transition: 'all 0.3s ease'
     }}>
+      {/* Top Navigation */}
+      <TopNavigation
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
+        theme={theme}
+        adminData={adminData}
+        unreadNotifications={metrics.unreadNotifications}
+        unreadChats={metrics.unreadChats}
+      />
+
       {/* Booking Modal */}
       <BookingModal
         isOpen={isBookingModalOpen}
@@ -5326,227 +5507,77 @@ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
         onSubmit={handleBookConsultation}
       />
 
-      {/* Sidebar Navigation */}
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        left: '20px',
-        zIndex: 100,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px'
-      }}>
-        <button
-          onClick={() => setActiveSection('dashboard')}
-          style={{
-            padding: '12px',
-            background: activeSection === 'dashboard' ? '#6366f1' : (theme === 'dark' ? '#1e293b' : '#ffffff'),
-            border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-            borderRadius: '10px',
-            color: activeSection === 'dashboard' ? 'white' : (theme === 'dark' ? '#f1f5f9' : '#0f172a'),
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s'
-          }}
-          title="Dashboard"
-        >
-          <FiHome size={20} />
-        </button>
+      {/* Main Content Area */}
+      <div style={{ padding: '20px', paddingTop: '30px' }}>
+        {activeSection === 'dashboard' && (
+          <DashboardCards
+            unreadChats={metrics.unreadChats}
+            pendingConsultations={metrics.pendingConsultations}
+            unreadNotifications={metrics.unreadNotifications}
+            activeConversations={metrics.activeConversations}
+            onCardClick={setActiveSection}
+            theme={theme}
+            onBookConsultation={() => setIsBookingModalOpen(true)}
+          />
+        )}
 
-        <button
-          onClick={() => setActiveSection('conversations')}
-          style={{
-            padding: '12px',
-            background: activeSection === 'conversations' ? '#6366f1' : (theme === 'dark' ? '#1e293b' : '#ffffff'),
-            border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-            borderRadius: '10px',
-            color: activeSection === 'conversations' ? 'white' : (theme === 'dark' ? '#f1f5f9' : '#0f172a'),
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s'
-          }}
-          title="Live Chats"
-        >
-          <FiMessageCircle size={20} />
-        </button>
+        {activeSection === 'conversations' && (
+          <LiveChatsComponent
+            conversations={conversations}
+            theme={theme}
+            onSelectConversation={setSelectedConversation}
+            selectedConversation={selectedConversation}
+            adminData={adminData}
+            socket={socket}
+            isSocketConnected={isSocketConnected}
+          />
+        )}
 
-        <button
-          onClick={() => setActiveSection('consultations')}
-          style={{
-            padding: '12px',
-            background: activeSection === 'consultations' ? '#6366f1' : (theme === 'dark' ? '#1e293b' : '#ffffff'),
-            border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-            borderRadius: '10px',
-            color: activeSection === 'consultations' ? 'white' : (theme === 'dark' ? '#f1f5f9' : '#0f172a'),
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s'
-          }}
-          title="Consultations"
-        >
-          <FiCalendar size={20} />
-        </button>
+        {activeSection === 'consultations' && (
+          <ConsultationsManagement
+            consultations={consultations}
+            onUpdateConsultation={handleUpdateConsultation}
+            onDeleteConsultation={handleDeleteConsultation}
+            theme={theme}
+            onBookConsultation={() => setIsBookingModalOpen(true)}
+          />
+        )}
 
-        <button
-          onClick={() => setActiveSection('notifications')}
-          style={{
-            padding: '12px',
-            background: activeSection === 'notifications' ? '#6366f1' : (theme === 'dark' ? '#1e293b' : '#ffffff'),
-            border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-            borderRadius: '10px',
-            color: activeSection === 'notifications' ? 'white' : (theme === 'dark' ? '#f1f5f9' : '#0f172a'),
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s'
-          }}
-          title="Notifications"
-        >
-          <FiBell size={20} />
-        </button>
+        {activeSection === 'notifications' && (
+          <NotificationsComponent
+            notifications={notifications}
+            theme={theme}
+            onMarkAsRead={handleMarkNotificationAsRead}
+            onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+          />
+        )}
 
-        <button
-          onClick={() => setActiveSection('analytics')}
-          style={{
-            padding: '12px',
-            background: activeSection === 'analytics' ? '#6366f1' : (theme === 'dark' ? '#1e293b' : '#ffffff'),
-            border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-            borderRadius: '10px',
-            color: activeSection === 'analytics' ? 'white' : (theme === 'dark' ? '#f1f5f9' : '#0f172a'),
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s'
-          }}
-          title="Analytics"
-        >
-          <FiBarChart2 size={20} />
-        </button>
+        {activeSection === 'analytics' && (
+          <AnalyticsDashboard
+            theme={theme}
+            adminData={adminData}
+            consultations={consultations}
+            conversations={conversations}
+            analytics={analytics}
+          />
+        )}
 
-        <button
-          onClick={() => setActiveSection('notes')}
-          style={{
-            padding: '12px',
-            background: activeSection === 'notes' ? '#6366f1' : (theme === 'dark' ? '#1e293b' : '#ffffff'),
-            border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-            borderRadius: '10px',
-            color: activeSection === 'notes' ? 'white' : (theme === 'dark' ? '#f1f5f9' : '#0f172a'),
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s'
-          }}
-          title="Personal Notes"
-        >
-          <FiBook size={20} />
-        </button>
+        {activeSection === 'notes' && (
+          <NotesComponent
+            theme={theme}
+            adminData={adminData}
+          />
+        )}
 
-        <button
-          onClick={() => setActiveSection('settings')}
-          style={{
-            padding: '12px',
-            background: activeSection === 'settings' ? '#6366f1' : (theme === 'dark' ? '#1e293b' : '#ffffff'),
-            border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-            borderRadius: '10px',
-            color: activeSection === 'settings' ? 'white' : (theme === 'dark' ? '#f1f5f9' : '#0f172a'),
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s'
-          }}
-          title="Settings"
-        >
-          <FiSettings size={20} />
-        </button>
+        {activeSection === 'settings' && (
+          <SettingsComponent
+            adminData={adminData}
+            theme={theme}
+            onUpdateSettings={handleUpdateSettings}
+            onLogout={handleLogout}
+          />
+        )}
       </div>
-
-      {/* Main Content */}
-      {activeSection === 'dashboard' && (
-        <DashboardCards
-          unreadChats={metrics.unreadChats}
-          pendingConsultations={metrics.pendingConsultations}
-          unreadNotifications={metrics.unreadNotifications}
-          activeConversations={metrics.activeConversations}
-          onCardClick={setActiveSection}
-          theme={theme}
-          onBookConsultation={() => setIsBookingModalOpen(true)}
-        />
-      )}
-
-         // In AdminDashboard.tsx, where you render LiveChatsComponent:
-{activeSection === 'conversations' && (
-  <LiveChatsComponent
-    conversations={conversations}
-    theme={theme}
-    onSelectConversation={setSelectedConversation}
-    selectedConversation={selectedConversation}
-    adminData={adminData} // ✅ PASS adminData
-    socket={socket} // ✅ PASS socket
-    isSocketConnected={isSocketConnected} // ✅ PASS isSocketConnected
-  />
-)}
-
-      {activeSection === 'consultations' && (
-        <ConsultationsManagement
-          consultations={consultations}
-          onUpdateConsultation={handleUpdateConsultation}
-          onDeleteConsultation={handleDeleteConsultation}
-          theme={theme}
-          onBookConsultation={() => setIsBookingModalOpen(true)}
-        />
-      )}
-
-      {activeSection === 'notifications' && (
-        <NotificationsComponent
-          notifications={notifications}
-          theme={theme}
-          onMarkAsRead={handleMarkNotificationAsRead}
-          onMarkAllAsRead={handleMarkAllNotificationsAsRead}
-        />
-      )}
-
-      {activeSection === 'analytics' && (
-        <AnalyticsDashboard
-          theme={theme}
-          adminData={adminData}
-          consultations={consultations}
-          conversations={conversations}
-          analytics={analytics}
-        />
-      )}
-
-      {activeSection === 'notes' && (
-        <NotesComponent
-          theme={theme}
-          adminData={adminData}
-        />
-      )}
-
-      {activeSection === 'settings' && (
-        <SettingsComponent
-          adminData={adminData}
-          theme={theme}
-          onUpdateSettings={handleUpdateSettings}
-          onLogout={handleLogout}
-        />
-      )}
 
       <style>{`
         @keyframes spin {

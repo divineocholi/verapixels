@@ -8,16 +8,15 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
-  root: 'Verapixels',
   base: '/',
   build: {
-    outDir: '../dist',
+    outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets'
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './Verapixels/src')
+      '@': path.resolve(__dirname, './src')
     }
   }
 })

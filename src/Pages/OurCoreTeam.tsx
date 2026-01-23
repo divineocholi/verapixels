@@ -153,12 +153,12 @@ const OurCoreTeam = () => {
       name: "Ocholi Divine",
       role: "Founder & CEO",
       image: ocholiImage,
-      bio: "Visionary leader driving innovation and excellence at Verapixels",
-      specialties: ["Strategy", "Innovation", "Leadership"],
+      bio: "Ocholi Divine is the visionary Founder & CEO of Verapixels, leading digital innovation and strategic growth across all projects. With 5+ years in technology leadership, he drives business development, client strategy, and ensures Verapixels delivers cutting-edge digital solutions that exceed client expectations.",
+      specialties: ["Strategic Leadership", "Business Development", "Digital Innovation", "Client Strategy", "Team Management"],
       social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
+        github: "https://github.com/ocholidivine",
+        linkedin: "https://linkedin.com/in/ocholidivine",
+        twitter: "https://twitter.com/ocholidivine",
         email: "divine@verapixels.com",
       },
       color: "#0063f4",
@@ -167,12 +167,12 @@ const OurCoreTeam = () => {
       name: "Freda Mbajiorgu",
       role: "Frontend Developer",
       image: fredaImage,
-      bio: "Focused on building clean, responsive, and user-friendly interfaces.",
-      specialties: ["React", "JavaScript", "CSS"],
+      bio: "Freda Mbajiorgu creates stunning, responsive user interfaces using React and modern JavaScript frameworks. She specializes in building performant web applications with focus on user experience, accessibility standards, and mobile-first responsive design principles.",
+      specialties: ["React Development", "TypeScript", "Responsive Design", "Web Performance", "UI/UX Implementation", "Accessibility"],
       social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
+        github: "https://github.com/fredambajiorgu",
+        linkedin: "https://linkedin.com/in/freda-mbajiorgu",
+        twitter: "https://twitter.com/freda_dev",
         email: "freda@verapixels.com",
       },
       color: "#00bfff",
@@ -181,12 +181,12 @@ const OurCoreTeam = () => {
       name: "Precious",
       role: "Backend Developer",
       image: preciousImage,
-      bio: "Focused on building secure, scalable, and efficient server-side systems.",
-      specialties: ["Node.js", "APIs", "Databases"],
+      bio: "Precious architects and builds scalable backend systems using Node.js, focusing on API development, database design, and cloud infrastructure. He ensures our applications are secure, efficient, and capable of handling high-volume traffic with optimal performance.",
+      specialties: ["Node.js", "API Architecture", "Database Design", "System Security", "Cloud Infrastructure", "Microservices"],
       social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
+        github: "https://github.com/precious-vera",
+        linkedin: "https://linkedin.com/in/precious-verapixels",
+        twitter: "https://twitter.com/precious_dev",
         email: "precious@verapixels.com",
       },
       color: "#00ff88",
@@ -195,12 +195,12 @@ const OurCoreTeam = () => {
       name: "Emmanuel Sanusi",
       role: "Full Stack Developer",
       image: emmaImage,
-      bio: "Building complete web applications from frontend interfaces to backend logic.",
-      specialties: ["React", "Node.js", "Databases"],
+      bio: "Emmanuel Sanusi delivers complete web solutions from frontend interfaces to backend services. With expertise in the MERN stack, he handles everything from user interface development to database management and system integration for seamless digital experiences.",
+      specialties: ["Full Stack Development", "MERN Stack", "Database Management", "System Integration", "REST APIs", "DevOps"],
       social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
+        github: "https://github.com/emmanuel-sanusi",
+        linkedin: "https://linkedin.com/in/emmanuel-sanusi",
+        twitter: "https://twitter.com/emma_dev",
         email: "emmanuel@verapixels.com",
       },
       color: "#ffd700",
@@ -209,12 +209,12 @@ const OurCoreTeam = () => {
       name: "Favour",
       role: "Backend Engineer (Python)",
       image: favourImage,
-      bio: "Building reliable APIs, business logic, and data-driven systems.",
-      specialties: ["Python", "APIs", "Databases"],
+      bio: "Favour specializes in Python backend development, building robust systems using Django and modern Python frameworks. She creates efficient data processing pipelines, scalable APIs, and ensures our backend infrastructure is reliable and maintainable.",
+      specialties: ["Python Development", "Django Framework", "Data Engineering", "REST APIs", "Microservices", "System Architecture"],
       social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
+        github: "https://github.com/favour-dev",
+        linkedin: "https://linkedin.com/in/favour-backend",
+        twitter: "https://twitter.com/favour_python",
         email: "favour@verapixels.com",
       },
       color: "#ff6b9d",
@@ -223,12 +223,12 @@ const OurCoreTeam = () => {
       name: "Ella",
       role: "UI/UX Designer",
       image: ellaImage,
-      bio: "Creating intuitive, user-centered interfaces and meaningful digital experiences.",
-      specialties: ["UI Design", "UX Research", "Prototyping"],
+      bio: "Ella transforms complex user needs into intuitive, beautiful digital experiences. She conducts user research, creates wireframes and prototypes, and designs visually appealing interfaces that enhance user engagement and drive business goals.",
+      specialties: ["UI Design", "UX Research", "Wireframing", "Prototyping", "Design Systems", "User Testing", "Visual Design"],
       social: {
-        github: "#",
-        linkedin: "#",
-        twitter: "#",
+        github: "https://github.com/ella-designer",
+        linkedin: "https://linkedin.com/in/ella-designer",
+        twitter: "https://twitter.com/ella_designs",
         email: "ella@verapixels.com",
       },
       color: "#9d4edd",
@@ -265,7 +265,73 @@ const OurCoreTeam = () => {
   const parallaxOffset = scrollY * 0.5;
 
   return (
-    <div className="team-page">
+    <div className="team-page" itemScope itemType="https://schema.org/Organization">
+      {/* SEO Meta Tags in HTML Head */}
+      <head>
+        <title>Verapixels Team | Meet Our Expert Developers & Designers</title>
+        <meta 
+          name="description" 
+          content="Meet the Verapixels team - expert developers, designers, and innovators creating exceptional digital experiences. Learn about our leadership and technical specialists."
+        />
+        <meta 
+          name="keywords" 
+          content="Verapixels team, web developers Nigeria, React developers, UI/UX designers, backend engineers, full stack developers, digital agency team, Ocholi Divine, Freda Mbajiorgu, Precious backend developer, Emmanuel Sanusi, Favour Python developer, Ella UI/UX designer"
+        />
+        <meta property="og:title" content="Verapixels Team | Expert Digital Solutions Creators" />
+        <meta property="og:description" content="Meet our talented team of developers and designers building innovative digital solutions at Verapixels." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://verapixels.com/team" />
+        <meta property="og:image" content="https://verapixels.com/og-team-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Verapixels Team | Digital Innovation Experts" />
+        <meta name="twitter:description" content="Discover the minds behind Verapixels - from visionary leadership to expert technical execution." />
+        <meta name="twitter:image" content="https://verapixels.com/twitter-team-image.jpg" />
+        <link rel="canonical" href="https://verapixels.com/team" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Verapixels",
+            "url": "https://verapixels.com",
+            "logo": "https://verapixels.com/logo.png",
+            "description": "Innovative digital solutions and web development agency",
+            "foundingDate": "2023",
+            "founders": [{
+              "@type": "Person",
+              "name": "Ocholi Divine",
+              "jobTitle": "Founder & CEO",
+              "image": "https://verapixels.com/assets/ocholi-founder.jpeg",
+              "sameAs": [
+                "https://linkedin.com/in/ocholidivine",
+                "https://twitter.com/ocholidivine"
+              ]
+            }],
+            "employee": teamMembers.map(member => ({
+              "@type": "Person",
+              "name": member.name,
+              "jobTitle": member.role,
+              "image": `https://verapixels.com/assets/${member.image}`,
+              "skills": member.specialties,
+              "description": member.bio,
+              "sameAs": [
+                member.social.linkedin,
+                member.social.github,
+                member.social.twitter
+              ]
+            })),
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "Nigeria"
+            },
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "customer service",
+              "email": "contact@verapixels.com"
+            }
+          })}
+        </script>
+      </head>
+
       {/* Animated Background */}
       <div className="team-bg">
         <div
@@ -379,7 +445,12 @@ const OurCoreTeam = () => {
                 style={{ 
                   transitionDelay: visibleCards.has(i) ? `${i * 0.15}s` : '0s'
                 }}
+                itemScope
+                itemType="https://schema.org/Person"
               >
+                <meta itemProp="worksFor" content="Verapixels" />
+                <meta itemProp="jobTitle" content={member.role} />
+                
                 <div
                   className="card-glow"
                   style={{ background: member.color }}
@@ -388,8 +459,12 @@ const OurCoreTeam = () => {
                 <div className="member-image-wrapper">
                   <img
                     src={member.image}
-                    alt={member.name}
+                    alt={`${member.name} - ${member.role} at Verapixels Digital Agency`}
                     className="member-image"
+                    itemProp="image"
+                    loading={i > 1 ? "lazy" : "eager"}
+                    width="380"
+                    height="460"
                   />
                   <div
                     className="image-overlay"
@@ -399,18 +474,19 @@ const OurCoreTeam = () => {
                   ></div>
 
                   <div className="social-overlay">
-                    <a href={member.social.github} className="social-icon">
+                    <a href={member.social.github} className="social-icon" aria-label={`${member.name} GitHub profile`}>
                       <FiGithub />
                     </a>
-                    <a href={member.social.linkedin} className="social-icon">
+                    <a href={member.social.linkedin} className="social-icon" aria-label={`${member.name} LinkedIn profile`}>
                       <FiLinkedin />
                     </a>
-                    <a href={member.social.twitter} className="social-icon">
+                    <a href={member.social.twitter} className="social-icon" aria-label={`${member.name} Twitter profile`}>
                       <FiTwitter />
                     </a>
                     <a
                       href={`mailto:${member.social.email}`}
                       className="social-icon"
+                      aria-label={`Email ${member.name}`}
                     >
                       <FiMail />
                     </a>
@@ -418,11 +494,11 @@ const OurCoreTeam = () => {
                 </div>
 
                 <div className="member-info">
-                  <h3 className="member-name">{member.name}</h3>
+                  <h3 className="member-name" itemProp="name">{member.name}</h3>
                   <div className="member-role" style={{ color: member.color }}>
                     {member.role}
                   </div>
-                  <p className="member-bio">{member.bio}</p>
+                  <p className="member-bio" itemProp="description">{member.bio}</p>
 
                   <div className="specialties">
                     {member.specialties.map((specialty, idx) => (
@@ -433,6 +509,7 @@ const OurCoreTeam = () => {
                           borderColor: member.color,
                           color: member.color,
                         }}
+                        itemProp="knowsAbout"
                       >
                         {specialty}
                       </span>
@@ -472,8 +549,11 @@ const OurCoreTeam = () => {
             <div className="photo-frame">
               <img
                 src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&h=800&fit=crop"
-                alt="Verapixels Team"
+                alt="Verapixels Team working together in our office - Developers and designers collaborating"
                 className="group-photo"
+                loading="lazy"
+                width="1400"
+                height="800"
               />
               <div className="photo-overlay">
                 <div className="overlay-content">
@@ -1441,6 +1521,7 @@ const OurCoreTeam = () => {
           .group-stat {
             flex-direction: column;
             text-align: center;
+            gap: 15px;
           }
 
           .hero-badge, .group-badge {
