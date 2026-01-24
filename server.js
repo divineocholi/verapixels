@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
 import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcryptjs'; // ✅ ADD THIS IMPORT
 
 // Load environment variables
 dotenv.config();
@@ -165,7 +166,7 @@ app.post('/api/admin/create-invite', async (req, res) => {
   }
 });
 
-// ✅ NEW ENDPOINT: Complete admin registration
+// ✅ UPDATED ENDPOINT: Complete admin registration with password hashing
 app.post('/api/admin/complete-registration', async (req, res) => {
   const { token, password, name } = req.body;
 
@@ -191,7 +192,7 @@ app.post('/api/admin/complete-registration', async (req, res) => {
 
     console.log('✅ Invite validated for:', invite.email);
 
-    // 2. Update user password using SERVICE_ROLE_KEY
+    // 2. Update user password in Supabase Auth
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       invite.auth_user_id,
       { password: password }
@@ -205,15 +206,20 @@ app.post('/api/admin/complete-registration', async (req, res) => {
       });
     }
 
-    console.log('✅ Password updated successfully');
+    console.log('✅ Password updated in Supabase Auth');
 
-    // 3. Create admin record
+    // 3. ✅ HASH PASSWORD FOR ADMINS TABLE
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('✅ Password hashed for database');
+
+    // 4. Create admin record WITH HASHED PASSWORD
     const { error: adminError } = await supabaseAdmin
       .from('admins')
       .insert({
         auth_user_id: invite.auth_user_id,
         name: name || invite.email.split('@')[0],
         email: invite.email,
+        password_hash: hashedPassword, // ✅ STORE HASHED PASSWORD
         role: invite.role_assigned,
         is_active: true,
         settings: {}
@@ -227,9 +233,9 @@ app.post('/api/admin/complete-registration', async (req, res) => {
       });
     }
 
-    console.log('✅ Admin record created');
+    console.log('✅ Admin record created with hashed password');
 
-    // 4. Mark invite as used
+    // 5. Mark invite as used
     const { error: markUsedError } = await supabaseAdmin
       .from('admin_invites')
       .update({ 
@@ -245,7 +251,7 @@ app.post('/api/admin/complete-registration', async (req, res) => {
 
     console.log('✅ Invite marked as used');
 
-    // 5. Return success
+    // 6. Return success
     res.json({
       success: true,
       email: invite.email,
@@ -257,6 +263,66 @@ app.post('/api/admin/complete-registration', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: error.message || 'Registration failed. Please try again.' 
+    });
+  }
+});
+
+// ✅ NEW ENDPOINT: Admin Login with password verification
+app.post('/api/admin/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    console.log('🔐 Admin login attempt for:', email);
+
+    // 1. Get admin from database
+    const { data: admin, error: adminError } = await supabaseAdmin
+      .from('admins')
+      .select('*')
+      .eq('email', email)
+      .eq('is_active', true)
+      .single();
+
+    if (adminError || !admin) {
+      console.error('❌ Admin not found:', adminError);
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Invalid email or password' 
+      });
+    }
+
+    // 2. Verify password
+    const isPasswordValid = await bcrypt.compare(password, admin.password_hash);
+
+    if (!isPasswordValid) {
+      console.error('❌ Invalid password for:', email);
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Invalid email or password' 
+      });
+    }
+
+    console.log('✅ Password verified for:', email);
+
+    // 3. Update last login
+    await supabaseAdmin
+      .from('admins')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', admin.id);
+
+    // 4. Return admin data (without password)
+    const { password_hash, ...adminData } = admin;
+
+    res.json({
+      success: true,
+      admin: adminData,
+      message: 'Login successful'
+    });
+
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Login failed. Please try again.' 
     });
   }
 });
@@ -740,7 +806,7 @@ app.get("/health", (req, res) => {
     connections: io.engine.clientsCount,
     activeConnections: activeConnections.size,
     server: "Chat WebSocket Server",
-    version: "2.3.0",
+    version: "2.4.0",
     environment: process.env.NODE_ENV || 'development'
   });
 });
@@ -760,7 +826,8 @@ app.get("/test", (req, res) => {
       devtools: "/.well-known/appspecific/com.chrome.devtools.json",
       adminApi: {
         createInvite: "/api/admin/create-invite",
-        completeRegistration: "/api/admin/complete-registration"
+        completeRegistration: "/api/admin/complete-registration",
+        login: "/api/admin/login" // ✅ NEW
       }
     },
     allowedOrigins: allowedOrigins,
@@ -778,6 +845,7 @@ server.listen(PORT, () => {
   console.log(`👥 Admin API:`);
   console.log(`   - Create Invite: http://localhost:${PORT}/api/admin/create-invite`);
   console.log(`   - Complete Registration: http://localhost:${PORT}/api/admin/complete-registration`);
+  console.log(`   - Login: http://localhost:${PORT}/api/admin/login`); // ✅ NEW
   console.log(`🔧 DevTools endpoint: http://localhost:${PORT}/.well-known/appspecific/com.chrome.devtools.json`);
   console.log(`✅ Server ready for connections!`);
 });
