@@ -253,10 +253,10 @@ const { data: adminData, error: adminError } = await supabase
           textAlign: 'center'
         }}>
           <p style={{ color: '#777', fontSize: '12px', marginBottom: '10px' }}>
-            Need to create an account?
+              Don't have admin access?
           </p>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            Run the SQL in Supabase first to create your account
+            Contact management for account approval
           </div>
         </div>
 

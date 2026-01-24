@@ -174,6 +174,12 @@ const SuperadminDashboard: React.FC = () => {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
+  const [inviteResult, setInviteResult] = useState<{
+  email: string;
+  inviteUrl: string;
+  token: string;
+} | null>(null);
+
   interface AdminInvite {
     id: string;
     token: string;
@@ -483,76 +489,37 @@ const SuperadminDashboard: React.FC = () => {
     localStorage.removeItem("admin_data");
     navigate("/superadmin/login");
   };
-
- // In your SuperadminDashboard.tsx - UPDATED handleCreateInvite function
 const handleCreateInvite = async () => {
   if (!inviteEmail.trim() || !admin) return;
 
   try {
-    // 1. Check if user already exists in auth
-    const { data: existingAuthUser } = await supabase
-      .from('auth.users')
-      .select('id')
-      .eq('email', inviteEmail)
-      .maybeSingle();
-
-    let authUserId;
-    
-    if (existingAuthUser) {
-      // User already exists in auth
-      authUserId = existingAuthUser.id;
-    } else {
-      // 2. Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Call YOUR backend API instead of Supabase directly
+    const response = await fetch('http://localhost:5001/api/admin/create-invite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         email: inviteEmail,
-        password: 'TemporaryPassword123!', // Will be changed on first login
-        email_confirm: true,
-        user_metadata: { name: 'New Admin' }
-      });
-
-      if (authError) throw authError;
-      authUserId = authData.user.id;
-    }
-
-    // 3. Generate invite token
-    const token = `inv_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    // 4. Create invite record
-    const { error: inviteError } = await supabase.from("admin_invites").insert({
-      token,
-      email: inviteEmail,
-      role_assigned: inviteRole,
-      expires_at: expiresAt.toISOString(),
-      created_by: admin.id,
-      auth_user_id: authUserId  // Store the auth user ID
+        role: inviteRole,
+        createdBy: admin.id
+      })
     });
 
-    if (inviteError) throw inviteError;
+    const result = await response.json();
 
-    // 5. Generate invite URL with password reset
-    const inviteUrl = `${window.location.origin}/superadmin/register?token=${token}`;
-    
-    // 6. Send invite email (simplified)
-    const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
-      body: {
-        to: inviteEmail,
-        inviteUrl,
-        adminName: admin.name,
-        role: inviteRole
-      }
-    });
-
-    if (emailError) {
-      console.warn('Email sending failed, but invite was created:', emailError);
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Failed to create invite');
     }
 
-    // 7. Show success message
-    alert(`✅ Invite sent to ${inviteEmail}!\n\nInvite Link: ${inviteUrl}\n\nTemporary Password: TemporaryPassword123!`);
+    // Show success modal instead of alert
+    setInviteResult({
+      email: result.email,
+      inviteUrl: result.inviteUrl,
+      token: result.token
+    });
 
-    // 8. Clean up
+    // Clean up
     setInviteEmail("");
     setShowInviteModal(false);
     fetchInvites();
@@ -563,7 +530,6 @@ const handleCreateInvite = async () => {
     alert(`❌ Error: ${error.message}`);
   }
 };
-
   // Deactivate admin
   const handleDeactivateAdmin = async (adminId: string, adminName: string) => {
     if (!window.confirm(`Are you sure you want to deactivate ${adminName}?`))
@@ -2140,6 +2106,241 @@ const handleCreateInvite = async () => {
           </div>
         </div>
       )}
+
+      {/* Invite Success Modal */}
+{inviteResult && (
+  <div
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: "rgba(0, 0, 0, 0.5)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 1001,
+    }}
+  >
+    <div
+      style={{
+        background: styles.cardBg,
+        borderRadius: "12px",
+        padding: "30px",
+        width: "100%",
+        maxWidth: "600px",
+        border: `1px solid ${styles.border}`,
+      }}
+    >
+      <div style={{ textAlign: "center", marginBottom: "20px" }}>
+        <div
+          style={{
+            width: "60px",
+            height: "60px",
+            borderRadius: "50%",
+            background: `${colors.success}20`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 15px",
+          }}
+        >
+          <i
+            className="fas fa-check-circle"
+            style={{ fontSize: "30px", color: colors.success }}
+          ></i>
+        </div>
+        <h3
+          style={{
+            margin: "0 0 10px 0",
+            fontSize: "20px",
+            fontWeight: 600,
+          }}
+        >
+          Invite Created Successfully!
+        </h3>
+        <p style={{ color: styles.mutedText, fontSize: "14px", margin: 0 }}>
+          Admin invite sent to <strong>{inviteResult.email}</strong>
+        </p>
+      </div>
+
+      <div
+        style={{
+          background: theme === "dark" ? "#2d3748" : "#f8fafc",
+          borderRadius: "8px",
+          padding: "20px",
+          marginBottom: "20px",
+        }}
+      >
+        <label
+          style={{
+            display: "block",
+            marginBottom: "8px",
+            fontSize: "13px",
+            fontWeight: 500,
+            color: styles.mutedText,
+          }}
+        >
+          Invite Link
+        </label>
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            alignItems: "center",
+          }}
+        >
+          <input
+            type="text"
+            value={inviteResult.inviteUrl}
+            readOnly
+            style={{
+              flex: 1,
+              padding: "12px",
+              border: `1px solid ${styles.border}`,
+              borderRadius: "8px",
+              background: styles.background,
+              color: styles.text,
+              fontSize: "13px",
+              fontFamily: "monospace",
+            }}
+            onClick={(e) => e.currentTarget.select()}
+          />
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(inviteResult.inviteUrl);
+              // Optional: Show a temporary "Copied!" message
+              const btn = document.activeElement as HTMLButtonElement;
+              const originalText = btn.innerHTML;
+              btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+              btn.style.background = colors.success;
+              setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = colors.primary;
+              }, 2000);
+            }}
+            style={{
+              padding: "12px 20px",
+              background: colors.primary,
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: 500,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <i className="fas fa-copy"></i> Copy
+          </button>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background: `${colors.warning}15`,
+          border: `1px solid ${colors.warning}40`,
+          borderRadius: "8px",
+          padding: "15px",
+          marginBottom: "20px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            alignItems: "flex-start",
+          }}
+        >
+          <i
+            className="fas fa-exclamation-triangle"
+            style={{ color: colors.warning, marginTop: "2px" }}
+          ></i>
+          <div style={{ flex: 1 }}>
+            <div
+              style={{
+                fontWeight: 500,
+                fontSize: "13px",
+                marginBottom: "5px",
+              }}
+            >
+              Temporary Password
+            </div>
+            <div
+              style={{
+                fontSize: "12px",
+                color: styles.mutedText,
+                marginBottom: "8px",
+              }}
+            >
+              The new admin should use this temporary password on first login:
+            </div>
+            <code
+              style={{
+                display: "block",
+                padding: "8px 12px",
+                background: theme === "dark" ? "#2d3748" : "#ffffff",
+                border: `1px solid ${styles.border}`,
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontFamily: "monospace",
+                color: colors.warning,
+              }}
+            >
+              TemporaryPassword123!
+            </code>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: "10px",
+          justifyContent: "flex-end",
+        }}
+      >
+        <button
+          onClick={() => {
+            // Send email (optional)
+            window.location.href = `mailto:${inviteResult.email}?subject=Admin Invite&body=You've been invited as an admin. Click this link to register: ${inviteResult.inviteUrl}%0A%0ATemporary Password: TemporaryPassword123!`;
+          }}
+          style={{
+            padding: "10px 20px",
+            background: "transparent",
+            border: `1px solid ${styles.border}`,
+            color: styles.text,
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "14px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <i className="fas fa-envelope"></i>
+          Send via Email
+        </button>
+        <button
+          onClick={() => setInviteResult(null)}
+          style={{
+            padding: "10px 20px",
+            background: colors.primary,
+            color: "white",
+            border: "none",
+            borderRadius: "8px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: 500,
+          }}
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Add Font Awesome */}
       <link

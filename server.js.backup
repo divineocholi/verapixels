@@ -1,0 +1,400 @@
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import cors from "cors";
+import dotenv from "dotenv";
+import { createClient } from '@supabase/supabase-js';
+
+// Load environment variables
+dotenv.config();
+
+const app = express();
+const server = createServer(app);
+
+// Environment-based configuration
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const PORT = process.env.PORT || 5001;
+
+// Dynamic CORS origins
+const allowedOrigins = isDevelopment
+  ? [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "http://localhost:5177",
+    ]
+  : process.env.CLIENT_URL 
+    ? process.env.CLIENT_URL.split(',') 
+    : [];
+
+console.log('Ìºç Environment:', process.env.NODE_ENV || 'development');
+console.log('Ì¥ê Allowed origins:', allowedOrigins);
+
+// Middleware
+app.use(express.json());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
+// Security headers with dynamic CSP
+app.use((req, res, next) => {
+  const protocol = isDevelopment ? 'ws:' : 'wss:';
+  const httpProtocol = isDevelopment ? 'http:' : 'https:';
+  const serverDomain = process.env.SERVER_DOMAIN || `localhost:${PORT}`;
+  
+  res.setHeader('Content-Security-Policy', 
+    "default-src 'self'; " +
+    `connect-src 'self' ${protocol}//${serverDomain} ${httpProtocol}//${serverDomain}; ` +
+    "script-src 'self' 'unsafe-inline'; " +
+    "style-src 'self' 'unsafe-inline';"
+  );
+  next();
+});
+
+// ========== SUPABASE ADMIN CLIENT ==========
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
+
+// ========== ADMIN API ROUTES ==========
+
+// Create admin invite endpoint
+app.post('/api/admin/create-invite', async (req, res) => {
+  const { email, role, createdBy } = req.body;
+
+  try {
+    console.log('Ì≥ß Creating invite for:', email);
+
+    // 1. Check if user already exists in admins table
+    const { data: existingUser } = await supabaseAdmin
+      .from('admins')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'An admin with this email already exists' 
+      });
+    }
+
+    // 2. Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: 'TemporaryPassword123!',
+      email_confirm: true,
+      user_metadata: { name: 'New Admin' }
+    });
+
+    if (authError) {
+      console.error('‚ùå Auth error:', authError);
+      throw authError;
+    }
+
+    console.log('‚úÖ Auth user created:', authData.user.id);
+
+    // 3. Generate invite token
+    const token = `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // 4. Create invite record
+    const { error: inviteError } = await supabaseAdmin
+      .from('admin_invites')
+      .insert({
+        token,
+        email,
+        role_assigned: role,
+        expires_at: expiresAt.toISOString(),
+        created_by: createdBy,
+        auth_user_id: authData.user.id
+      });
+
+    if (inviteError) {
+      console.error('‚ùå Invite error:', inviteError);
+      throw inviteError;
+    }
+
+    console.log('‚úÖ Invite created successfully');
+
+    // 5. Generate invite URL
+    const inviteUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/superadmin/register?token=${token}`;
+
+    res.json({
+      success: true,
+      userId: authData.user.id,
+      inviteUrl,
+      token,
+      email
+    });
+
+  } catch (error) {
+    console.error('‚ùå Error creating invite:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to create invite' 
+    });
+  }
+});
+
+// ========== SOCKET.IO SETUP ==========
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+  transports: ['websocket', 'polling']
+});
+
+// Chrome DevTools endpoint
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
+  console.log('Ì≥ä Chrome DevTools connection attempt');
+  const protocol = isDevelopment ? 'ws:' : 'wss:';
+  const serverDomain = process.env.SERVER_DOMAIN || `localhost:${PORT}`;
+  
+  res.json({
+    manifest: {
+      debugger_websocket_url: `${protocol}//${serverDomain}/socket.io/`,
+      description: "Chat WebSocket Server DevTools",
+      title: "Chat Server Debugger",
+      type: "node"
+    }
+  });
+});
+
+// Store active connections
+const activeConnections = new Map();
+
+// Simple query classification
+const classifyQuery = (message) => {
+  const lowerMessage = message.toLowerCase();
+
+  const bookingKeywords = [
+    "book", "appointment", "schedule", "reserve", "consultation", "meeting", "booking"
+  ];
+  const adminKeywords = [
+    "talk to human", "speak to someone", "real person", "human agent", 
+    "person", "human", "admin", "representative", "agent"
+  ];
+
+  if (bookingKeywords.some((kw) => lowerMessage.includes(kw))) {
+    return "BOOKING";
+  }
+  if (adminKeywords.some((kw) => lowerMessage.includes(kw))) {
+    return "ADMIN_REQUEST";
+  }
+  return "SIMPLE";
+};
+
+// Function to log room information
+const logRoomInfo = (roomId) => {
+  const room = io.sockets.adapter.rooms.get(roomId);
+  if (room) {
+    console.log(`Ì≥ç Room ${roomId}: ${room.size} member(s)`);
+    console.log(`Ì≥ç Members:`, Array.from(room));
+  } else {
+    console.log(`Ì≥ç Room ${roomId}: Does not exist`);
+  }
+};
+
+io.on("connection", (socket) => {
+  console.log("‚úÖ New client connected:", socket.id);
+
+  // Log all events for debugging
+  socket.onAny((eventName, ...args) => {
+    if (eventName !== 'ping' && eventName !== 'pong') {
+      console.log(`Ì≥° [${socket.id}] Event: ${eventName}`, 
+        args[0] ? JSON.stringify(args[0]).substring(0, 100) + '...' : 'No data');
+    }
+  });
+
+  // Check client type
+  const { adminId, dashboard, clientType, sessionId } = socket.handshake.query;
+  
+  console.log("Client type:", { adminId, dashboard, clientType, sessionId });
+
+  // ========== ADMIN CONNECTION ==========
+  if (dashboard === 'admin') {
+    console.log(`Ì±®‚ÄçÌ≤º Admin connected: ${adminId} (Socket ID: ${socket.id})`);
+    
+    activeConnections.set(socket.id, { 
+      type: 'admin', 
+      adminId, 
+      rooms: new Set() 
+    });
+
+    socket.on('admin_join', (data) => {
+      console.log('Ì±• Admin joining conversation:', data.conversationId);
+      
+      const roomId = data.conversationId;
+      const adminInfo = activeConnections.get(socket.id);
+      
+      if (adminInfo && adminInfo.rooms) {
+        adminInfo.rooms.forEach(oldRoom => {
+          if (oldRoom !== roomId) {
+            socket.leave(oldRoom);
+          }
+        });
+        adminInfo.rooms.clear();
+        adminInfo.rooms.add(roomId);
+      }
+      
+      socket.join(roomId);
+      logRoomInfo(roomId);
+      
+      const joinMessage = {
+        id: `system_msg_${Date.now()}`,
+        message_id: `system_msg_${Date.now()}`,
+        conversation_id: roomId,
+        sender_type: 'admin',
+        sender_name: 'System',
+        message_text: `${data.adminName || 'An admin'} has joined the conversation.`,
+        timestamp: new Date().toISOString(),
+        read_by_admin: true,
+        read_by_user: false,
+        intent_detected: 'admin_joined',
+        classification: 'SYSTEM'
+      };
+      
+      io.to(roomId).emit('new_message', joinMessage);
+      io.to(roomId).emit('admin_joined', {
+        adminId: data.adminId,
+        adminName: data.adminName,
+        conversationId: roomId,
+        timestamp: new Date().toISOString()
+      });
+    });
+    
+    const handleAdminMessage = (data) => {
+      const roomId = data.conversationId || data.conversation_id;
+      
+      if (!roomId) return;
+      
+      if (!socket.rooms.has(roomId)) {
+        socket.join(roomId);
+      }
+      
+      const adminMessage = {
+        id: `admin_msg_${Date.now()}`,
+        message_id: `admin_msg_${Date.now()}`,
+        conversation_id: roomId,
+        sender_type: 'admin',
+        sender_name: data.adminName || 'Admin',
+        message_text: data.message || data.message_text,
+        timestamp: new Date().toISOString(),
+        read_by_admin: true,
+        read_by_user: false
+      };
+      
+      io.to(roomId).emit('new_message', adminMessage);
+    };
+    
+    socket.on('admin_message', handleAdminMessage);
+    socket.on('send_message', handleAdminMessage);
+    
+  } else if (clientType === 'chatbot') {
+    console.log(`Ì¥ñ Chatbot connected: ${sessionId}`);
+    
+    activeConnections.set(socket.id, { 
+      type: 'user', 
+      sessionId, 
+      rooms: new Set() 
+    });
+    
+    socket.join(sessionId);
+    
+    socket.on('send_message', (data) => {
+      const roomId = data.conversationId || sessionId;
+      
+      const userMessage = {
+        id: `msg_${Date.now()}`,
+        message_id: `msg_${Date.now()}`,
+        conversation_id: roomId,
+        sender_type: 'user',
+        sender_name: data.sender || 'User',
+        message_text: data.message,
+        timestamp: new Date().toISOString(),
+        classification: classifyQuery(data.message)
+      };
+      
+      io.to(roomId).emit('new_message', userMessage);
+    });
+  }
+  
+  socket.on("ping", () => {
+    socket.emit("pong", { 
+      timestamp: new Date().toISOString(),
+      socketId: socket.id 
+    });
+  });
+  
+  socket.on("disconnect", (reason) => {
+    console.log("‚ùå Client disconnected:", socket.id);
+    activeConnections.delete(socket.id);
+  });
+  
+  socket.emit('connected', {
+    socketId: socket.id,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Endpoint to check active connections
+app.get("/connections", (req, res) => {
+  const connections = {
+    total: activeConnections.size,
+    admins: Array.from(activeConnections.entries())
+      .filter(([_, info]) => info.type === 'admin')
+      .map(([socketId, info]) => ({ socketId, adminId: info.adminId })),
+    users: Array.from(activeConnections.entries())
+      .filter(([_, info]) => info.type === 'user')
+      .map(([socketId, info]) => ({ socketId, sessionId: info.sessionId }))
+  };
+  
+  res.json(connections);
+});
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    connections: io.engine.clientsCount,
+    activeConnections: activeConnections.size,
+    server: "Chat WebSocket Server",
+    version: "2.2.0",
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Test endpoint
+app.get("/test", (req, res) => {
+  res.json({
+    message: "Server is running!",
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      health: "/health",
+      connections: "/connections",
+      adminApi: "/api/admin/*"
+    }
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Ì∫Ä WebSocket server running on port ${PORT}`);
+  console.log(`Ìºê Health check: http://localhost:${PORT}/health`);
+  console.log(`Ì≥° Admin API: http://localhost:${PORT}/api/admin/create-invite`);
+  console.log(`‚úÖ Server ready for connections!`);
+});
+
+export { app, server, io };
