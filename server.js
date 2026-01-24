@@ -76,23 +76,85 @@ app.post('/api/admin/create-invite', async (req, res) => {
   try {
     console.log('🎯 Creating invite for:', email);
 
-    // ... all the existing code ...
+    // 1. Check if user already exists in admins table
+    const { data: existingUser } = await supabaseAdmin
+      .from('admins')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'An admin with this email already exists' 
+      });
+    }
+
+    // 2. Generate invite token FIRST (before creating auth user)
+    const token = `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    console.log('🔑 Generated token:', token);
+
+    // 3. Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password: 'TemporaryPassword123!',
+      email_confirm: true,
+      user_metadata: { name: 'New Admin' }
+    });
+
+    if (authError) {
+      console.error('❌ Auth error:', authError);
+      return res.status(500).json({ 
+        success: false, 
+        error: authError.message || 'Failed to create auth user' 
+      });
+    }
+
+    console.log('✅ Auth user created:', authData.user.id);
+
+    // 4. Create invite record
+    const { error: inviteError } = await supabaseAdmin
+      .from('admin_invites')
+      .insert({
+        token: token,
+        email: email,
+        role_assigned: role,
+        expires_at: expiresAt.toISOString(),
+        created_by: createdBy,
+        auth_user_id: authData.user.id,
+        used: false
+      });
+
+    if (inviteError) {
+      console.error('❌ Invite error:', inviteError);
+      // Clean up: delete the auth user if invite creation fails
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      return res.status(500).json({ 
+        success: false, 
+        error: inviteError.message || 'Failed to create invite' 
+      });
+    }
 
     console.log('✅ Invite created successfully');
 
-    // 5. Generate invite URL - FIXED VERSION
+    // 5. Generate invite URL (FIXED)
     const clientUrl = process.env.CLIENT_URL 
       ? process.env.CLIENT_URL.split(',')[0].trim()
       : 'http://localhost:5173';
     
     const inviteUrl = `${clientUrl}/superadmin/register?token=${token}`;
 
+    console.log('📧 Invite URL:', inviteUrl);
+
+    // 6. Return success response
     res.json({
       success: true,
       userId: authData.user.id,
-      inviteUrl,
-      token,
-      email
+      inviteUrl: inviteUrl,
+      token: token,
+      email: email
     });
 
   } catch (error) {

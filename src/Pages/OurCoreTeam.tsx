@@ -251,7 +251,7 @@ const OurCoreTeam = () => {
       color: "#ffd700",
     },
     {
-      name: "Favour",
+      name: "Abade Favour",
       role: "Backend Engineer (Python)",
       image: favourImage,
       bio: "Favour specializes in Python backend development, building robust systems using Django and modern Python frameworks. She creates efficient data processing pipelines, scalable APIs, and ensures our backend infrastructure is reliable and maintainable.",
