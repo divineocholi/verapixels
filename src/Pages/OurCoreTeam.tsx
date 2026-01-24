@@ -265,7 +265,7 @@ const OurCoreTeam = () => {
       color: "#ff6b9d",
     },
     {
-      name: "Ella",
+      name: " Emmanuella Udom",
       role: "UI/UX Designer",
       image: ellaImage,
       bio: "Ella transforms complex user needs into intuitive, beautiful digital experiences. She conducts user research, creates wireframes and prototypes, and designs visually appealing interfaces that enhance user engagement and drive business goals.",

@@ -74,62 +74,18 @@ app.post('/api/admin/create-invite', async (req, res) => {
   const { email, role, createdBy } = req.body;
 
   try {
-    console.log('��� Creating invite for:', email);
+    console.log('🎯 Creating invite for:', email);
 
-    // 1. Check if user already exists in admins table
-    const { data: existingUser } = await supabaseAdmin
-      .from('admins')
-      .select('email')
-      .eq('email', email)
-      .maybeSingle();
-
-    if (existingUser) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'An admin with this email already exists' 
-      });
-    }
-
-    // 2. Create user in Supabase Auth
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: 'TemporaryPassword123!',
-      email_confirm: true,
-      user_metadata: { name: 'New Admin' }
-    });
-
-    if (authError) {
-      console.error('❌ Auth error:', authError);
-      throw authError;
-    }
-
-    console.log('✅ Auth user created:', authData.user.id);
-
-    // 3. Generate invite token
-    const token = `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    // 4. Create invite record
-    const { error: inviteError } = await supabaseAdmin
-      .from('admin_invites')
-      .insert({
-        token,
-        email,
-        role_assigned: role,
-        expires_at: expiresAt.toISOString(),
-        created_by: createdBy,
-        auth_user_id: authData.user.id
-      });
-
-    if (inviteError) {
-      console.error('❌ Invite error:', inviteError);
-      throw inviteError;
-    }
+    // ... all the existing code ...
 
     console.log('✅ Invite created successfully');
 
-    // 5. Generate invite URL
-    const inviteUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/superadmin/register?token=${token}`;
+    // 5. Generate invite URL - FIXED VERSION
+    const clientUrl = process.env.CLIENT_URL 
+      ? process.env.CLIENT_URL.split(',')[0].trim()
+      : 'http://localhost:5173';
+    
+    const inviteUrl = `${clientUrl}/superadmin/register?token=${token}`;
 
     res.json({
       success: true,
