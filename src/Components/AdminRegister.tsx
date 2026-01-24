@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from './supabase'; // ✅ Your REAL Supabase import
 
+
+const API_URL = import.meta.env.PROD
+  ? 'https://verapixels-server.onrender.com'
+  : 'http://localhost:5001';
+
 const AdminRegister: React.FC = () => {
   const [token, setToken] = useState('');
   const [email, setEmail] = useState('');
@@ -80,91 +85,60 @@ const AdminRegister: React.FC = () => {
       setError('Failed to validate invite');
     }
   };
+const handleRegister = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  if (password !== confirmPassword) {
+    setError('Passwords do not match');
+    setLoading(false);
+    return;
+  }
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
+  if (password.length < 8) {
+    setError('Password must be at least 8 characters');
+    setLoading(false);
+    return;
+  }
+
+  try {
+    console.log('🔐 Starting registration for:', email);
+
+    // Call backend API to complete registration
+    const response = await fetch(`${API_URL}/api/admin/complete-registration`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: token,
+        password: password,
+        name: name
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Registration failed');
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      setLoading(false);
-      return;
-    }
+    console.log('✅ Registration completed successfully');
 
-    try {
-      console.log('🔐 Starting registration for:', email);
+    // Show success message
+    alert('✅ Registration successful! You can now login with your email and password.');
+    
+    // Redirect to login
+    navigate('/superadmin/login');
 
-      // 1. Get the invite details
-      const { data: invite, error: inviteError } = await supabase
-        .from('admin_invites')
-        .select('*')
-        .eq('token', token)
-        .single();
-
-      if (inviteError || !invite) {
-        throw new Error('Invite not found');
-      }
-
-      console.log('📧 Invite details:', invite);
-
-      // 2. Update the user's password using the auth_user_id from invite
-      const { error: updateError } = await supabase.auth.admin.updateUserById(
-        invite.auth_user_id,
-        { password: password }
-      );
-
-      if (updateError) {
-        console.error('❌ Password update failed:', updateError);
-        throw updateError;
-      }
-
-      console.log('✅ Password updated successfully');
-
-      // 3. Create admin record
-      const { error: adminError } = await supabase
-        .from('admins')
-        .insert({
-          auth_user_id: invite.auth_user_id,
-          name: name || invite.email.split('@')[0],
-          email: invite.email,
-          role: invite.role_assigned,
-          is_active: true,
-          settings: {}
-        });
-
-      if (adminError) {
-        console.error('❌ Admin record creation failed:', adminError);
-        throw adminError;
-      }
-
-      console.log('✅ Admin record created');
-
-      // 4. Mark invite as used
-      await supabase
-        .from('admin_invites')
-        .update({ used: true, used_at: new Date().toISOString() })
-        .eq('token', token);
-
-      console.log('✅ Invite marked as used');
-
-      // 5. Redirect to login
-      alert('✅ Registration successful! You can now login with your email and new password.');
-      navigate('/superadmin/login');
-
-    } catch (error: any) {
-      console.error('❌ Registration error:', error);
-      setError(error.message || 'Registration failed');
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (error: any) {
+    console.error('❌ Registration error:', error);
+    setError(error.message || 'Registration failed');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const getPasswordStrengthColor = () => {
     if (passwordStrength < 40) return '#ef4444';
