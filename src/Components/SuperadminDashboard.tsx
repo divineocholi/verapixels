@@ -46,6 +46,11 @@ interface Admin {
   created_by: string | null;
 }
 
+  // ✅ ADD THIS NEAR THE TOP OF THE FILE
+const API_URL = import.meta.env.PROD
+  ? 'https://verapixels-server.onrender.com'
+  : 'http://localhost:5001';
+
 // Static Data for Fallback
 const STATIC_TRAFFIC_TRENDS = Array.from({ length: 30 }, (_, i) => ({
   date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toISOString(),
@@ -489,12 +494,13 @@ const SuperadminDashboard: React.FC = () => {
     localStorage.removeItem("admin_data");
     navigate("/superadmin/login");
   };
-const handleCreateInvite = async () => {
+
+  const handleCreateInvite = async () => {
   if (!inviteEmail.trim() || !admin) return;
 
   try {
-    // Call YOUR backend API instead of Supabase directly
-    const response = await fetch('http://localhost:5001/api/admin/create-invite', {
+    // ✅ NOW USES THE CONSTANT FROM TOP OF FILE
+    const response = await fetch(`${API_URL}/api/admin/create-invite`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

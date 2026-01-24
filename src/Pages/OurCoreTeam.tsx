@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import ocholiImage from "@/assets/ocholi founder.jpeg";
 import fredaImage from "@/assets/freeda team member.jpeg";
 import preciousImage from "@/assets/prech vera teem.jpeg";
-import ellaImage from "@/assets/ella1.jpeg";
+import ellaImage from "@/assets/ellaImage.jpeg";
 import emmaImage from "@/assets/emmaImage.jpeg";
 import favourImage from "@/assets/favourImage.jpeg";
 import {
