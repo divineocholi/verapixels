@@ -5017,114 +5017,87 @@ const fetchConversations = async () => {
       console.error('Error tracking session end:', error);
     }
   };
-
+  
   const handleLogin = async (email: string, password: string): Promise<{ success: boolean; message: string }> => {
-    try {
-      console.log('🔐 Login attempt for:', email);
-      
-      const { data: adminData, error: adminError } = await supabase
-        .from('admins')
-        .select(`
-          id,
-          name,
-          email,
-          password_hash,
-          role,
-          last_login,
-          is_active,
-          auth_user_id,
-          settings,
-          profile_picture_url
-        `)
-        .eq('email', email.toLowerCase().trim())
-        .eq('is_active', true)
-        .maybeSingle();
+  try {
+    console.log('🔐 Login attempt for:', email);
+    
+    // ✅ CALL YOUR SERVER LOGIN ENDPOINT
+    const API_URL = import.meta.env.PROD
+      ? 'https://verapixels-server.onrender.com'
+      : 'http://localhost:5001';
+    
+    const response = await fetch(`${API_URL}/api/admin/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password })
+    });
 
-      console.log('Admin query result:', { adminData, adminError });
+    const result = await response.json();
 
-      if (adminError) {
-        console.error('Database error:', adminError);
-        return { 
-          success: false, 
-          message: 'Database error. Please try again.' 
-        };
-      }
-
-      if (!adminData) {
-        return { success: false, message: 'Invalid email or password' };
-      }
-
-      const isPasswordValid = adminData.password_hash === password;
-      
-      if (!isPasswordValid) {
-        return { success: false, message: 'Invalid email or password' };
-      }
-
-      const { error: updateError } = await supabase
-        .from('admins')
-        .update({ 
-          last_login: new Date().toISOString(),
-          is_online: true
-        })
-        .eq('id', adminData.id);
-
-      if (updateError) {
-        console.error('Update error:', updateError);
-      }
-
-      const adminInfo = {
-        id: adminData.id,
-        auth_user_id: adminData.auth_user_id || '',
-        name: adminData.name || 'Admin',
-        email: adminData.email || email,
-        role: adminData.role || 'admin',
-        last_login: new Date().toISOString(),
-        profile_picture_url: adminData.profile_picture_url || '',
-        settings: adminData.settings || {
-          theme: 'light',
-          notifications: true,
-          email_notifications: true,
-          timezone: 'Africa/Lagos'
-        }
-      };
-
-      setAdminData(adminInfo);
-      setTheme(adminInfo.settings.theme || 'light');
-      setIsAuthenticated(true);
-      
-      const sessionData = {
-        id: adminData.id,
-        email: adminData.email,
-        name: adminData.name,
-        role: adminData.role,
-        timestamp: Date.now()
-      };
-      
-      localStorage.setItem('admin_session', JSON.stringify(sessionData));
-
-      const sessionId = await trackSessionStart();
-      setCurrentSessionId(sessionId);
-      
-      await Promise.all([
-        fetchConversations(),
-        fetchConsultations(),
-        fetchNotifications(),
-        fetchAnalytics()
-      ]);
-
-      return { 
-        success: true, 
-        message: 'Login successful! Loading dashboard...' 
-      };
-      
-    } catch (error: any) {
-      console.error('Login error:', error);
+    if (!response.ok || !result.success) {
       return { 
         success: false, 
-        message: error.message || 'Login failed. Please try again.' 
+        message: result.error || 'Invalid email or password' 
       };
     }
-  };
+
+    // ✅ Use the admin data from server response
+    const adminInfo = {
+      id: result.admin.id,
+      auth_user_id: result.admin.auth_user_id || '',
+      name: result.admin.name || 'Admin',
+      email: result.admin.email || email,
+      role: result.admin.role || 'admin',
+      last_login: new Date().toISOString(),
+      profile_picture_url: result.admin.profile_picture_url || '',
+      settings: result.admin.settings || {
+        theme: 'light',
+        notifications: true,
+        email_notifications: true,
+        timezone: 'Africa/Lagos'
+      }
+    };
+
+    setAdminData(adminInfo);
+    setTheme(adminInfo.settings.theme || 'light');
+    setIsAuthenticated(true);
+    
+    const sessionData = {
+      id: result.admin.id,
+      email: result.admin.email,
+      name: result.admin.name,
+      role: result.admin.role,
+      timestamp: Date.now()
+    };
+    
+    localStorage.setItem('admin_session', JSON.stringify(sessionData));
+
+    const sessionId = await trackSessionStart();
+    setCurrentSessionId(sessionId);
+    
+    await Promise.all([
+      fetchConversations(),
+      fetchConsultations(),
+      fetchNotifications(),
+      fetchAnalytics()
+    ]);
+
+    return { 
+      success: true, 
+      message: 'Login successful! Loading dashboard...' 
+    };
+    
+  } catch (error: any) {
+    console.error('Login error:', error);
+    return { 
+      success: false, 
+      message: error.message || 'Login failed. Please try again.' 
+    };
+  }
+};
 
   const handleLogout = async () => {
     try {
