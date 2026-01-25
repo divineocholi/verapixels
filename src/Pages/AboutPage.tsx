@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet";
 import founderImage from '@/assets/founder.jpeg';
+import familyPhoto from "@/assets/verapixels family.jpeg";
 import { 
   FiCode, 
   FiZap, 
@@ -328,7 +329,7 @@ const AboutPage = () => {
         
         {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:site" content="@verapixels" />
+        <meta name="twitter:site" content="@verapixels_" />
         <meta name="twitter:creator" content="@ocholidivine" />
         <meta name="twitter:title" content={openGraphData.title} />
         <meta name="twitter:description" content={openGraphData.description} />
@@ -646,7 +647,7 @@ const AboutPage = () => {
             <div className="team-photo-wrapper">
               <div className="photo-container">
                 <img
-                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&h=700&fit=crop"
+                  src={familyPhoto}
                   alt="Verapixels Team - Digital Innovation Experts"
                   title="Verapixels Team working on digital solutions"
                   className="team-photo"
@@ -1577,12 +1578,14 @@ const AboutPage = () => {
           }
 
           .photo-container {
-            position: relative;
-            border-radius: 30px;
-            overflow: hidden;
-            margin-bottom: 50px;
-            transition: all 0.5s ease;
-          }
+  position: relative;
+  border-radius: 30px;
+  overflow: hidden;
+  margin-bottom: 50px;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  aspect-ratio: 4/3; /* Use the same as your other page */
+  width: 100%;
+}
 
           .team-photo-section.visible .photo-container {
             animation: zoomIn 1s ease;
@@ -1592,13 +1595,15 @@ const AboutPage = () => {
             transform: translateY(-10px);
             box-shadow: 0 40px 100px rgba(0, 99, 244, 0.3);
           }
-
+             
           .team-photo {
-            width: 100%;
-            height: auto;
-            display: block;
-            transition: transform 0.8s ease;
-          }
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center 15%; /* Adjust this value as needed */
+  transition: transform 0.8s ease;
+}
 
           .photo-container:hover .team-photo {
             transform: scale(1.05);

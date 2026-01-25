@@ -7,6 +7,8 @@ import preciousImage from "@/assets/prech vera teem.jpeg";
 import ellaImage from "@/assets/ellaImage.jpeg";
 import emmaImage from "@/assets/emmaImage.jpeg";
 import favourImage from "@/assets/favourImage.jpeg";
+// Add this import with your other image imports
+import familyPhoto from "@/assets/verapixels family.jpeg";
 import {
   FiGithub,
   FiLinkedin,
@@ -699,7 +701,7 @@ const OurCoreTeam = () => {
           <div className="group-photo-container">
             <div className="photo-frame">
               <img
-                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1400&h=800&fit=crop"
+                 src={familyPhoto}
                 alt="Verapixels Team working together in our office - Developers and designers collaborating"
                 className="group-photo"
                 loading="lazy"
@@ -1726,19 +1728,29 @@ const OurCoreTeam = () => {
           margin: 0 auto;
         }
 
-        .group-photo-container {
-          max-width: 1200px;
-          margin: 0 auto;
-        }
+       .group-photo-container {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.photo-frame {
+  position: relative;
+  border-radius: 30px;
+  overflow: hidden;
+  margin-bottom: 50px;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  aspect-ratio: 4/3; /* Good aspect ratio */
+  width: 100%;
+}
 
-        .photo-frame {
-          position: relative;
-          border-radius: 30px;
-          overflow: hidden;
-          margin-bottom: 50px;
-          transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
+.group-photo {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center 10%; /* Changed from 25% to 10% - shows more top */
+  transition: transform 0.8s ease;
+}
         .group-photo-section.visible .photo-frame {
           animation: zoomIn 1s ease both;
         }
@@ -1758,13 +1770,8 @@ const OurCoreTeam = () => {
           transform: translateY(-10px);
           box-shadow: 0 40px 100px rgba(0, 99, 244, 0.3);
         }
+     
 
-        .group-photo {
-          width: 100%;
-          height: auto;
-          display: block;
-          transition: transform 0.8s ease;
-        }
 
         .photo-frame:hover .group-photo {
           transform: scale(1.05);
