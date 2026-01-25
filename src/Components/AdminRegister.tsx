@@ -130,7 +130,7 @@ const handleRegister = async (e: React.FormEvent) => {
     alert('✅ Registration successful! You can now login with your email and password.');
     
     // Redirect to login
-    navigate('/superadmin/login');
+    navigate('/admin');
 
   } catch (error: any) {
     console.error('❌ Registration error:', error);
