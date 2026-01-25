@@ -5,16 +5,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist --dotfiles",
-    "server": "nodemon server.js",
-    "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
-    "start": "npm run dev:all"
-  },
+  "dev": "vite",
+  "build": "tsc -b && vite build && npm run copy-404",
+  "copy-404": "node -e \"require('fs').copyFileSync('public/404.html', 'dist/404.html')\"",
+  "lint": "eslint .",
+  "preview": "vite preview",
+  "predeploy": "npm run build",
+  "deploy": "gh-pages -d dist --dotfiles",
+  "server": "nodemon server.js",
+  "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
+  "start": "npm run dev:all"
+},
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@iconify/react": "^6.0.2",
