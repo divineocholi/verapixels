@@ -1144,8 +1144,7 @@ const ConsultationBooking = () => {
           </div>
         </section>
       </div>
-
-      <style>{`
+          <style>{`
         * {
           margin: 0;
           padding: 0;
@@ -1525,47 +1524,73 @@ const ConsultationBooking = () => {
           z-index: 1;
         }
 
+        /* ====== FIX: GRID LAYOUT FOR FORM SECTIONS ====== */
         .booking-form {
           display: flex;
           flex-direction: column;
           gap: 50px;
         }
 
-        .form-section {
+        .booking-form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 40px;
+          align-items: start;
+        }
+
+        .form-left-column,
+        .form-right-column {
           display: flex;
-          flexDirection: column;
-          gap: 24px;
-          position: relative;
-          z-index: auto;
+          flex-direction: column;
+          gap: 50px;
+        }
+
+        /* Form sections styling */
+        .form-section {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          padding: 32px;
+          backdrop-filter: blur(10px);
+          transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+          border-color: rgba(0, 99, 244, 0.15);
+          background: rgba(0, 99, 244, 0.03);
         }
 
         .section-title {
-          font-size: 1.8rem;
-          font-weight: 800;
+          font-size: 1.5rem;
+          font-weight: 700;
           display: flex;
           align-items: center;
           gap: 12px;
           color: #fff;
-          margin-bottom: 10px;
+          margin-bottom: 24px;
+          padding-bottom: 12px;
+          border-bottom: 2px solid rgba(0, 99, 244, 0.2);
         }
 
         .section-title svg {
           color: #00bfff;
-          font-size: 28px;
+          font-size: 24px;
         }
 
+        /* ====== FIX: IMPROVED FORM ROW LAYOUT ====== */
         .form-row {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 24px;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          width: 100%;
         }
 
+        /* ====== FIX: FORM GROUP IMPROVEMENTS ====== */
         .form-group {
           display: flex;
           flex-direction: column;
-          gap: 10px;
-          position: relative;
-          z-index: auto;
+          gap: 12px;
+          width: 100%;
         }
 
         .form-group label {
@@ -1574,7 +1599,8 @@ const ConsultationBooking = () => {
           color: rgba(255, 255, 255, 0.9);
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
+          margin-bottom: 4px;
         }
 
         .checking-badge {
@@ -1599,10 +1625,10 @@ const ConsultationBooking = () => {
         .form-group input,
         .form-group select,
         .form-group textarea {
-          padding: 16px 20px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          border-radius: 12px;
+          padding: 14px 18px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
           color: #fff;
           font-size: 1rem;
           transition: all 0.3s ease;
@@ -1614,8 +1640,8 @@ const ConsultationBooking = () => {
         .form-group textarea:focus {
           outline: none;
           border-color: #0063f4;
-          background: rgba(0, 99, 244, 0.08);
-          box-shadow: 0 0 0 4px rgba(0, 99, 244, 0.2);
+          background: rgba(0, 99, 244, 0.05);
+          box-shadow: 0 0 0 3px rgba(0, 99, 244, 0.15);
         }
 
         .form-group input::placeholder,
@@ -1874,10 +1900,14 @@ const ConsultationBooking = () => {
           background: rgba(0, 99, 244, 0.7);
         }
 
+        /* ====== FIX: TIME SLOTS GRID ====== */
         .time-slots-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 8px;
+          gap: 10px;
+          max-height: 300px;
+          overflow-y: auto;
+          padding-right: 5px;
         }
 
         .time-slot {
@@ -2070,10 +2100,11 @@ const ConsultationBooking = () => {
           padding: 8px 0;
         }
 
+        /* ====== FIX: CALENDAR DAYS GRID ====== */
         .calendar-days {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
-          gap: 4px;
+          gap: 6px;
           margin-bottom: 20px;
         }
 
@@ -2147,21 +2178,22 @@ const ConsultationBooking = () => {
           border-color: #00ff88;
         }
 
+        /* ====== FIX: CONTACT METHODS GRID ====== */
         .contact-methods {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-          gap: 20px;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
         }
 
         .method-card {
           position: relative;
-          padding: 24px 20px;
+          padding: 20px 16px;
           background: rgba(255, 255, 255, 0.03);
           border: 2px solid rgba(255, 255, 255, 0.1);
           border-radius: 16px;
           text-align: center;
           cursor: pointer;
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           backdrop-filter: blur(10px);
           animation: slideUp 0.6s ease backwards;
         }
@@ -2178,10 +2210,10 @@ const ConsultationBooking = () => {
         }
 
         .method-card:hover {
-          transform: translateY(-8px);
+          transform: translateY(-4px);
           border-color: rgba(0, 99, 244, 0.4);
           background: rgba(0, 99, 244, 0.06);
-          box-shadow: 0 15px 40px rgba(0, 99, 244, 0.3);
+          box-shadow: 0 10px 25px rgba(0, 99, 244, 0.2);
         }
 
         .method-card.active {
@@ -2198,7 +2230,7 @@ const ConsultationBooking = () => {
         }
 
         .method-icon {
-          font-size: 36px;
+          font-size: 32px;
           margin-bottom: 12px;
           transition: all 0.3s ease;
           display: flex;
@@ -2212,7 +2244,7 @@ const ConsultationBooking = () => {
 
         .method-label {
           font-weight: 600;
-          font-size: 1rem;
+          font-size: 0.95rem;
           display: block;
           color: rgba(255, 255, 255, 0.9);
         }
@@ -2236,7 +2268,7 @@ const ConsultationBooking = () => {
         .form-actions {
           display: flex;
           justify-content: center;
-          margin-top: 20px;
+          margin-top: 40px;
         }
 
         .submit-btn {
@@ -2338,10 +2370,12 @@ const ConsultationBooking = () => {
           font-size: 24px;
         }
 
+        /* ====== FIX: INFO CARDS GRID ====== */
         .info-cards {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          grid-template-columns: repeat(3, 1fr);
           gap: 30px;
+          margin-top: 60px;
         }
 
         .info-card {
@@ -2434,6 +2468,34 @@ const ConsultationBooking = () => {
           opacity: 1;
         }
 
+        /* ====== RESPONSIVE DESIGN ====== */
+        @media (max-width: 1200px) {
+          .consultation-container {
+            max-width: 1000px;
+            padding: 0 30px;
+          }
+        }
+
+        @media (max-width: 992px) {
+          .booking-form-grid {
+            grid-template-columns: 1fr;
+            gap: 30px;
+          }
+          
+          .form-left-column,
+          .form-right-column {
+            gap: 30px;
+          }
+          
+          .info-cards {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          
+          .contact-methods {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
         @media (max-width: 768px) {
           .consultation-page {
             padding: 40px 0;
@@ -2441,6 +2503,10 @@ const ConsultationBooking = () => {
 
           .booking-card {
             padding: 40px 24px;
+          }
+          
+          .form-section {
+            padding: 24px;
           }
 
           .hero-title {
@@ -2460,15 +2526,12 @@ const ConsultationBooking = () => {
           }
 
           .section-title {
-            font-size: 1.5rem;
-          }
-
-          .contact-methods {
-            grid-template-columns: repeat(2, 1fr);
+            font-size: 1.3rem;
           }
 
           .form-row {
             grid-template-columns: 1fr;
+            gap: 16px;
           }
 
           .time-slots-grid {
@@ -2494,12 +2557,40 @@ const ConsultationBooking = () => {
 
           .info-cards {
             grid-template-columns: 1fr;
+            margin-top: 40px;
           }
 
           .timezone-dropdown {
             left: 0;
             right: 0;
             transform: none;
+          }
+        }
+
+        @media (max-width: 576px) {
+          .contact-methods {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          
+          .method-card {
+            padding: 18px 16px;
+          }
+          
+          .method-icon {
+            font-size: 28px;
+          }
+          
+          .time-slots-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .calendar-days {
+            gap: 4px;
+          }
+          
+          .calendar-day {
+            font-size: 0.85rem;
           }
         }
 
@@ -2544,12 +2635,12 @@ const ConsultationBooking = () => {
           }
 
           .section-title {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             flex-wrap: wrap;
           }
 
           .section-title svg {
-            font-size: 24px;
+            font-size: 20px;
           }
 
           .form-section {
@@ -2560,27 +2651,32 @@ const ConsultationBooking = () => {
             gap: 40px;
           }
 
-          .contact-methods {
-            grid-template-columns: 1fr;
-            gap: 16px;
+          .booking-form-grid {
+            gap: 20px;
+          }
+          
+          .form-left-column,
+          .form-right-column {
+            gap: 20px;
           }
 
           .method-card {
-            padding: 20px 16px;
+            padding: 16px 12px;
           }
 
           .method-icon {
-            font-size: 32px;
+            font-size: 26px;
           }
 
           .method-label {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
           }
 
           .time-conversion-note {
             flex-direction: column;
             text-align: center;
             font-size: 0.85rem;
+            padding: 10px 12px;
           }
 
           .submit-btn {
@@ -2615,7 +2711,7 @@ const ConsultationBooking = () => {
           }
 
           .calendar-day {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
           }
 
           .success-content {
