@@ -949,8 +949,12 @@ app.get('/blog/:id', (req, res) => {
   }
 });
 
-// All other requests return the React app
-app.use((req, res) => {
+// All other requests return the React app (EXCEPT API routes)
+app.use((req, res, next) => {
+  // Skip API routes
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
   res.sendFile(path.join(buildPath, 'index.html'));
 });
 
