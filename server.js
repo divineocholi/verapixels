@@ -693,7 +693,7 @@ app.post('/api/admin/create-invite', async (req, res) => {
   }
 });
 
-// ✅ UPDATED ENDPOINT: Complete admin registration with password hashing
+// Complete admin registration with password hashing
 app.post('/api/admin/complete-registration', async (req, res) => {
   const { token, password, name } = req.body;
 
@@ -735,18 +735,18 @@ app.post('/api/admin/complete-registration', async (req, res) => {
 
     console.log('✅ Password updated in Supabase Auth');
 
-    // 3. ✅ HASH PASSWORD FOR ADMINS TABLE
+    // 3. Hash password for admins table
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log('✅ Password hashed for database');
 
-    // 4. Create admin record WITH HASHED PASSWORD
+    // 4. Create admin record with hashed password
     const { error: adminError } = await supabaseAdmin
       .from('admins')
       .insert({
         auth_user_id: invite.auth_user_id,
         name: name || invite.email.split('@')[0],
         email: invite.email,
-        password_hash: hashedPassword, // ✅ STORE HASHED PASSWORD
+        password_hash: hashedPassword,
         role: invite.role_assigned,
         is_active: true,
         settings: {}
@@ -773,7 +773,6 @@ app.post('/api/admin/complete-registration', async (req, res) => {
 
     if (markUsedError) {
       console.error('⚠️ Warning: Failed to mark invite as used:', markUsedError);
-      // Don't fail the request for this
     }
 
     console.log('✅ Invite marked as used');
@@ -794,7 +793,7 @@ app.post('/api/admin/complete-registration', async (req, res) => {
   }
 });
 
-// ✅ NEW ENDPOINT: Admin Login with password verification
+// Admin Login with password verification
 app.post('/api/admin/login', async (req, res) => {
   const { email, password } = req.body;
 
@@ -854,10 +853,105 @@ app.post('/api/admin/login', async (req, res) => {
   }
 });
 
-// ========== STATIC FILE SERVING ==========
+// ========== UTILITY ENDPOINTS ==========
+
+// Endpoint to check active connections
+app.get("/connections", (req, res) => {
+  const connections = {
+    total: activeConnections.size,
+    admins: Array.from(activeConnections.entries())
+      .filter(([_, info]) => info.type === 'admin')
+      .map(([socketId, info]) => ({ socketId, adminId: info.adminId })),
+    users: Array.from(activeConnections.entries())
+      .filter(([_, info]) => info.type === 'user')
+      .map(([socketId, info]) => ({ socketId, sessionId: info.sessionId })),
+    rooms: Array.from(io.sockets.adapter.rooms.entries())
+      .filter(([roomId]) => !Array.from(activeConnections.keys()).includes(roomId))
+      .map(([roomId, sockets]) => ({
+        roomId,
+        memberCount: sockets.size,
+        members: Array.from(sockets)
+      }))
+  };
+  
+  res.json(connections);
+});
+
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    connections: io.engine.clientsCount,
+    activeConnections: activeConnections.size,
+    blogPosts: blogPosts.length,
+    server: "Chat & Blog Server",
+    version: "3.0.0",
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      blogs: "/api/blogs",
+      blog: "/api/blogs/:id",
+      categories: "/api/blogs/categories/all",
+      health: "/health",
+      connections: "/connections",
+      adminApi: {
+        createInvite: "/api/admin/create-invite",
+        completeRegistration: "/api/admin/complete-registration",
+        login: "/api/admin/login"
+      }
+    }
+  });
+});
+
+// Test endpoint
+app.get("/test", (req, res) => {
+  const protocol = isDevelopment ? 'ws:' : 'wss:';
+  const serverDomain = process.env.SERVER_DOMAIN || `localhost:${PORT}`;
+  
+  res.json({
+    message: "Server is running!",
+    environment: process.env.NODE_ENV || 'development',
+    endpoints: {
+      health: "/health",
+      connections: "/connections",
+      blogs: "/api/blogs",
+      blog: "/api/blogs/:id",
+      websocket: `${protocol}//${serverDomain}`,
+      devtools: "/.well-known/appspecific/com.chrome.devtools.json",
+      adminApi: {
+        createInvite: "/api/admin/create-invite",
+        completeRegistration: "/api/admin/complete-registration",
+        login: "/api/admin/login"
+      }
+    },
+    allowedOrigins: allowedOrigins,
+    activeConnections: io.engine.clientsCount,
+    socketRooms: io.sockets.adapter.rooms.size,
+    blogCount: blogPosts.length,
+    blogCategories: [...new Set(blogPosts.map(blog => blog.category))]
+  });
+});
+
+// Chrome DevTools endpoint
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
+  console.log('🔧 Chrome DevTools connection attempt');
+  const protocol = isDevelopment ? 'ws:' : 'wss:';
+  const serverDomain = process.env.SERVER_DOMAIN || `localhost:${PORT}`;
+  
+  res.json({
+    manifest: {
+      debugger_websocket_url: `${protocol}//${serverDomain}/socket.io/`,
+      description: "Chat WebSocket Server DevTools",
+      title: "Chat Server Debugger",
+      type: "node"
+    }
+  });
+});
+
+// ========== STATIC FILE SERVING (AFTER ALL API ROUTES!) ==========
 
 // Serve static files from React build directory
-const buildPath = path.join(__dirname, 'dist'); // Change to 'dist' if using Vite
+const buildPath = path.join(__dirname, 'dist');
 app.use(express.static(buildPath));
 
 // Server-side rendering for blog posts
@@ -951,9 +1045,12 @@ app.get('/blog/:id', (req, res) => {
 
 // All other requests return the React app (EXCEPT API routes)
 app.use((req, res, next) => {
-  // Skip API routes
+  // Skip API routes - they should have been handled already
   if (req.path.startsWith('/api/')) {
-    return next();
+    return res.status(404).json({
+      success: false,
+      error: 'API endpoint not found'
+    });
   }
   res.sendFile(path.join(buildPath, 'index.html'));
 });
@@ -966,22 +1063,6 @@ const io = new Server(server, {
     credentials: true,
   },
   transports: ['websocket', 'polling']
-});
-
-// Chrome DevTools endpoint
-app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
-  console.log('🔧 Chrome DevTools connection attempt');
-  const protocol = isDevelopment ? 'ws:' : 'wss:';
-  const serverDomain = process.env.SERVER_DOMAIN || `localhost:${PORT}`;
-  
-  res.json({
-    manifest: {
-      debugger_websocket_url: `${protocol}//${serverDomain}/socket.io/`,
-      description: "Chat WebSocket Server DevTools",
-      title: "Chat Server Debugger",
-      type: "node"
-    }
-  });
 });
 
 // Store active connections
@@ -1072,7 +1153,7 @@ io.on("connection", (socket) => {
       // Log room info
       logRoomInfo(roomId);
       
-      // ✅ SEND JOIN MESSAGE: "Junior has joined the conversation"
+      // Send join message
       const joinMessage = {
         id: `system_msg_${Date.now()}`,
         message_id: `system_msg_${Date.now()}`,
@@ -1143,7 +1224,7 @@ io.on("connection", (socket) => {
       console.log('📤 Emitting to conversation room:', roomId);
       logRoomInfo(roomId);
       
-      // ✅ CRITICAL: Send to ALL sockets in the conversation room
+      // Send to ALL sockets in the conversation room
       io.to(roomId).emit('new_message', adminMessage);
       
       console.log('✅ Admin message sent to conversation:', roomId);
@@ -1404,83 +1485,6 @@ io.on("connection", (socket) => {
     socketId: socket.id,
     timestamp: new Date().toISOString(),
     message: 'Successfully connected to WebSocket server'
-  });
-});
-
-// Endpoint to check active connections
-app.get("/connections", (req, res) => {
-  const connections = {
-    total: activeConnections.size,
-    admins: Array.from(activeConnections.entries())
-      .filter(([_, info]) => info.type === 'admin')
-      .map(([socketId, info]) => ({ socketId, adminId: info.adminId })),
-    users: Array.from(activeConnections.entries())
-      .filter(([_, info]) => info.type === 'user')
-      .map(([socketId, info]) => ({ socketId, sessionId: info.sessionId })),
-    rooms: Array.from(io.sockets.adapter.rooms.entries())
-      .filter(([roomId]) => !Array.from(activeConnections.keys()).includes(roomId))
-      .map(([roomId, sockets]) => ({
-        roomId,
-        memberCount: sockets.size,
-        members: Array.from(sockets)
-      }))
-  };
-  
-  res.json(connections);
-});
-
-// Health check endpoint
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    connections: io.engine.clientsCount,
-    activeConnections: activeConnections.size,
-    blogPosts: blogPosts.length,
-    server: "Chat & Blog Server",
-    version: "3.0.0",
-    environment: process.env.NODE_ENV || 'development',
-    endpoints: {
-      blogs: "/api/blogs",
-      blog: "/api/blogs/:id",
-      categories: "/api/blogs/categories/all",
-      health: "/health",
-      connections: "/connections",
-      adminApi: {
-        createInvite: "/api/admin/create-invite",
-        completeRegistration: "/api/admin/complete-registration",
-        login: "/api/admin/login"
-      }
-    }
-  });
-});
-
-// Test endpoint
-app.get("/test", (req, res) => {
-  const protocol = isDevelopment ? 'ws:' : 'wss:';
-  const serverDomain = process.env.SERVER_DOMAIN || `localhost:${PORT}`;
-  
-  res.json({
-    message: "Server is running!",
-    environment: process.env.NODE_ENV || 'development',
-    endpoints: {
-      health: "/health",
-      connections: "/connections",
-      blogs: "/api/blogs",
-      blog: "/api/blogs/:id",
-      websocket: `${protocol}//${serverDomain}`,
-      devtools: "/.well-known/appspecific/com.chrome.devtools.json",
-      adminApi: {
-        createInvite: "/api/admin/create-invite",
-        completeRegistration: "/api/admin/complete-registration",
-        login: "/api/admin/login"
-      }
-    },
-    allowedOrigins: allowedOrigins,
-    activeConnections: io.engine.clientsCount,
-    socketRooms: io.sockets.adapter.rooms.size,
-    blogCount: blogPosts.length,
-    blogCategories: [...new Set(blogPosts.map(blog => blog.category))]
   });
 });
 
