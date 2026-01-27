@@ -5,6 +5,11 @@ import {
   Palette, Code, Zap, Lightbulb, Briefcase, FileText, Check 
 } from 'lucide-react';
 
+// API Configuration
+const API_URL = import.meta.env.PROD 
+  ? 'https://verapixels-server.onrender.com'
+  : '';
+  
 interface BlogPost {
   id: string;
   title: string;
@@ -207,7 +212,7 @@ const Blog = () => {
 
   const fetchBlogs = async () => {
     try {
-      const response = await fetch('/api/blogs');
+      const response = await fetch(`${API_URL}/api/blogs`);
       const data = await response.json();
       
       if (data.success) {
