@@ -950,7 +950,7 @@ app.get('/blog/:id', (req, res) => {
 });
 
 // All other requests return the React app
-app.get('*', (req, res) => {
+app.get('/*', (req, res) => {
   res.sendFile(path.join(buildPath, 'index.html'));
 });
 
