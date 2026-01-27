@@ -54,6 +54,7 @@ const MobileAppDevelopment = () => {
       features: [
         "Swift & SwiftUI development",
         "Apple ecosystem integration",
+
         "App Store optimization",
         "iOS-specific features"
       ],

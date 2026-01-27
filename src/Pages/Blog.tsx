@@ -5,11 +5,13 @@ import {
   Palette, Code, Zap, Lightbulb, Briefcase, FileText, Check 
 } from 'lucide-react';
 
+
+
 // API Configuration
 const API_URL = import.meta.env.PROD 
   ? 'https://verapixels-server.onrender.com'
   : '';
-  
+
 interface BlogPost {
   id: string;
   title: string;
@@ -232,7 +234,7 @@ const Blog = () => {
 
   const fetchBlogById = async (blogId: string) => {
     try {
-      const response = await fetch(`/api/blogs/${blogId}`);
+     const response = await fetch(`${API_URL}/api/blogs/${blogId}`);
       const data = await response.json();
       
       if (data.success && data.blog) {
@@ -245,7 +247,7 @@ const Blog = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/blogs/categories/all');
+      const response = await fetch(`${API_URL}/api/blogs/categories/all`);
       const data = await response.json();
       
       if (data.success) {
@@ -258,7 +260,7 @@ const Blog = () => {
 
   const fetchRelatedBlogs = async (blog: BlogPost) => {
     try {
-      const response = await fetch(`/api/blogs/category/${blog.category}`);
+      const response = await fetch(`${API_URL}/api/blogs/category/${blog.category}`);
       const data = await response.json();
       
       if (data.success) {
@@ -326,7 +328,7 @@ const Blog = () => {
     }
     
     try {
-      const response = await fetch(`/api/blogs/search/${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(`${API_URL}/api/blogs/search/${encodeURIComponent(searchQuery)}`);
       const data = await response.json();
       
       if (data.success) {
@@ -346,7 +348,7 @@ const Blog = () => {
     }
     
     try {
-      const response = await fetch(`/api/blogs/category/${category}`);
+      const response = await fetch(`${API_URL}/api/blogs/category/${category}`);
       const data = await response.json();
       
       if (data.success) {
