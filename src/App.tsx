@@ -48,7 +48,11 @@ const App: React.FC = () => {
         <Route path="/casestudies" element={<CaseStudies />} />
         <Route path="/consultationbooking" element={<ConsultationBooking />} />
         <Route path="/career" element={<CareersPage />} />
-        <Route path="/Blog" element={<Blog/>} />
+        
+        {/* FIXED: Blog routes - lowercase and add detail route */}
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:id" element={<Blog />} />
+        
         <Route path="/contact" element={<Contact />} />
       </Route>
 

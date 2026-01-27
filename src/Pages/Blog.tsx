@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Clock, User, Calendar, Share2, Bookmark, TrendingUp, ChevronRight, Search, Filter, Palette, Code, Zap, Lightbulb, Briefcase, FileText, X, Menu, Copy, Check } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  ArrowLeft, Clock, User, Calendar, Share2, TrendingUp, ChevronRight, Search, 
+  Palette, Code, Zap, Lightbulb, Briefcase, FileText, Check 
+} from 'lucide-react';
 
 interface BlogPost {
   id: string;
@@ -9,10 +13,9 @@ interface BlogPost {
   readTime: string;
   date: string;
   category: string;
-  icon: any;
   gradient: string;
   image: string;
-  detailedContent: {
+  detailedContent?: {
     lead: string;
     sections: Array<{
       title: string;
@@ -23,7 +26,7 @@ interface BlogPost {
       }>;
     }>;
     highlight: {
-      icon: any;
+      icon: string;
       text: string;
     };
     quote: string;
@@ -37,417 +40,240 @@ interface BlogPost {
 }
 
 const Blog = () => {
+  const { id: blogIdFromURL } = useParams();
+  const navigate = useNavigate();
+  
   const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isAnimating, setIsAnimating] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState(['All']);
+  const [relatedBlogs, setRelatedBlogs] = useState<BlogPost[]>([]);
 
-  // Scroll restoration effect - FIX FOR SCROLL ISSUE
+  // Helper functions for SEO meta tags
+  const updateMetaTag = (property: string, content: string) => {
+    let tag = document.querySelector(`meta[property="${property}"]`) || 
+               document.querySelector(`meta[name="${property}"]`);
+    
+    if (!tag) {
+      tag = document.createElement('meta');
+      if (property.startsWith('og:')) {
+        tag.setAttribute('property', property);
+      } else if (property.startsWith('twitter:')) {
+        tag.setAttribute('name', property);
+      } else {
+        tag.setAttribute('name', property);
+      }
+      document.head.appendChild(tag);
+    }
+    tag.setAttribute('content', content);
+  };
+
+  const updateCanonicalUrl = (url: string) => {
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', url);
+  };
+
+  const updateMetaTags = (blog: BlogPost) => {
+    // Update title
+    document.title = `${blog.title} | Expert Insights Blog`;
+    
+    // Update meta description
+    updateMetaTag('description', blog.excerpt);
+    
+    // Open Graph tags
+    updateMetaTag('og:title', blog.title);
+    updateMetaTag('og:description', blog.excerpt);
+    updateMetaTag('og:image', blog.image);
+    updateMetaTag('og:url', window.location.href);
+    updateMetaTag('og:type', 'article');
+    updateMetaTag('og:site_name', 'Expert Insights Blog');
+    
+    // Twitter Card tags
+    updateMetaTag('twitter:card', 'summary_large_image');
+    updateMetaTag('twitter:title', blog.title);
+    updateMetaTag('twitter:description', blog.excerpt);
+    updateMetaTag('twitter:image', blog.image);
+    
+    // Article-specific meta tags
+    updateMetaTag('article:published_time', blog.date + 'T00:00:00Z');
+    updateMetaTag('article:modified_time', blog.date + 'T00:00:00Z');
+    updateMetaTag('article:author', blog.author);
+    updateMetaTag('article:section', blog.category);
+    
+    // Update canonical URL
+    updateCanonicalUrl(window.location.href);
+    
+    // Add structured data for SEO
+    addStructuredData(blog);
+  };
+
+  const resetMetaTags = () => {
+    document.title = 'Expert Insights Blog | Industry Knowledge & Tutorials';
+    
+    // Reset description
+    updateMetaTag('description', 'Discover expert guides, tutorials, and industry insights to grow your business and master your craft');
+    
+    // Reset canonical URL
+    updateCanonicalUrl(window.location.origin + '/blog');
+    
+    // Reset Open Graph tags
+    updateMetaTag('og:title', 'Expert Insights Blog | Industry Knowledge & Tutorials');
+    updateMetaTag('og:description', 'Discover expert guides, tutorials, and industry insights to grow your business and master your craft');
+    updateMetaTag('og:url', window.location.origin + '/blog');
+    updateMetaTag('og:type', 'website');
+    
+    // Reset Twitter tags
+    updateMetaTag('twitter:card', 'summary_large_image');
+    updateMetaTag('twitter:title', 'Expert Insights Blog | Industry Knowledge & Tutorials');
+    updateMetaTag('twitter:description', 'Discover expert guides, tutorials, and industry insights to grow your business and master your craft');
+  };
+
+  const addStructuredData = (blog: BlogPost) => {
+    // Remove existing structured data
+    const existingScript = document.querySelector('script[type="application/ld+json"]');
+    if (existingScript) {
+      existingScript.remove();
+    }
+    
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": blog.title,
+      "description": blog.excerpt,
+      "image": blog.image,
+      "datePublished": blog.date + 'T00:00:00Z',
+      "dateModified": blog.date + 'T00:00:00Z',
+      "author": {
+        "@type": "Person",
+        "name": blog.author
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Expert Insights",
+        "logo": {
+          "@type": "ImageObject",
+          "url": window.location.origin + "/logo.png"
+        }
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": window.location.href
+      }
+    };
+    
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(structuredData);
+    document.head.appendChild(script);
+  };
+
+  // Fetch blog posts on component mount
   useEffect(() => {
-    if (!selectedBlog) {
-      // We're on the listing page, scroll to top
-      const timer = setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'instant' });
-      }, 10);
-      
-      return () => clearTimeout(timer);
+    fetchBlogs();
+    fetchCategories();
+  }, []);
+
+  // Load blog from URL on component mount
+  useEffect(() => {
+    if (blogIdFromURL && blogPosts.length > 0) {
+      const blog = blogPosts.find(post => post.id === blogIdFromURL);
+      if (blog) {
+        setTimeout(() => openBlog(blog), 50);
+      } else {
+        // Try to fetch the blog from API
+        fetchBlogById(blogIdFromURL);
+      }
+    }
+  }, [blogIdFromURL, blogPosts]);
+
+  // Update SEO meta tags when blog is selected
+  useEffect(() => {
+    if (selectedBlog) {
+      updateMetaTags(selectedBlog);
+      fetchRelatedBlogs(selectedBlog);
+    } else {
+      resetMetaTags();
     }
   }, [selectedBlog]);
 
-  // Blog data with unique detailed content
-  const blogPosts: BlogPost[] = [
-    {
-      id: "5-ui-ux-tricks",
-      title: "5 UI/UX Tricks That Make Websites Feel Premium",
-      excerpt: "Discover the secret design patterns that top tech companies use to create luxury digital experiences.",
-      author: " Emmanuella Udom",
-      readTime: "8 min read",
-      date: "Oct 25, 2025",
-      category: "Design",
-      icon: Palette,
-      gradient: "linear-gradient(135deg, #6a00ff 0%, #8b5cf6 100%)",
-      image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=1200&h=600&fit=crop",
-      detailedContent: {
-        lead: "Premium UI/UX isn't about adding more elements—it's about strategic subtraction and psychological design principles that create an air of sophistication.",
-        sections: [
-          {
-            title: "The Psychology of Premium Design",
-            content: "Premium design leverages cognitive biases and emotional responses. Research shows users perceive designs as premium when they exhibit three key characteristics: consistency, intentionality, and emotional resonance.",
-            subsections: [
-              {
-                title: "Visual Consistency",
-                content: "Maintain consistent spacing (using 8px grid systems), typography hierarchies (no more than 3 typefaces), and color palettes with intentional contrast ratios."
-              },
-              {
-                title: "Micro-interactions",
-                content: "Smooth animations with proper easing curves (cubic-bezier(0.4, 0, 0.2, 1)) and meaningful hover states that provide tactile feedback."
-              }
-            ]
-          },
-          {
-            title: "The 5 Key Techniques",
-            content: "Here are the specific techniques that elevate ordinary designs to premium experiences:",
-            subsections: [
-              {
-                title: "Strategic Negative Space",
-                content: "Use 60px+ margins on desktop, 40px+ on mobile. Negative space should feel intentional, not empty. It guides user attention and creates breathing room."
-              },
-              {
-                title: "Custom Cursor States",
-                content: "Implement cursor states that change based on context—pointers for clickable elements, grabbing for draggable items, and custom shapes for special interactions."
-              },
-              {
-                title: "Progressive Disclosure",
-                content: "Reveal information gradually. Complex features should unfold naturally as users need them, reducing cognitive load while maintaining advanced capabilities."
-              }
-            ]
-          }
-        ],
-        highlight: {
-          icon: Lightbulb,
-          text: "Premium design is about confidence in restraint. Remove one unnecessary element from every screen you design."
-        },
-        quote: "Good design is as little design as possible. Less, but better—because it concentrates on the essential aspects.",
-        pitfalls: [
-          {
-            title: "Over-designing",
-            description: "Adding unnecessary elements in pursuit of 'premium' actually creates clutter and confusion."
-          },
-          {
-            title: "Inconsistent spacing",
-            description: "Random padding/margin values break visual harmony and signal amateur design."
-          }
-        ],
-        applications: "These principles apply across e-commerce luxury brands, fintech platforms requiring trust, and SaaS products needing to justify premium pricing tiers.",
-        conclusion: "Premium UI/UX creates perceived value through intentional design decisions. Start implementing one technique at a time and measure user engagement improvements."
+  const fetchBlogs = async () => {
+    try {
+      const response = await fetch('/api/blogs');
+      const data = await response.json();
+      
+      if (data.success) {
+        setBlogPosts(data.blogs);
+        
+        // Check if there's initial blog data from server-side rendering
+        if ((window as any).__INITIAL_BLOG_DATA__) {
+          setSelectedBlog((window as any).__INITIAL_BLOG_DATA__);
+        }
       }
-    },
-    {
-      id: "website-speed-revenue",
-      title: "How Fast Websites Boost Business Revenue",
-      excerpt: "Learn why website speed is directly tied to conversion rates and discover optimization techniques.",
-      author: "Ocholi Divine",
-      readTime: "6 min read",
-      date: "Oct 22, 2025",
-      category: "Performance",
-      icon: Zap,
-      gradient: "linear-gradient(135deg, #00d4ff 0%, #0ea5e9 100%)",
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&h=600&fit=crop",
-      detailedContent: {
-        lead: "Every 100ms delay in page load time reduces conversion rates by 7%. In the competitive digital landscape, speed isn't just technical—it's revenue.",
-        sections: [
-          {
-            title: "The Direct Revenue Impact",
-            content: "Amazon found that 100ms of latency cost them 1% in sales. Google discovered that delaying search results by 400ms reduced searches by 0.74%. These aren't minor metrics—they're business-critical numbers.",
-            subsections: [
-              {
-                title: "Mobile Performance",
-                content: "53% of mobile site visits are abandoned if pages take longer than 3 seconds to load. With mobile traffic dominating, this directly impacts revenue."
-              },
-              {
-                title: "Core Web Vitals",
-                content: "Google's ranking factors now include Largest Contentful Paint (LCP), First Input Delay (FID), and Cumulative Layout Shift (CLS)—each affecting both SEO and conversions."
-              }
-            ]
-          },
-          {
-            title: "Optimization Strategies",
-            content: "Implement these performance improvements in order of impact:",
-            subsections: [
-              {
-                title: "Image Optimization",
-                content: "Convert images to WebP format (30% smaller than JPEG), implement lazy loading, and use responsive images with srcset attributes."
-              },
-              {
-                title: "JavaScript Optimization",
-                content: "Code-split your bundles, remove unused code, and defer non-critical JavaScript. Consider using Partial Hydration for React applications."
-              }
-            ]
-          }
-        ],
-        highlight: {
-          icon: Zap,
-          text: "Prioritize above-the-fold content. Users form opinions in the first 50ms—make those milliseconds count with immediate visual feedback."
-        },
-        quote: "Performance isn't a feature—it's a fundamental user experience requirement that directly impacts business metrics.",
-        pitfalls: [
-          {
-            title: "Third-party script bloat",
-            description: "Analytics, chat widgets, and social plugins can add seconds to load times without proper async loading."
-          },
-          {
-            title: "Unoptimized hero images",
-            description: "Large above-the-fold images are the #1 cause of poor LCP scores and immediate bounce rates."
-          }
-        ],
-        applications: "E-commerce sites see immediate revenue improvements. Content sites benefit from better SEO rankings. SaaS platforms reduce churn with faster interfaces.",
-        conclusion: "Website speed optimization provides some of the highest ROI in digital marketing. Start measuring with tools like WebPageTest and Lighthouse, then implement improvements systematically."
-      }
-    },
-    {
-      id: "smooth-animations-tech",
-      title: "The Tech Behind Smooth Animations",
-      excerpt: "Dive deep into the frameworks and principles that power buttery-smooth animations.",
-      author: "Freda Mbajiorgu",
-      readTime: "10 min read",
-      date: "Oct 20, 2025",
-      category: "Development",
-      icon: Code,
-      gradient: "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
-      image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&h=600&fit=crop",
-      detailedContent: {
-        lead: "Smooth animations run at 60fps (16.7ms per frame) with consistent timing functions and hardware acceleration. Achieving this requires understanding both the browser's rendering pipeline and animation principles.",
-        sections: [
-          {
-            title: "Browser Rendering Pipeline",
-            content: "Every animation triggers Style, Layout, Paint, and Composite steps. The most performant animations only trigger Composite (using transform and opacity properties).",
-            subsections: [
-              {
-                title: "CSS Transforms vs. Layout Properties",
-                content: "Use transform: translateX() instead of left/right properties, and opacity instead of visibility. These use the GPU and avoid costly layout recalculations."
-              },
-              {
-                title: "Will-Change Property",
-                content: "Hint to browsers about what will animate: will-change: transform. But use sparingly—overuse causes memory overhead."
-              }
-            ]
-          },
-          {
-            title: "JavaScript Animation Libraries",
-            content: "Choose libraries based on your needs:",
-            subsections: [
-              {
-                title: "Framer Motion (React)",
-                content: "Declarative animations with spring physics and gesture support. Best for complex, interactive UI animations."
-              },
-              {
-                title: "GSAP",
-                content: "Industry standard for timeline-based animations and complex sequences. Unparalleled performance and browser compatibility."
-              }
-            ]
-          }
-        ],
-        highlight: {
-          icon: Code,
-          text: "Always use requestAnimationFrame() instead of setTimeout/setInterval for JavaScript animations to sync with browser refresh rates."
-        },
-        quote: "Animation isn't just about moving things—it's about creating relationships between elements and guiding user attention through time and space.",
-        pitfalls: [
-          {
-            title: "Over-animating",
-            description: "Too many simultaneous animations compete for attention and cause performance bottlenecks."
-          },
-          {
-            title: "Ignoring reduced motion",
-            description: "Always respect prefers-reduced-motion media query for accessibility compliance."
-          }
-        ],
-        applications: "Micro-interactions in buttons, page transitions, loading states, scroll-triggered animations, and data visualization come to life with proper animation techniques.",
-        conclusion: "Mastering smooth animations requires both technical knowledge and artistic timing. Start with CSS transitions, graduate to JavaScript libraries, and always measure performance with Chrome DevTools."
-      }
-    },
-    {
-      id: "naming-your-business",
-      title: "The Complete Guide to Naming Your Business",
-      excerpt: "Master the art and science of creating a memorable business name that resonates with customers.",
-      author: "Ocholi Divine",
-      readTime: "12 min read",
-      date: "Oct 18, 2025",
-      category: "Business",
-      icon: Briefcase,
-      gradient: "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
-      image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1200&h=600&fit=crop",
-      detailedContent: {
-        lead: "A great business name is pronounceable, memorable, available as a domain, and evokes the right emotions. It's your first impression and lasting brand identity.",
-        sections: [
-          {
-            title: "The Name Spectrum",
-            content: "Names exist on a spectrum from descriptive (General Motors) to suggestive (Uber) to abstract (Google). Each position has different trademark and marketing implications.",
-            subsections: [
-              {
-                title: "Descriptive Names",
-                content: "Clear but hard to trademark. Best for local businesses where clarity trumps creativity."
-              },
-              {
-                title: "Suggestive Names",
-                content: "Balance clarity and creativity. Hint at benefits without being literal (Slack for team communication)."
-              }
-            ]
-          },
-          {
-            title: "Naming Techniques",
-            content: "Systematic approaches to generate quality names:",
-            subsections: [
-              {
-                title: "Portmanteau Method",
-                content: "Combine relevant words: Netflix (Internet + flicks), Pinterest (Pin + interest). Creates unique, trademarkable names."
-              },
-              {
-                title: "Foreign Word Method",
-                content: "Use words from other languages that sound appealing and relate to your values: Novo (Portuguese for 'new'), Kairos (Greek for 'right moment')."
-              }
-            ]
-          }
-        ],
-        highlight: {
-          icon: Lightbulb,
-          text: "Test names with your target audience. Say them aloud, check pronunciation, and ensure they don't have negative connotations in other languages."
-        },
-        quote: "Your brand name is the single word that will eventually represent everything you do. Choose it wisely.",
-        pitfalls: [
-          {
-            title: "Overly clever names",
-            description: "Names that require explanation fail the 'bar test'—can you explain it simply in a noisy bar?"
-          },
-          {
-            title: "Domain availability",
-            description: "Don't compromise with strange TLDs or hyphens. The perfect name needs the perfect domain."
-          }
-        ],
-        applications: "Startups need names that scale. SaaS products benefit from suggestive names. Consumer brands need emotional resonance. B2B companies need credibility signals.",
-        conclusion: "Naming is both creative and strategic. Generate hundreds of options, filter systematically, test with real people, and secure all assets (domain, social handles, trademark) before committing."
-      }
-    },
-    {
-      id: "case-study-writing-guide",
-      title: "How to Write Compelling Case Studies That Convert",
-      excerpt: "Learn the proven formula for creating case studies that showcase your expertise and persuade customers.",
-      author: "Precious",
-      readTime: "11 min read",
-      date: "Oct 15, 2024",
-      category: "Content",
-      icon: FileText,
-      gradient: "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&h=600&fit=crop",
-      detailedContent: {
-        lead: "Effective case studies follow the STAR method: Situation, Task, Action, Result. They transform features into tangible outcomes that prospects can envision for themselves.",
-        sections: [
-          {
-            title: "The Psychology of Persuasion",
-            content: "Case studies work because they provide social proof (Cialdini's principle) and create mental availability. Readers see themselves in the customer's situation.",
-            subsections: [
-              {
-                title: "Quantifiable Results",
-                content: "Always lead with metrics: 'Increased conversions by 47%' or 'Reduced processing time by 3 hours.' Numbers create credibility anchors."
-              },
-              {
-                title: "Customer Quotes",
-                content: "Direct quotes add human authenticity. Capture emotional benefits alongside functional ones: 'This saved my team from burnout.'"
-              }
-            ]
-          },
-          {
-            title: "Structure That Converts",
-            content: "Follow this narrative arc for maximum impact:",
-            subsections: [
-              {
-                title: "The Hero's Journey",
-                content: "Position the customer as hero, their challenge as the dragon, and your solution as the magical weapon. This classic story structure increases retention."
-              },
-              {
-                title: "Before-After-Bridge",
-                content: "Show the painful before state, the glorious after state, and how your solution bridges the gap. This creates desire and shows understanding."
-              }
-            ]
-          }
-        ],
-        highlight: {
-          icon: FileText,
-          text: "Include specific implementation details. Prospects want to know exactly how you achieved results—this builds credibility and sets realistic expectations."
-        },
-        quote: "A well-written case study does the selling for you. It answers objections before they're raised and builds trust through demonstrated expertise.",
-        pitfalls: [
-          {
-            title: "Vague results",
-            description: "'Improved efficiency' is meaningless. 'Reduced processing from 4 hours to 15 minutes' is compelling."
-          },
-          {
-            title: "Too much self-promotion",
-            description: "Focus 70% on the customer's story, 30% on your solution. The customer should be the protagonist."
-          }
-        ],
-        applications: "B2B companies use case studies in sales decks. SaaS companies feature them on pricing pages. Agencies use them in proposals. Enterprise sales require detailed implementation studies.",
-        conclusion: "Great case studies are customer-centric stories with measurable outcomes. Interview customers deeply, extract emotional and quantitative benefits, and structure them as compelling narratives that address prospect anxieties."
-      }
-    },
-    {
-      id: "startup-branding-essentials",
-      title: "Startup Branding Essentials: Build Your Identity",
-      excerpt: "Everything you need to know about creating a strong brand identity from day one.",
-      author: "Ocholi Divine",
-      readTime: "9 min read",
-      date: "Oct 12, 2025",
-      category: "Business",
-      icon: Lightbulb,
-      gradient: "linear-gradient(135deg, #ec4899 0%, #f59e0b 100%)",
-      image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1200&h=600&fit=crop",
-      detailedContent: {
-        lead: "Startup branding isn't just a logo—it's a cohesive system of visual, verbal, and experiential elements that communicate your unique value proposition and build emotional connections.",
-        sections: [
-          {
-            title: "Brand Strategy Foundations",
-            content: "Before design begins, define your brand strategy: positioning statement, target audience personas, brand personality, and core values. These decisions inform every design choice.",
-            subsections: [
-              {
-                title: "Positioning Matrix",
-                content: "Plot competitors on axes (price vs. quality, innovative vs. traditional) to identify gaps. Own a unique position rather than competing directly."
-              },
-              {
-                title: "Brand Archetypes",
-                content: "Identify with one of 12 archetypes (Hero, Sage, Jester, etc.). This provides consistency across all brand expressions."
-              }
-            ]
-          },
-          {
-            title: "Visual Identity System",
-            content: "Create scalable design systems, not just individual assets:",
-            subsections: [
-              {
-                title: "Logo Architecture",
-                content: "Design primary, secondary, and submark logos. Each serves different use cases while maintaining recognition."
-              },
-              {
-                title: "Design Tokens",
-                content: "Establish color palettes (primary, secondary, accent), typography scales, spacing systems, and component libraries for consistency."
-              }
-            ]
-          }
-        ],
-        highlight: {
-          icon: Briefcase,
-          text: "Document everything in a brand book. Even solo founders need this reference to maintain consistency as the team grows."
-        },
-        quote: "Your brand is what people say about you when you're not in the room. Design every touchpoint to shape that conversation.",
-        pitfalls: [
-          {
-            title: "Designing in a vacuum",
-            description: "Brands exist in competitive contexts. Research competitors thoroughly to differentiate, not imitate."
-          },
-          {
-            title: "Ignoring implementation",
-            description: "Beautiful brand guidelines are useless without considering real-world applications (email signatures, social media, merchandise)."
-          }
-        ],
-        applications: "Tech startups need scalable design systems. DTC brands require emotional resonance. B2B companies need professional credibility. All benefit from clear brand architecture.",
-        conclusion: "Startup branding is an investment that compounds over time. Begin with strategic foundations, build flexible visual systems, implement consistently across all touchpoints, and evolve as you learn from market feedback."
-      }
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const categories = ['All', 'Design', 'Performance', 'Development', 'Business', 'Content'];
+  const fetchBlogById = async (blogId: string) => {
+    try {
+      const response = await fetch(`/api/blogs/${blogId}`);
+      const data = await response.json();
+      
+      if (data.success && data.blog) {
+        openBlog(data.blog);
+      }
+    } catch (error) {
+      console.error('Error fetching blog:', error);
+    }
+  };
 
-  const filteredBlogs = blogPosts.filter(blog => {
-    const matchesSearch = blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         blog.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || blog.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/blogs/categories/all');
+      const data = await response.json();
+      
+      if (data.success) {
+        setCategories(data.categories);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchRelatedBlogs = async (blog: BlogPost) => {
+    try {
+      const response = await fetch(`/api/blogs/category/${blog.category}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        // Filter out current blog and limit to 3
+        const related = data.blogs
+          .filter((post: BlogPost) => post.id !== blog.id)
+          .slice(0, 3);
+        setRelatedBlogs(related);
+      }
+    } catch (error) {
+      console.error('Error fetching related blogs:', error);
+    }
+  };
 
   const openBlog = (blog: BlogPost) => {
     setIsAnimating(true);
     setTimeout(() => {
       setSelectedBlog(blog);
+      // Update URL without page reload
+      navigate(`/blog/${blog.id}`, { replace: true });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setIsAnimating(false);
     }, 300);
@@ -457,6 +283,7 @@ const Blog = () => {
     setIsAnimating(true);
     setTimeout(() => {
       setSelectedBlog(null);
+      navigate('/blog');
       setIsAnimating(false);
     }, 300);
   };
@@ -474,7 +301,8 @@ const Blog = () => {
             url: shareUrl,
           });
         } catch (err) {
-          console.log('Error sharing:', err);
+          // User cancelled share
+          console.log('Share cancelled');
         }
       } else {
         // Fallback: Copy to clipboard
@@ -484,6 +312,70 @@ const Blog = () => {
       }
     }
   };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      fetchBlogs();
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/blogs/search/${encodeURIComponent(searchQuery)}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setBlogPosts(data.blogs);
+      }
+    } catch (error) {
+      console.error('Error searching blogs:', error);
+    }
+  };
+
+  const handleCategoryFilter = async (category: string) => {
+    setSelectedCategory(category);
+    
+    if (category === 'All') {
+      fetchBlogs();
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/blogs/category/${category}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setBlogPosts(data.blogs);
+      }
+    } catch (error) {
+      console.error('Error filtering blogs:', error);
+    }
+  };
+
+  const filteredBlogs = blogPosts.filter(blog => {
+    const matchesSearch = blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         blog.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || blog.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  // Icon mapping
+  const iconMap: Record<string, React.ComponentType<any>> = {
+    Design: Palette,
+    Performance: Zap,
+    Development: Code,
+    Business: Briefcase,
+    Content: FileText
+  };
+
+  if (loading && !selectedBlog) {
+    return (
+      <div className="blog-loading">
+        <div className="spinner"></div>
+        <p>Loading blog posts...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="blog-page">
@@ -506,7 +398,7 @@ const Blog = () => {
               </p>
               
               {/* Search Bar */}
-              <div className="blog-search-bar">
+              <form onSubmit={handleSearch} className="blog-search-bar">
                 <Search size={20} />
                 <input
                   type="text"
@@ -514,7 +406,10 @@ const Blog = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              </div>
+                <button type="submit" className="search-btn">
+                  Search
+                </button>
+              </form>
             </div>
           </div>
 
@@ -526,7 +421,7 @@ const Blog = () => {
                   <button
                     key={cat}
                     className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(cat)}
+                    onClick={() => handleCategoryFilter(cat)}
                   >
                     {cat}
                   </button>
@@ -537,49 +432,61 @@ const Blog = () => {
 
           {/* Blog Grid */}
           <div className="blog-grid-container">
-            <div className="blog-grid">
-              {filteredBlogs.map((post, index) => {
-                const IconComponent = post.icon;
-                return (
-                  <article
-                    key={post.id}
-                    className="blog-card"
-                    onClick={() => openBlog(post)}
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="blog-card-image-wrapper">
-                      <img src={post.image} alt={post.title} className="blog-card-image" />
-                      <div className="blog-card-overlay" style={{ background: post.gradient }}></div>
-                      <div className="blog-category-badge">
-                        <IconComponent size={16} />
-                        <span>{post.category}</span>
-                      </div>
-                    </div>
-
-                    <div className="blog-card-content">
-                      <h2 className="blog-card-title">{post.title}</h2>
-                      <p className="blog-card-excerpt">{post.excerpt}</p>
-
-                      <div className="blog-card-meta">
-                        <div className="meta-item">
-                          <User size={14} />
-                          <span>{post.author}</span>
-                        </div>
-                        <div className="meta-item">
-                          <Clock size={14} />
-                          <span>{post.readTime}</span>
+            {filteredBlogs.length === 0 ? (
+              <div className="no-results">
+                <h3>No blog posts found</h3>
+                <p>Try a different search or category</p>
+              </div>
+            ) : (
+              <div className="blog-grid">
+                {filteredBlogs.map((post, index) => {
+                  const IconComponent = iconMap[post.category] || FileText;
+                  return (
+                    <article
+                      key={post.id}
+                      className="blog-card"
+                      onClick={() => openBlog(post)}
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <div className="blog-card-image-wrapper">
+                        <img 
+                          src={post.image} 
+                          alt={post.title} 
+                          className="blog-card-image"
+                          loading="lazy"
+                        />
+                        <div className="blog-card-overlay" style={{ background: post.gradient }}></div>
+                        <div className="blog-category-badge">
+                          <IconComponent size={16} />
+                          <span>{post.category}</span>
                         </div>
                       </div>
 
-                      <button className="read-more-btn">
-                        <span>Read Article</span>
-                        <ChevronRight size={18} />
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+                      <div className="blog-card-content">
+                        <h2 className="blog-card-title">{post.title}</h2>
+                        <p className="blog-card-excerpt">{post.excerpt}</p>
+
+                        <div className="blog-card-meta">
+                          <div className="meta-item">
+                            <User size={14} />
+                            <span>{post.author}</span>
+                          </div>
+                          <div className="meta-item">
+                            <Clock size={14} />
+                            <span>{post.readTime}</span>
+                          </div>
+                        </div>
+
+                        <button className="read-more-btn">
+                          <span>Read Article</span>
+                          <ChevronRight size={18} />
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -597,6 +504,7 @@ const Blog = () => {
                 className="action-btn"
                 onClick={handleShare}
                 title={shareCopied ? "Copied!" : "Share article"}
+                aria-label={shareCopied ? "Link copied" : "Share this article"}
               >
                 {shareCopied ? <Check size={18} /> : <Share2 size={18} />}
               </button>
@@ -605,7 +513,11 @@ const Blog = () => {
 
           {/* Hero Image */}
           <div className="blog-detail-hero">
-            <img src={selectedBlog.image} alt={selectedBlog.title} />
+            <img 
+              src={selectedBlog.image} 
+              alt={selectedBlog.title} 
+              loading="eager"
+            />
             <div className="blog-detail-overlay" style={{ background: selectedBlog.gradient }}></div>
           </div>
 
@@ -634,14 +546,14 @@ const Blog = () => {
             <h1 className="blog-detail-title">{selectedBlog.title}</h1>
             
             <div className="blog-detail-body">
-              <p className="lead-paragraph">{selectedBlog.detailedContent.lead}</p>
+              <p className="lead-paragraph">{selectedBlog.detailedContent?.lead || selectedBlog.excerpt}</p>
               
-              {selectedBlog.detailedContent.sections.map((section, index) => (
+              {selectedBlog.detailedContent?.sections?.map((section, index) => (
                 <div key={index} className="content-section">
                   <h2>{section.title}</h2>
                   <p>{section.content}</p>
                   
-                  {section.subsections && section.subsections.map((subsection, subIndex) => (
+                  {section.subsections?.map((subsection, subIndex) => (
                     <div key={subIndex} className="subsection">
                       <h3>{subsection.title}</h3>
                       <p>{subsection.content}</p>
@@ -650,42 +562,55 @@ const Blog = () => {
                 </div>
               ))}
 
-              <div className="content-highlight">
-                {(() => {
-                  const HighlightIcon = selectedBlog.detailedContent.highlight.icon;
-                  return <HighlightIcon size={24} />;
-                })()}
-                <div>
-                  <strong>Key Insight:</strong> {selectedBlog.detailedContent.highlight.text}
+              {selectedBlog.detailedContent?.highlight && (
+                <div className="content-highlight">
+                  <Lightbulb size={24} />
+                  <div>
+                    <strong>Key Insight:</strong> {selectedBlog.detailedContent.highlight.text}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="content-quote">
-                "{selectedBlog.detailedContent.quote}"
-              </div>
+              {selectedBlog.detailedContent?.quote && (
+                <div className="content-quote">
+                  "{selectedBlog.detailedContent.quote}"
+                </div>
+              )}
 
-              <h2>Common Pitfalls to Avoid</h2>
-              <p>
-                Even with the best intentions, it's easy to make mistakes. Here are the most common pitfalls specific to {selectedBlog.category.toLowerCase()}:
-              </p>
+              {selectedBlog.detailedContent?.pitfalls && selectedBlog.detailedContent.pitfalls.length > 0 && (
+                <>
+                  <h2>Common Pitfalls to Avoid</h2>
+                  <p>
+                    Even with the best intentions, it's easy to make mistakes. Here are the most common pitfalls specific to {selectedBlog.category.toLowerCase()}:
+                  </p>
 
-              <ul>
-                {selectedBlog.detailedContent.pitfalls.map((pitfall, index) => (
-                  <li key={index}>
-                    <strong>{pitfall.title}:</strong> {pitfall.description}
-                  </li>
-                ))}
-              </ul>
+                  <ul>
+                    {selectedBlog.detailedContent.pitfalls.map((pitfall, index) => (
+                      <li key={index}>
+                        <strong>{pitfall.title}:</strong> {pitfall.description}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
 
-              <h2>Real-World Applications</h2>
-              <p>
-                {selectedBlog.detailedContent.applications}
-              </p>
+              {selectedBlog.detailedContent?.applications && (
+                <>
+                  <h2>Real-World Applications</h2>
+                  <p>
+                    {selectedBlog.detailedContent.applications}
+                  </p>
+                </>
+              )}
 
-              <h2>Moving Forward</h2>
-              <p>
-                {selectedBlog.detailedContent.conclusion}
-              </p>
+              {selectedBlog.detailedContent?.conclusion && (
+                <>
+                  <h2>Moving Forward</h2>
+                  <p>
+                    {selectedBlog.detailedContent.conclusion}
+                  </p>
+                </>
+              )}
 
               <div className="content-cta">
                 <h3>Ready to Get Started?</h3>
@@ -710,31 +635,28 @@ const Blog = () => {
             </div>
 
             {/* Related Articles */}
-            <div className="related-articles">
-              <h3>Related Articles</h3>
-              <div className="related-grid">
-                {blogPosts
-                  .filter(post => post.id !== selectedBlog.id && post.category === selectedBlog.category)
-                  .slice(0, 3)
-                  .map(post => {
-                    const IconComponent = post.icon;
+            {relatedBlogs.length > 0 && (
+              <div className="related-articles">
+                <h3>Related Articles</h3>
+                <div className="related-grid">
+                  {relatedBlogs.map(post => {
+                    const IconComponent = iconMap[post.category] || FileText;
                     return (
                       <div
                         key={post.id}
                         className="related-card"
                         onClick={() => {
-                          // Scroll to top before opening
                           window.scrollTo({ top: 0, behavior: 'instant' });
                           setIsAnimating(true);
                           setTimeout(() => {
                             setSelectedBlog(post);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                            navigate(`/blog/${post.id}`);
                             setIsAnimating(false);
                           }, 300);
                         }}
                       >
                         <div className="related-image">
-                          <img src={post.image} alt={post.title} />
+                          <img src={post.image} alt={post.title} loading="lazy" />
                         </div>
                         <div className="related-content">
                           <div className="related-badge">
@@ -749,8 +671,9 @@ const Blog = () => {
                       </div>
                     );
                   })}
+                </div>
               </div>
-            </div>
+            )}
           </article>
         </div>
       )}
@@ -760,6 +683,28 @@ const Blog = () => {
           min-height: 100vh;
           background: #000;
           color: #fff;
+        }
+
+        .blog-loading {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          height: 100vh;
+          gap: 20px;
+        }
+
+        .blog-loading .spinner {
+          width: 40px;
+          height: 40px;
+          border: 4px solid rgba(255, 255, 255, 0.1);
+          border-radius: 50%;
+          border-top-color: #6a00ff;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
 
         /* Hero Section */
@@ -866,6 +811,23 @@ const Blog = () => {
 
         .blog-search-bar input::placeholder {
           color: rgba(255, 255, 255, 0.4);
+        }
+
+        .search-btn {
+          background: linear-gradient(135deg, #6a00ff, #00d4ff);
+          border: none;
+          color: white;
+          padding: 8px 20px;
+          border-radius: 25px;
+          font-weight: 600;
+          cursor: pointer;
+          margin-left: 10px;
+          transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(106, 0, 255, 0.3);
         }
 
         /* Centered Category Filters */
@@ -1052,6 +1014,21 @@ const Blog = () => {
         .read-more-btn:hover {
           background: linear-gradient(135deg, #6a00ff, #00d4ff);
           border-color: transparent;
+        }
+
+        .no-results {
+          text-align: center;
+          padding: 60px 20px;
+        }
+
+        .no-results h3 {
+          font-size: 2rem;
+          margin-bottom: 16px;
+        }
+
+        .no-results p {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 1.1rem;
         }
 
         /* Blog Detail */
@@ -1495,6 +1472,18 @@ const Blog = () => {
             font-size: 0.9rem;
           }
 
+          .blog-search-bar {
+            flex-direction: column;
+            gap: 10px;
+            padding: 20px;
+          }
+
+          .search-btn {
+            width: 100%;
+            margin-left: 0;
+            margin-top: 10px;
+          }
+
           .blog-grid {
             grid-template-columns: 1fr;
             gap: 30px;
@@ -1551,6 +1540,14 @@ const Blog = () => {
 
           .back-btn {
             padding: 10px;
+          }
+
+          .content-cta {
+            padding: 24px;
+          }
+
+          .content-cta h3 {
+            font-size: 1.5rem;
           }
         }
       `}</style>
