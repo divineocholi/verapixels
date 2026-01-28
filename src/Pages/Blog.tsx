@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Clock, User, Calendar, Share2, TrendingUp, ChevronRight, Search, 
-  Palette, Code, Zap, Lightbulb, Briefcase, FileText, Check, X 
+  Palette, Code, Zap, Lightbulb, Briefcase, FileText, Check, X, AlertTriangle,
+  CheckCircle, XCircle, Brain, BookOpen
 } from 'lucide-react';
 
 // API Configuration
@@ -39,6 +40,11 @@ interface BlogPost {
       title: string;
       description: string;
     }>;
+    caseStudy?: {
+      title: string;
+      data: string;
+    };
+    advancedTools?: string[];
     applications: string;
     conclusion: string;
   };
@@ -379,7 +385,9 @@ const Blog = () => {
     Performance: Zap,
     Development: Code,
     Business: Briefcase,
-    Content: FileText
+    Content: FileText,
+    Brain: Brain,
+    Language: FileText
   };
 
   if (loading && !selectedBlog) {
@@ -588,13 +596,16 @@ const Blog = () => {
             <h1 className="blog-detail-title">{selectedBlog.title}</h1>
             
             <div className="blog-detail-body">
+              {/* Lead Paragraph */}
               <p className="lead-paragraph">{selectedBlog.detailedContent?.lead || selectedBlog.excerpt}</p>
               
+              {/* Main Sections */}
               {selectedBlog.detailedContent?.sections?.map((section, index) => (
                 <div key={index} className="content-section">
                   <h2>{section.title}</h2>
                   <p>{section.content}</p>
                   
+                  {/* Subsections */}
                   {section.subsections?.map((subsection, subIndex) => (
                     <div key={subIndex} className="subsection">
                       <h3>{subsection.title}</h3>
@@ -604,6 +615,7 @@ const Blog = () => {
                 </div>
               ))}
 
+              {/* Highlight Section */}
               {selectedBlog.detailedContent?.highlight && (
                 <div className="content-highlight">
                   <Lightbulb size={24} />
@@ -613,47 +625,87 @@ const Blog = () => {
                 </div>
               )}
 
+              {/* Quote */}
               {selectedBlog.detailedContent?.quote && (
                 <div className="content-quote">
                   "{selectedBlog.detailedContent.quote}"
                 </div>
               )}
 
+              {/* Pitfalls Section */}
               {selectedBlog.detailedContent?.pitfalls && selectedBlog.detailedContent.pitfalls.length > 0 && (
-                <>
+                <div className="content-section">
                   <h2>Common Pitfalls to Avoid</h2>
                   <p>
-                    Even with the best intentions, it's easy to make mistakes. Here are the most common pitfalls specific to {selectedBlog.category.toLowerCase()}:
+                    Even with the best intentions, it's easy to make mistakes. Here are the most common pitfalls to watch out for:
                   </p>
 
-                  <ul>
+                  <div className="pitfalls-grid">
                     {selectedBlog.detailedContent.pitfalls.map((pitfall, index) => (
-                      <li key={index}>
-                        <strong>{pitfall.title}:</strong> {pitfall.description}
-                      </li>
+                      <div key={index} className="pitfall-card">
+                        <div className="pitfall-icon">
+                          <AlertTriangle size={24} />
+                        </div>
+                        <div className="pitfall-content">
+                          <h4>{pitfall.title}</h4>
+                          <p>{pitfall.description}</p>
+                        </div>
+                      </div>
                     ))}
-                  </ul>
-                </>
+                  </div>
+                </div>
               )}
 
+              {/* Case Study Section */}
+              {selectedBlog.detailedContent?.caseStudy && (
+                <div className="case-study-section">
+                  <div className="case-study-header">
+                    <BookOpen size={28} />
+                    <h2>Case Study</h2>
+                  </div>
+                  <div className="case-study-content">
+                    <h3>{selectedBlog.detailedContent.caseStudy.title}</h3>
+                    <p>{selectedBlog.detailedContent.caseStudy.data}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Advanced Tools Section */}
+              {selectedBlog.detailedContent?.advancedTools && selectedBlog.detailedContent.advancedTools.length > 0 && (
+                <div className="content-section">
+                  <h2>Advanced Tools & Resources</h2>
+                  <p>
+                    Take your implementation to the next level with these professional-grade tools:
+                  </p>
+                  
+                  <div className="tools-grid">
+                    {selectedBlog.detailedContent.advancedTools.map((tool, index) => (
+                      <div key={index} className="tool-card">
+                        <CheckCircle size={20} />
+                        <span>{tool}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Applications Section */}
               {selectedBlog.detailedContent?.applications && (
-                <>
+                <div className="content-section">
                   <h2>Real-World Applications</h2>
-                  <p>
-                    {selectedBlog.detailedContent.applications}
-                  </p>
-                </>
+                  <p>{selectedBlog.detailedContent.applications}</p>
+                </div>
               )}
 
+              {/* Conclusion Section */}
               {selectedBlog.detailedContent?.conclusion && (
-                <>
+                <div className="content-section">
                   <h2>Moving Forward</h2>
-                  <p>
-                    {selectedBlog.detailedContent.conclusion}
-                  </p>
-                </>
+                  <p>{selectedBlog.detailedContent.conclusion}</p>
+                </div>
               )}
 
+              {/* CTA Section */}
               <div className="content-cta">
                 <h3>Ready to Get Started?</h3>
                 <p>Apply these insights to your projects and watch your results transform. Remember, the best time to start is now.</p>
@@ -725,7 +777,7 @@ const Blog = () => {
           min-height: 100vh;
           background: #000;
           color: #fff;
-          padding-top: 80px; /* Add padding to prevent navbar overlap */
+          padding-top: 80px;
         }
 
         .blog-loading {
@@ -1410,6 +1462,10 @@ const Blog = () => {
           }
         }
 
+        .content-section {
+          margin-bottom: 50px;
+        }
+
         .blog-detail-body h2 {
           font-size: 1.8rem;
           font-weight: 800;
@@ -1531,6 +1587,134 @@ const Blog = () => {
           .content-quote::before {
             font-size: 4rem;
           }
+        }
+
+        /* Pitfalls Grid */
+        .pitfalls-grid {
+          display: grid;
+          gap: 20px;
+          margin-top: 30px;
+        }
+
+        @media (min-width: 768px) {
+          .pitfalls-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        .pitfall-card {
+          background: rgba(255, 0, 0, 0.05);
+          border: 1px solid rgba(255, 0, 0, 0.2);
+          border-radius: 12px;
+          padding: 20px;
+          display: flex;
+          gap: 16px;
+          transition: all 0.3s ease;
+        }
+
+        .pitfall-card:hover {
+          border-color: rgba(255, 0, 0, 0.4);
+          transform: translateY(-2px);
+        }
+
+        .pitfall-icon {
+          color: #ff6b6b;
+          flex-shrink: 0;
+        }
+
+        .pitfall-content h4 {
+          font-size: 1.1rem;
+          font-weight: 700;
+          margin: 0 0 8px;
+          color: #ff6b6b;
+        }
+
+        .pitfall-content p {
+          margin: 0;
+          font-size: 0.95rem;
+          color: rgba(255, 255, 255, 0.8);
+          line-height: 1.6;
+        }
+
+        /* Case Study Section */
+        .case-study-section {
+          background: linear-gradient(135deg, rgba(106, 0, 255, 0.1), rgba(0, 212, 255, 0.1));
+          border: 1px solid rgba(106, 0, 255, 0.3);
+          border-radius: 16px;
+          padding: 30px;
+          margin: 50px 0;
+        }
+
+        @media (min-width: 768px) {
+          .case-study-section {
+            padding: 40px;
+          }
+        }
+
+        .case-study-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 24px;
+        }
+
+        .case-study-header svg {
+          color: #00d4ff;
+        }
+
+        .case-study-header h2 {
+          margin: 0;
+          font-size: 1.8rem;
+        }
+
+        .case-study-content h3 {
+          font-size: 1.3rem;
+          margin: 0 0 16px;
+          color: #00d4ff;
+        }
+
+        .case-study-content p {
+          margin: 0;
+          line-height: 1.7;
+        }
+
+        /* Tools Grid */
+        .tools-grid {
+          display: grid;
+          gap: 16px;
+          margin-top: 30px;
+        }
+
+        @media (min-width: 768px) {
+          .tools-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        .tool-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+          padding: 16px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .tool-card:hover {
+          border-color: #6a00ff;
+          transform: translateX(5px);
+        }
+
+        .tool-card svg {
+          color: #00d4ff;
+          flex-shrink: 0;
+        }
+
+        .tool-card span {
+          font-size: 0.95rem;
+          line-height: 1.5;
         }
 
         .content-cta {
