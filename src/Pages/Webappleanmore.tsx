@@ -778,6 +778,7 @@ const WebApplearnMore = () => {
           padding: 24px 0;
           position: relative;
           z-index: 10;
+            margin-top: 80px;
         }
 
         .back-btn {

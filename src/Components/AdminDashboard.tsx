@@ -1,4 +1,4 @@
-// AdminDashboard.tsx - COMPLETE WORKING VERSION WITH ALL FIXES
+// AdminDashboard.tsx - COMPLETE WORKING VERSION WITH SOUND INTEGRATIONS
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from './supabase';
 import emailjs from '@emailjs/browser';
@@ -80,6 +80,14 @@ const TIME_SLOTS = [
   '03:00 PM', '03:30 PM', '04:00 PM'
 ];
 
+// ========== NOTIFICATION SOUND CONFIGURATION ==========
+const NOTIFICATION_SOUNDS = {
+  newMessage: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_d1718ab41b.mp3',
+  newConsultation: 'https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c7443c.mp3',
+  urgent: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c6c0e95e7f.mp3',
+  general: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_d1718ab41b.mp3'
+};
+
 // ========== TYPES ==========
 interface Conversation {
   id: string;
@@ -137,6 +145,7 @@ interface AdminData {
   settings?: {
     theme?: 'light' | 'dark';
     notifications?: boolean;
+    sound_notifications?: boolean;
     email_notifications?: boolean;
     timezone?: string;
   };
@@ -208,6 +217,94 @@ interface BookingFormData {
 interface LoginFormData {
   email: string;
   password: string;
+}
+
+// ========== NOTIFICATION SOUND MANAGER CLASS ==========
+class NotificationSoundManager {
+  private static instance: NotificationSoundManager;
+  private audioContext: AudioContext | null = null;
+  private sounds: Map<string, AudioBuffer> = new Map();
+  private enabled: boolean = true;
+
+  private constructor() {
+    this.initAudioContext();
+  }
+
+  static getInstance(): NotificationSoundManager {
+    if (!NotificationSoundManager.instance) {
+      NotificationSoundManager.instance = new NotificationSoundManager();
+    }
+    return NotificationSoundManager.instance;
+  }
+
+  private initAudioContext() {
+    try {
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      console.log('🔊 Audio context initialized');
+    } catch (error) {
+      console.error('Failed to initialize audio context:', error);
+    }
+  }
+
+  async preloadSound(key: string, url: string): Promise<void> {
+    if (!this.audioContext) return;
+
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      this.sounds.set(key, audioBuffer);
+      console.log(`✅ Preloaded sound: ${key}`);
+    } catch (error) {
+      console.error(`Failed to preload sound ${key}:`, error);
+    }
+  }
+
+  async playSound(soundType: keyof typeof NOTIFICATION_SOUNDS): Promise<void> {
+    if (!this.enabled || !this.audioContext) {
+      console.log('🔇 Sound disabled or no audio context');
+      return;
+    }
+
+    try {
+      if (this.audioContext.state === 'suspended') {
+        await this.audioContext.resume();
+      }
+
+      const soundBuffer = this.sounds.get(soundType);
+      
+      if (soundBuffer) {
+        const source = this.audioContext.createBufferSource();
+        source.buffer = soundBuffer;
+        source.connect(this.audioContext.destination);
+        source.start(0);
+        console.log(`🔊 Playing sound: ${soundType}`);
+      } else {
+        console.log(`⏳ Sound not preloaded, loading: ${soundType}`);
+        await this.preloadSound(soundType, NOTIFICATION_SOUNDS[soundType]);
+        await this.playSound(soundType);
+      }
+    } catch (error) {
+      console.error('Error playing sound:', error);
+    }
+  }
+
+  setEnabled(enabled: boolean): void {
+    this.enabled = enabled;
+    console.log(`🔊 Notification sounds ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  isEnabled(): boolean {
+    return this.enabled;
+  }
+
+  async preloadAllSounds(): Promise<void> {
+    const promises = Object.entries(NOTIFICATION_SOUNDS).map(([key, url]) =>
+      this.preloadSound(key, url)
+    );
+    await Promise.all(promises);
+    console.log('✅ All notification sounds preloaded');
+  }
 }
 
 // ========== LOGIN COMPONENT ==========
@@ -477,7 +574,6 @@ const TopNavigation: React.FC<{
         maxWidth: '1400px',
         margin: '0 auto'
       }}>
-        {/* Logo and Brand */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{
             width: '40px',
@@ -503,7 +599,6 @@ const TopNavigation: React.FC<{
           </div>
         </div>
 
-        {/* Navigation Items */}
         <div style={{ display: 'flex', gap: '5px' }}>
           {navItems.map(item => (
             <button
@@ -541,7 +636,6 @@ const TopNavigation: React.FC<{
           ))}
         </div>
 
-        {/* User Profile */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <button
             onClick={() => setActiveSection('settings')}
@@ -800,7 +894,6 @@ const NotificationsComponent: React.FC<{
         </p>
       </div>
 
-      {/* Stats Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
         <div style={{
           background: styles.cardBg,
@@ -852,7 +945,6 @@ const NotificationsComponent: React.FC<{
         </div>
       </div>
 
-      {/* Filters */}
       <div style={{
         background: styles.cardBg,
         borderRadius: '12px',
@@ -918,7 +1010,6 @@ const NotificationsComponent: React.FC<{
         </div>
       </div>
 
-      {/* Notifications List */}
       <div style={{
         background: styles.cardBg,
         borderRadius: '12px',
@@ -1994,7 +2085,6 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
       </div>
 
       <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
-        {/* Conversation List */}
         <div style={{
           flex: '0 0 350px',
           background: styles.cardBg,
@@ -2128,7 +2218,6 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
           </div>
         </div>
 
-        {/* Chat Area - FIXED POSITIONING */}
         <div style={{
           flex: 1,
           background: styles.cardBg,
@@ -2141,7 +2230,6 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
         }}>
           {selectedConversation ? (
             <>
-              {/* Chat Header - Fixed at top */}
               <div style={{
                 padding: '20px',
                 borderBottom: `1px solid ${styles.border}`,
@@ -2216,7 +2304,6 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
                 </div>
               </div>
 
-              {/* Messages Container - Scrollable */}
               <div style={{ 
                 flex: 1, 
                 padding: '20px', 
@@ -2281,7 +2368,6 @@ const LiveChatsComponent: React.FC<LiveChatsComponentProps> = ({
                 )}
               </div>
 
-              {/* Message Input - Fixed at bottom */}
               <div style={{
                 padding: '20px',
                 borderTop: `1px solid ${styles.border}`,
@@ -2490,7 +2576,6 @@ const ConsultationsManagement: React.FC<{
         </p>
       </div>
 
-      {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
         <div style={{
           background: styles.cardBg,
@@ -2542,7 +2627,6 @@ const ConsultationsManagement: React.FC<{
         </div>
       </div>
 
-      {/* Filters */}
       <div style={{
         background: styles.cardBg,
         borderRadius: '12px',
@@ -2642,7 +2726,6 @@ const ConsultationsManagement: React.FC<{
         </div>
       </div>
 
-      {/* Consultations Table */}
       <div style={{
         background: styles.cardBg,
         borderRadius: '12px',
@@ -2793,7 +2876,6 @@ const ConsultationsManagement: React.FC<{
         </div>
       </div>
 
-      {/* Details Panel */}
       {selectedConsultation && (
         <div style={{
           marginTop: '30px',
@@ -3422,6 +3504,7 @@ const SettingsComponent: React.FC<{
   const [settings, setSettings] = useState({
     theme: theme,
     notifications: true,
+    sound_notifications: true,
     email_notifications: true,
     timezone: TIMEZONES[0],
     ...adminData?.settings
@@ -3430,7 +3513,9 @@ const SettingsComponent: React.FC<{
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+ const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info' | 'warning', text: string } | null>(null);
+ 
+  const soundManager = NotificationSoundManager.getInstance();
 
   const styles = {
     background: theme === 'dark' ? '#0f172a' : '#f8fafc',
@@ -3483,6 +3568,20 @@ const SettingsComponent: React.FC<{
     if (success || !enabled) {
       setSettings({ ...settings, notifications: enabled });
     }
+  };
+
+  const handleSoundNotificationChange = async (enabled: boolean) => {
+    soundManager.setEnabled(enabled);
+    setSettings({ ...settings, sound_notifications: enabled });
+    
+    if (enabled) {
+      await soundManager.playSound('general');
+      setMessage({ type: 'success', text: 'Sound notifications enabled! 🔊' });
+    } else {
+      setMessage({ type: 'info', text: 'Sound notifications disabled 🔇' });
+    }
+    
+    setTimeout(() => setMessage(null), 2000);
   };
 
   const handleProfileUpload = async () => {
@@ -3766,7 +3865,7 @@ const SettingsComponent: React.FC<{
                   Push Notifications
                 </div>
                 <div style={{ fontSize: '13px', color: styles.mutedText }}>
-                  Receive notifications for new messages and consultations
+                  Receive browser notifications for new messages and consultations
                 </div>
               </div>
               <button
@@ -3785,6 +3884,50 @@ const SettingsComponent: React.FC<{
                   position: 'absolute',
                   top: '2px',
                   left: settings.notifications ? '24px' : '2px',
+                  width: '24px',
+                  height: '24px',
+                  background: 'white',
+                  borderRadius: '50%',
+                  transition: 'left 0.2s'
+                }} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '15px', fontWeight: 500, color: styles.text, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  🔊 Sound Notifications
+                  <span style={{
+                    padding: '2px 8px',
+                    background: styles.success + '20',
+                    color: styles.success,
+                    fontSize: '11px',
+                    borderRadius: '12px',
+                    fontWeight: 600
+                  }}>
+                    NEW
+                  </span>
+                </div>
+                <div style={{ fontSize: '13px', color: styles.mutedText }}>
+                  Play sound alerts for notifications (works even when dashboard is in background)
+                </div>
+              </div>
+              <button
+                onClick={() => handleSoundNotificationChange(!settings.sound_notifications)}
+                style={{
+                  width: '50px',
+                  height: '28px',
+                  background: settings.sound_notifications ? styles.success : styles.mutedText,
+                  border: 'none',
+                  borderRadius: '14px',
+                  position: 'relative',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{
+                  position: 'absolute',
+                  top: '2px',
+                  left: settings.sound_notifications ? '24px' : '2px',
                   width: '24px',
                   height: '24px',
                   background: 'white',
@@ -3856,6 +3999,7 @@ const SettingsComponent: React.FC<{
                 setSettings({
                   theme: theme,
                   notifications: true,
+                  sound_notifications: true,
                   email_notifications: true,
                   timezone: TIMEZONES[0]
                 });
@@ -3988,7 +4132,6 @@ const NotesComponent: React.FC<{
     
   } catch (error) {
     console.error('Error in fetchNotes:', error);
-    // Fallback to localStorage if database fails
     const localNotes = JSON.parse(localStorage.getItem('admin_notes') || '[]');
     const userNotes = localNotes.filter((note: AdminNote) => 
       note.admin_id === adminData.id && !note.is_deleted
@@ -4021,12 +4164,11 @@ const handleCreateNote = async () => {
 
     console.log('Creating note with data:', noteData);
 
-    // Insert and return the data
     const { data, error } = await supabase
       .from('admin_notes')
       .insert([noteData])
-      .select() // Add this to get the inserted data back
-      .single(); // Use single() to get one row
+      .select()
+      .single();
 
     if (error) {
       console.error('Supabase insert error:', error);
@@ -4036,12 +4178,10 @@ const handleCreateNote = async () => {
     console.log('Note created successfully:', data);
 
     if (data) {
-      // Update state with the returned data (includes auto-generated id)
       setNotes(prev => [data, ...prev]);
     } else {
-      // Fallback: create note object manually
       const newNoteItem: AdminNote = {
-        id: noteData.note_id, // Use note_id as id temporarily
+        id: noteData.note_id,
         ...noteData
       };
       setNotes(prev => [newNoteItem, ...prev]);
@@ -4614,6 +4754,7 @@ const AdminDashboard: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const soundManager = NotificationSoundManager.getInstance();
 
   useEffect(() => {
     checkAuth();
@@ -4684,6 +4825,68 @@ const AdminDashboard: React.FC = () => {
     };
   }, [isAuthenticated, adminData]);
   
+  useEffect(() => {
+    const initSounds = async () => {
+      await soundManager.preloadAllSounds();
+      
+      if (adminData?.settings?.sound_notifications !== undefined) {
+        soundManager.setEnabled(adminData.settings.sound_notifications);
+      }
+    };
+    
+    if (isAuthenticated && adminData) {
+      initSounds();
+    }
+  }, [adminData, isAuthenticated]);
+
+  useEffect(() => {
+    const playNotificationSound = async () => {
+      if (!adminData?.settings?.sound_notifications) return;
+      
+      const unreadNotifications = notifications.filter(n => n.status === 'pending');
+      
+      if (unreadNotifications.length > 0) {
+        const latestNotif = unreadNotifications[0];
+        
+        if (latestNotif.priority === 'urgent') {
+          await soundManager.playSound('urgent');
+        } else {
+          await soundManager.playSound('general');
+        }
+      }
+    };
+
+    playNotificationSound();
+  }, [notifications.length]);
+
+  useEffect(() => {
+    const playMessageSound = async () => {
+      if (!adminData?.settings?.sound_notifications) return;
+      
+      const unreadChats = conversations.filter(c => c.unread_count > 0);
+      
+      if (unreadChats.length > 0) {
+        await soundManager.playSound('newMessage');
+      }
+    };
+
+    playMessageSound();
+  }, [conversations]);
+
+  useEffect(() => {
+    const playConsultationSound = async () => {
+      if (!adminData?.settings?.sound_notifications) return;
+      
+      const pendingConsultations = consultations.filter(c => c.status === 'pending');
+      
+      if (pendingConsultations.length > 0) {
+        await soundManager.playSound('newConsultation');
+      }
+    };
+
+    playConsultationSound();
+  }, [consultations.length]);
+  
   const checkAuth = async () => {
     try {
       console.log('🔒 Checking authentication...');
@@ -4730,6 +4933,7 @@ const AdminDashboard: React.FC = () => {
         settings: adminData.settings || {
           theme: 'light',
           notifications: true,
+          sound_notifications: true,
           email_notifications: true,
           timezone: 'Africa/Lagos'
         }
@@ -5022,7 +5226,6 @@ const fetchConversations = async () => {
   try {
     console.log('🔐 Login attempt for:', email);
     
-    // ✅ CALL YOUR SERVER LOGIN ENDPOINT
     const API_URL = import.meta.env.PROD
       ? 'https://verapixels-server.onrender.com'
       : 'http://localhost:5001';
@@ -5044,7 +5247,6 @@ const fetchConversations = async () => {
       };
     }
 
-    // ✅ Use the admin data from server response
     const adminInfo = {
       id: result.admin.id,
       auth_user_id: result.admin.auth_user_id || '',
@@ -5056,6 +5258,7 @@ const fetchConversations = async () => {
       settings: result.admin.settings || {
         theme: 'light',
         notifications: true,
+        sound_notifications: true,
         email_notifications: true,
         timezone: 'Africa/Lagos'
       }
@@ -5462,7 +5665,6 @@ const fetchConversations = async () => {
       color: theme === 'dark' ? '#f1f5f9' : '#0f172a',
       transition: 'all 0.3s ease'
     }}>
-      {/* Top Navigation */}
       <TopNavigation
         activeSection={activeSection}
         setActiveSection={setActiveSection}
@@ -5472,7 +5674,6 @@ const fetchConversations = async () => {
         unreadChats={metrics.unreadChats}
       />
 
-      {/* Booking Modal */}
       <BookingModal
         isOpen={isBookingModalOpen}
         onClose={() => setIsBookingModalOpen(false)}
@@ -5480,7 +5681,6 @@ const fetchConversations = async () => {
         onSubmit={handleBookConsultation}
       />
 
-      {/* Main Content Area */}
       <div style={{ padding: '20px', paddingTop: '30px' }}>
         {activeSection === 'dashboard' && (
           <DashboardCards

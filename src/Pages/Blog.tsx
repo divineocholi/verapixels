@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Clock, User, Calendar, Share2, TrendingUp, ChevronRight, Search, 
-  Palette, Code, Zap, Lightbulb, Briefcase, FileText, Check 
+  Palette, Code, Zap, Lightbulb, Briefcase, FileText, Check, X 
 } from 'lucide-react';
-
-
 
 // API Configuration
 const API_URL = import.meta.env.PROD 
@@ -59,6 +57,7 @@ const Blog = () => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState(['All']);
   const [relatedBlogs, setRelatedBlogs] = useState<BlogPost[]>([]);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   // Helper functions for SEO meta tags
   const updateMetaTag = (property: string, content: string) => {
@@ -234,7 +233,7 @@ const Blog = () => {
 
   const fetchBlogById = async (blogId: string) => {
     try {
-     const response = await fetch(`${API_URL}/api/blogs/${blogId}`);
+      const response = await fetch(`${API_URL}/api/blogs/${blogId}`);
       const data = await response.json();
       
       if (data.success && data.blog) {
@@ -366,6 +365,14 @@ const Blog = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const clearSearch = () => {
+    setSearchQuery('');
+    fetchBlogs();
+    if (isSearchExpanded) {
+      setIsSearchExpanded(false);
+    }
+  };
+
   // Icon mapping
   const iconMap: Record<string, React.ComponentType<any>> = {
     Design: Palette,
@@ -405,22 +412,47 @@ const Blog = () => {
               </p>
               
               {/* Search Bar */}
-              <form onSubmit={handleSearch} className="blog-search-bar">
-                <Search size={20} />
-                <input
-                  type="text"
-                  placeholder="Search articles..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button type="submit" className="search-btn">
-                  Search
-                </button>
-              </form>
+              <div className={`blog-search-container ${isSearchExpanded ? 'expanded' : ''}`}>
+                {isSearchExpanded && (
+                  <button 
+                    className="search-close-btn"
+                    onClick={() => setIsSearchExpanded(false)}
+                    aria-label="Close search"
+                  >
+                    <X size={20} />
+                  </button>
+                )}
+                <form onSubmit={handleSearch} className="blog-search-bar">
+                  <Search size={20} />
+                  <input
+                    type="text"
+                    placeholder="Search articles..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setIsSearchExpanded(true)}
+                  />
+                  {searchQuery && (
+                    <button 
+                      type="button" 
+                      className="search-clear-btn"
+                      onClick={clearSearch}
+                      aria-label="Clear search"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                  <button type="submit" className="search-btn desktop-only">
+                    Search
+                  </button>
+                  <button type="submit" className="search-btn mobile-only" aria-label="Search">
+                    <Search size={18} />
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
 
-          {/* Category Filter - Centered */}
+          {/* Category Filter */}
           <div className="blog-filters">
             <div className="blog-filters-container">
               <div className="category-pills-wrapper">
@@ -443,6 +475,9 @@ const Blog = () => {
               <div className="no-results">
                 <h3>No blog posts found</h3>
                 <p>Try a different search or category</p>
+                <button className="clear-filters-btn" onClick={clearSearch}>
+                  Clear Search
+                </button>
               </div>
             ) : (
               <div className="blog-grid">
@@ -690,6 +725,7 @@ const Blog = () => {
           min-height: 100vh;
           background: #000;
           color: #fff;
+          padding-top: 80px; /* Add padding to prevent navbar overlap */
         }
 
         .blog-loading {
@@ -717,9 +753,15 @@ const Blog = () => {
         /* Hero Section */
         .blog-hero {
           position: relative;
-          padding: 120px 20px 80px;
+          padding: 60px 20px 40px;
           text-align: center;
           overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+          .blog-hero {
+            padding: 120px 20px 80px;
+          }
         }
 
         .blog-hero-bg {
@@ -760,13 +802,17 @@ const Blog = () => {
           font-weight: 700;
           letter-spacing: 2px;
           margin-bottom: 24px;
+          position: relative;
+          z-index: 10;
         }
 
         .blog-hero-title {
-          font-size: clamp(40px, 7vw, 72px);
+          font-size: clamp(36px, 6vw, 72px);
           font-weight: 900;
           margin: 0 0 20px;
           line-height: 1.1;
+          position: relative;
+          z-index: 10;
         }
 
         .gradient-text {
@@ -776,25 +822,45 @@ const Blog = () => {
         }
 
         .blog-hero-subtitle {
-          font-size: 1.2rem;
+          font-size: 1.1rem;
           color: rgba(255, 255, 255, 0.7);
           margin: 0 0 40px;
           max-width: 700px;
           margin-left: auto;
           margin-right: auto;
+          position: relative;
+          z-index: 10;
+        }
+
+        @media (min-width: 768px) {
+          .blog-hero-subtitle {
+            font-size: 1.2rem;
+          }
+        }
+
+        /* Search Container */
+        .blog-search-container {
+          max-width: 600px;
+          margin: 0 auto;
+          position: relative;
+          z-index: 10;
         }
 
         .blog-search-bar {
-          max-width: 600px;
-          margin: 0 auto;
           position: relative;
           display: flex;
           align-items: center;
           background: rgba(255, 255, 255, 0.05);
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 50px;
-          padding: 16px 24px;
+          padding: 12px 20px;
           transition: all 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+          .blog-search-bar {
+            padding: 16px 24px;
+          }
         }
 
         .blog-search-bar:focus-within {
@@ -805,6 +871,7 @@ const Blog = () => {
         .blog-search-bar svg {
           color: rgba(255, 255, 255, 0.5);
           margin-right: 12px;
+          flex-shrink: 0;
         }
 
         .blog-search-bar input {
@@ -814,10 +881,28 @@ const Blog = () => {
           color: #fff;
           font-size: 1rem;
           outline: none;
+          min-width: 0;
         }
 
         .blog-search-bar input::placeholder {
           color: rgba(255, 255, 255, 0.4);
+        }
+
+        .search-clear-btn {
+          background: none;
+          border: none;
+          color: rgba(255, 255, 255, 0.5);
+          cursor: pointer;
+          padding: 4px;
+          margin-right: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: color 0.3s ease;
+        }
+
+        .search-clear-btn:hover {
+          color: #fff;
         }
 
         .search-btn {
@@ -828,8 +913,8 @@ const Blog = () => {
           border-radius: 25px;
           font-weight: 600;
           cursor: pointer;
-          margin-left: 10px;
           transition: all 0.3s ease;
+          flex-shrink: 0;
         }
 
         .search-btn:hover {
@@ -837,7 +922,72 @@ const Blog = () => {
           box-shadow: 0 10px 20px rgba(106, 0, 255, 0.3);
         }
 
-        /* Centered Category Filters */
+        .search-close-btn {
+          display: none;
+          position: absolute;
+          top: 50%;
+          right: 16px;
+          transform: translateY(-50%);
+          background: none;
+          border: none;
+          color: rgba(255, 255, 255, 0.5);
+          cursor: pointer;
+          z-index: 11;
+        }
+
+        .mobile-only {
+          display: none;
+        }
+
+        .desktop-only {
+          display: inline-block;
+        }
+
+        /* Mobile Search Styles */
+        @media (max-width: 767px) {
+          .blog-search-container.expanded {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            padding: 80px 20px 0;
+            margin: 0;
+            max-width: none;
+          }
+
+          .blog-search-container.expanded .blog-search-bar {
+            border-radius: 20px;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.1);
+          }
+
+          .blog-search-container.expanded .search-close-btn {
+            display: block;
+          }
+
+          .mobile-only {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            width: 44px;
+            height: 44px;
+          }
+
+          .desktop-only {
+            display: none;
+          }
+
+          .blog-search-bar input {
+            font-size: 1.1rem;
+          }
+        }
+
+        /* Category Filter */
         .blog-filters {
           padding: 40px 20px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -895,6 +1045,13 @@ const Blog = () => {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
           gap: 40px;
+        }
+
+        @media (max-width: 768px) {
+          .blog-grid {
+            grid-template-columns: 1fr;
+            gap: 30px;
+          }
         }
 
         .blog-card {
@@ -1036,6 +1193,23 @@ const Blog = () => {
         .no-results p {
           color: rgba(255, 255, 255, 0.6);
           font-size: 1.1rem;
+          margin-bottom: 20px;
+        }
+
+        .clear-filters-btn {
+          background: linear-gradient(135deg, #6a00ff, #00d4ff);
+          border: none;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .clear-filters-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(106, 0, 255, 0.3);
         }
 
         /* Blog Detail */
@@ -1150,8 +1324,14 @@ const Blog = () => {
 
         .blog-detail-hero {
           position: relative;
-          height: 500px;
+          height: 300px;
           overflow: hidden;
+        }
+
+        @media (min-width: 768px) {
+          .blog-detail-hero {
+            height: 500px;
+          }
         }
 
         .blog-detail-hero img {
@@ -1169,7 +1349,13 @@ const Blog = () => {
         .blog-detail-content {
           max-width: 800px;
           margin: 0 auto;
-          padding: 60px 20px;
+          padding: 40px 20px;
+        }
+
+        @media (min-width: 768px) {
+          .blog-detail-content {
+            padding: 60px 20px;
+          }
         }
 
         .blog-detail-meta {
@@ -1199,26 +1385,44 @@ const Blog = () => {
         }
 
         .blog-detail-body {
-          font-size: 1.1rem;
+          font-size: 1rem;
           line-height: 1.8;
           color: rgba(255, 255, 255, 0.9);
         }
 
+        @media (min-width: 768px) {
+          .blog-detail-body {
+            font-size: 1.1rem;
+          }
+        }
+
         .lead-paragraph {
-          font-size: 1.3rem;
+          font-size: 1.1rem;
           color: rgba(255, 255, 255, 0.8);
           margin-bottom: 40px;
           line-height: 1.7;
           font-weight: 500;
         }
 
+        @media (min-width: 768px) {
+          .lead-paragraph {
+            font-size: 1.3rem;
+          }
+        }
+
         .blog-detail-body h2 {
-          font-size: 2rem;
+          font-size: 1.8rem;
           font-weight: 800;
           margin: 60px 0 24px;
           color: #fff;
           position: relative;
           padding-bottom: 12px;
+        }
+
+        @media (min-width: 768px) {
+          .blog-detail-body h2 {
+            font-size: 2rem;
+          }
         }
 
         .blog-detail-body h2::after {
@@ -1233,10 +1437,16 @@ const Blog = () => {
         }
 
         .blog-detail-body h3 {
-          font-size: 1.5rem;
+          font-size: 1.3rem;
           font-weight: 700;
           margin: 40px 0 20px;
           color: #fff;
+        }
+
+        @media (min-width: 768px) {
+          .blog-detail-body h3 {
+            font-size: 1.5rem;
+          }
         }
 
         .blog-detail-body p {
@@ -1265,12 +1475,18 @@ const Blog = () => {
         .content-highlight {
           background: rgba(106, 0, 255, 0.1);
           border-left: 4px solid #6a00ff;
-          padding: 24px;
+          padding: 20px;
           border-radius: 12px;
           margin: 40px 0;
           display: flex;
           gap: 16px;
           align-items: flex-start;
+        }
+
+        @media (min-width: 768px) {
+          .content-highlight {
+            padding: 24px;
+          }
         }
 
         .content-highlight svg {
@@ -1282,9 +1498,9 @@ const Blog = () => {
         .content-quote {
           background: rgba(255, 255, 255, 0.02);
           border-left: 4px solid #00d4ff;
-          padding: 32px;
-          margin: 50px 0;
-          font-size: 1.4rem;
+          padding: 24px;
+          margin: 40px 0;
+          font-size: 1.1rem;
           font-style: italic;
           line-height: 1.6;
           color: rgba(255, 255, 255, 0.9);
@@ -1292,47 +1508,86 @@ const Blog = () => {
           position: relative;
         }
 
+        @media (min-width: 768px) {
+          .content-quote {
+            padding: 32px;
+            margin: 50px 0;
+            font-size: 1.4rem;
+          }
+        }
+
         .content-quote::before {
           content: '"';
           position: absolute;
           top: 10px;
           left: 20px;
-          font-size: 4rem;
+          font-size: 3rem;
           color: rgba(0, 212, 255, 0.2);
           font-family: serif;
           line-height: 1;
         }
 
+        @media (min-width: 768px) {
+          .content-quote::before {
+            font-size: 4rem;
+          }
+        }
+
         .content-cta {
           background: linear-gradient(135deg, rgba(106, 0, 255, 0.1), rgba(0, 212, 255, 0.1));
           border: 1px solid rgba(106, 0, 255, 0.3);
-          padding: 40px;
+          padding: 30px;
           border-radius: 20px;
           text-align: center;
           margin: 60px 0;
         }
 
+        @media (min-width: 768px) {
+          .content-cta {
+            padding: 40px;
+          }
+        }
+
         .content-cta h3 {
-          font-size: 2rem;
+          font-size: 1.8rem;
           margin: 0 0 16px;
+        }
+
+        @media (min-width: 768px) {
+          .content-cta h3 {
+            font-size: 2rem;
+          }
         }
 
         .content-cta p {
           margin: 0 0 32px;
-          font-size: 1.1rem;
+          font-size: 1rem;
           color: rgba(255, 255, 255, 0.8);
+        }
+
+        @media (min-width: 768px) {
+          .content-cta p {
+            font-size: 1.1rem;
+          }
         }
 
         .cta-btn {
           border: none;
           color: #fff;
-          padding: 18px 40px;
+          padding: 16px 32px;
           border-radius: 12px;
           font-weight: 800;
-          font-size: 1.1rem;
+          font-size: 1rem;
           cursor: pointer;
           transition: all 0.3s ease;
           box-shadow: 0 20px 40px rgba(106, 0, 255, 0.3);
+        }
+
+        @media (min-width: 768px) {
+          .cta-btn {
+            padding: 18px 40px;
+            font-size: 1.1rem;
+          }
         }
 
         .cta-btn:hover {
@@ -1344,30 +1599,51 @@ const Blog = () => {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.05);
           border-radius: 20px;
-          padding: 32px;
+          padding: 24px;
           margin: 60px 0;
           display: flex;
-          gap: 24px;
+          gap: 20px;
           align-items: center;
         }
 
+        @media (min-width: 768px) {
+          .author-bio {
+            padding: 32px;
+            gap: 24px;
+          }
+        }
+
         .author-avatar {
-          width: 80px;
-          height: 80px;
+          width: 60px;
+          height: 60px;
           border-radius: 50%;
           background: linear-gradient(135deg, #6a00ff, #00d4ff);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 2rem;
+          font-size: 1.5rem;
           font-weight: 900;
           flex-shrink: 0;
         }
 
+        @media (min-width: 768px) {
+          .author-avatar {
+            width: 80px;
+            height: 80px;
+            font-size: 2rem;
+          }
+        }
+
         .author-info h4 {
-          font-size: 1.3rem;
+          font-size: 1.2rem;
           margin: 0 0 8px;
           font-weight: 700;
+        }
+
+        @media (min-width: 768px) {
+          .author-info h4 {
+            font-size: 1.3rem;
+          }
         }
 
         .author-info p {
@@ -1383,15 +1659,27 @@ const Blog = () => {
         }
 
         .related-articles h3 {
-          font-size: 2rem;
+          font-size: 1.8rem;
           font-weight: 800;
           margin: 0 0 40px;
+        }
+
+        @media (min-width: 768px) {
+          .related-articles h3 {
+            font-size: 2rem;
+          }
         }
 
         .related-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
           gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+          .related-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         .related-card {
@@ -1453,80 +1741,6 @@ const Blog = () => {
           color: rgba(255, 255, 255, 0.6);
         }
 
-        @media (max-width: 768px) {
-          .blog-hero {
-            padding: 80px 20px 60px;
-          }
-
-          .blog-hero-title {
-            font-size: 36px;
-          }
-
-          .blog-filters-container {
-            justify-content: flex-start;
-            overflow-x: auto;
-            padding-bottom: 10px;
-          }
-
-          .category-pills-wrapper {
-            justify-content: flex-start;
-            min-width: max-content;
-            padding-right: 20px;
-          }
-
-          .category-pill {
-            padding: 10px 20px;
-            font-size: 0.9rem;
-          }
-
-          .blog-search-bar {
-            flex-direction: column;
-            gap: 10px;
-            padding: 20px;
-          }
-
-          .search-btn {
-            width: 100%;
-            margin-left: 0;
-            margin-top: 10px;
-          }
-
-          .blog-grid {
-            grid-template-columns: 1fr;
-            gap: 30px;
-          }
-
-          .blog-detail-hero {
-            height: 300px;
-          }
-
-          .blog-detail-content {
-            padding: 40px 20px;
-          }
-
-          .blog-detail-title {
-            font-size: 32px;
-          }
-
-          .blog-detail-body {
-            font-size: 1rem;
-          }
-
-          .author-bio {
-            flex-direction: column;
-            text-align: center;
-          }
-
-          .related-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .content-quote {
-            font-size: 1.1rem;
-            padding: 24px;
-          }
-        }
-
         @media (max-width: 480px) {
           .blog-filters {
             padding: 30px 15px;
@@ -1550,11 +1764,17 @@ const Blog = () => {
           }
 
           .content-cta {
-            padding: 24px;
+            padding: 20px;
           }
 
           .content-cta h3 {
             font-size: 1.5rem;
+          }
+
+          .author-bio {
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
           }
         }
       `}</style>

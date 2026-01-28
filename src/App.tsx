@@ -22,6 +22,7 @@ import ConsultationBooking from './Pages/ConsultationBooking'
 import CareersPage from './Pages/CareersPage'
 import Contact from './Pages/Contact'
 import Blog from './Pages/Blog'
+import MobileAppLearnMore from './Pages/Webappleanmore'
 import NotFound from './Pages/NotFound'
 
 // ========== ADMIN PAGES ==========
@@ -48,7 +49,8 @@ const App: React.FC = () => {
         <Route path="/casestudies" element={<CaseStudies />} />
         <Route path="/consultationbooking" element={<ConsultationBooking />} />
         <Route path="/career" element={<CareersPage />} />
-        
+          <Route path="/mobile-app" element={<MobileAppDevelopment />} />
+        <Route path="/mobile-app-learn-more" element={<MobileAppLearnMore />} />
         {/* FIXED: Blog routes - lowercase and add detail route */}
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:id" element={<Blog />} />
