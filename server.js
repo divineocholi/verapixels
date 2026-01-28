@@ -699,7 +699,6 @@ const blogPosts = [
   // Additional posts can be added following the same enhanced structure...
 ];
 
-module.exports = { blogPosts };
 // ========== BLOG API ROUTES ==========
 
 // Get all blog posts
