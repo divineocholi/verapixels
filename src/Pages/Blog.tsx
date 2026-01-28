@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Clock, User, Calendar, Share2, TrendingUp, ChevronRight, Search, 
   Palette, Code, Zap, Lightbulb, Briefcase, FileText, Check, X, AlertTriangle,
-  CheckCircle, XCircle, Brain, BookOpen
+  CheckCircle, XCircle, Brain, BookOpen, Target, Award
 } from 'lucide-react';
 
 // API Configuration
@@ -19,10 +19,15 @@ interface BlogPost {
   readTime: string;
   date: string;
   category: string;
+  difficulty?: string;
   gradient: string;
   image: string;
   detailedContent?: {
     lead: string;
+    targetAudience?: {
+      ideal: string[];
+      requirements: string;
+    };
     sections: Array<{
       title: string;
       content: string;
@@ -43,6 +48,35 @@ interface BlogPost {
     caseStudy?: {
       title: string;
       data: string;
+    };
+    quickStartGuide?: {
+      title: string;
+      steps: string[];
+    };
+    measurementGuide?: {
+      title: string;
+      metrics: Array<{
+        name: string;
+        target: string;
+        meaning: string;
+      }>;
+    };
+    implementationGuide?: {
+      title: string;
+      phases: Array<{
+        week?: string;
+        quarter?: string;
+        focus: string;
+        actions: string[];
+      }>;
+    };
+    nextSteps?: {
+      title: string;
+      content: string;
+      cta: {
+        primary: string;
+        secondary: string;
+      };
     };
     advancedTools?: string[];
     applications: string;
@@ -95,62 +129,40 @@ const Blog = () => {
   };
 
   const updateMetaTags = (blog: BlogPost) => {
-    // Update title
     document.title = `${blog.title} | Expert Insights Blog`;
-    
-    // Update meta description
     updateMetaTag('description', blog.excerpt);
-    
-    // Open Graph tags
     updateMetaTag('og:title', blog.title);
     updateMetaTag('og:description', blog.excerpt);
     updateMetaTag('og:image', blog.image);
     updateMetaTag('og:url', window.location.href);
     updateMetaTag('og:type', 'article');
     updateMetaTag('og:site_name', 'Expert Insights Blog');
-    
-    // Twitter Card tags
     updateMetaTag('twitter:card', 'summary_large_image');
     updateMetaTag('twitter:title', blog.title);
     updateMetaTag('twitter:description', blog.excerpt);
     updateMetaTag('twitter:image', blog.image);
-    
-    // Article-specific meta tags
     updateMetaTag('article:published_time', blog.date + 'T00:00:00Z');
     updateMetaTag('article:modified_time', blog.date + 'T00:00:00Z');
     updateMetaTag('article:author', blog.author);
     updateMetaTag('article:section', blog.category);
-    
-    // Update canonical URL
     updateCanonicalUrl(window.location.href);
-    
-    // Add structured data for SEO
     addStructuredData(blog);
   };
 
   const resetMetaTags = () => {
     document.title = 'Expert Insights Blog | Industry Knowledge & Tutorials';
-    
-    // Reset description
     updateMetaTag('description', 'Discover expert guides, tutorials, and industry insights to grow your business and master your craft');
-    
-    // Reset canonical URL
     updateCanonicalUrl(window.location.origin + '/blog');
-    
-    // Reset Open Graph tags
     updateMetaTag('og:title', 'Expert Insights Blog | Industry Knowledge & Tutorials');
     updateMetaTag('og:description', 'Discover expert guides, tutorials, and industry insights to grow your business and master your craft');
     updateMetaTag('og:url', window.location.origin + '/blog');
     updateMetaTag('og:type', 'website');
-    
-    // Reset Twitter tags
     updateMetaTag('twitter:card', 'summary_large_image');
     updateMetaTag('twitter:title', 'Expert Insights Blog | Industry Knowledge & Tutorials');
     updateMetaTag('twitter:description', 'Discover expert guides, tutorials, and industry insights to grow your business and master your craft');
   };
 
   const addStructuredData = (blog: BlogPost) => {
-    // Remove existing structured data
     const existingScript = document.querySelector('script[type="application/ld+json"]');
     if (existingScript) {
       existingScript.remove();
@@ -188,26 +200,22 @@ const Blog = () => {
     document.head.appendChild(script);
   };
 
-  // Fetch blog posts on component mount
   useEffect(() => {
     fetchBlogs();
     fetchCategories();
   }, []);
 
-  // Load blog from URL on component mount
   useEffect(() => {
     if (blogIdFromURL && blogPosts.length > 0) {
       const blog = blogPosts.find(post => post.id === blogIdFromURL);
       if (blog) {
         setTimeout(() => openBlog(blog), 50);
       } else {
-        // Try to fetch the blog from API
         fetchBlogById(blogIdFromURL);
       }
     }
   }, [blogIdFromURL, blogPosts]);
 
-  // Update SEO meta tags when blog is selected
   useEffect(() => {
     if (selectedBlog) {
       updateMetaTags(selectedBlog);
@@ -225,7 +233,6 @@ const Blog = () => {
       if (data.success) {
         setBlogPosts(data.blogs);
         
-        // Check if there's initial blog data from server-side rendering
         if ((window as any).__INITIAL_BLOG_DATA__) {
           setSelectedBlog((window as any).__INITIAL_BLOG_DATA__);
         }
@@ -269,7 +276,6 @@ const Blog = () => {
       const data = await response.json();
       
       if (data.success) {
-        // Filter out current blog and limit to 3
         const related = data.blogs
           .filter((post: BlogPost) => post.id !== blog.id)
           .slice(0, 3);
@@ -284,7 +290,6 @@ const Blog = () => {
     setIsAnimating(true);
     setTimeout(() => {
       setSelectedBlog(blog);
-      // Update URL without page reload
       navigate(`/blog/${blog.id}`, { replace: true });
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setIsAnimating(false);
@@ -313,11 +318,9 @@ const Blog = () => {
             url: shareUrl,
           });
         } catch (err) {
-          // User cancelled share
           console.log('Share cancelled');
         }
       } else {
-        // Fallback: Copy to clipboard
         navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
         setShareCopied(true);
         setTimeout(() => setShareCopied(false), 2000);
@@ -379,7 +382,26 @@ const Blog = () => {
     }
   };
 
-  // Icon mapping
+  const getDifficultyBadge = (difficulty?: string) => {
+    if (!difficulty) return null;
+    
+    const badges = {
+      beginner: { icon: '🟢', label: 'Beginner', color: '#10b981' },
+      intermediate: { icon: '🟡', label: 'Intermediate', color: '#f59e0b' },
+      advanced: { icon: '🔴', label: 'Advanced', color: '#ef4444' }
+    };
+    
+    const badge = badges[difficulty as keyof typeof badges];
+    if (!badge) return null;
+    
+    return (
+      <span className="difficulty-badge" style={{ borderColor: badge.color, color: badge.color }}>
+        <span>{badge.icon}</span>
+        <span>{badge.label}</span>
+      </span>
+    );
+  };
+
   const iconMap: Record<string, React.ComponentType<any>> = {
     Design: Palette,
     Performance: Zap,
@@ -402,9 +424,7 @@ const Blog = () => {
   return (
     <div className="blog-page">
       {!selectedBlog ? (
-        /* Blog Listing Page */
         <div className="blog-listing">
-          {/* Hero Section */}
           <div className="blog-hero">
             <div className="blog-hero-bg"></div>
             <div className="blog-hero-content">
@@ -419,7 +439,6 @@ const Blog = () => {
                 Discover expert guides, tutorials, and industry insights to grow your business and master your craft
               </p>
               
-              {/* Search Bar */}
               <div className={`blog-search-container ${isSearchExpanded ? 'expanded' : ''}`}>
                 {isSearchExpanded && (
                   <button 
@@ -460,7 +479,6 @@ const Blog = () => {
             </div>
           </div>
 
-          {/* Category Filter */}
           <div className="blog-filters">
             <div className="blog-filters-container">
               <div className="category-pills-wrapper">
@@ -477,7 +495,6 @@ const Blog = () => {
             </div>
           </div>
 
-          {/* Blog Grid */}
           <div className="blog-grid-container">
             {filteredBlogs.length === 0 ? (
               <div className="no-results">
@@ -510,6 +527,11 @@ const Blog = () => {
                           <IconComponent size={16} />
                           <span>{post.category}</span>
                         </div>
+                        {post.difficulty && (
+                          <div className="blog-difficulty-badge">
+                            {getDifficultyBadge(post.difficulty)}
+                          </div>
+                        )}
                       </div>
 
                       <div className="blog-card-content">
@@ -540,9 +562,7 @@ const Blog = () => {
           </div>
         </div>
       ) : (
-        /* Blog Detail Page */
         <div className={`blog-detail ${isAnimating ? 'closing' : 'opening'}`}>
-          {/* Header */}
           <div className="blog-detail-header">
             <button className="back-btn" onClick={closeBlog}>
               <ArrowLeft size={20} />
@@ -561,7 +581,6 @@ const Blog = () => {
             </div>
           </div>
 
-          {/* Hero Image */}
           <div className="blog-detail-hero">
             <img 
               src={selectedBlog.image} 
@@ -571,12 +590,14 @@ const Blog = () => {
             <div className="blog-detail-overlay" style={{ background: selectedBlog.gradient }}></div>
           </div>
 
-          {/* Content */}
           <article className="blog-detail-content">
             <div className="blog-detail-meta">
-              <span className="meta-category" style={{ background: selectedBlog.gradient }}>
-                {selectedBlog.category}
-              </span>
+              <div className="meta-badges">
+                <span className="meta-category" style={{ background: selectedBlog.gradient }}>
+                  {selectedBlog.category}
+                </span>
+                {selectedBlog.difficulty && getDifficultyBadge(selectedBlog.difficulty)}
+              </div>
               <div className="meta-info">
                 <div className="meta-item">
                   <Calendar size={16} />
@@ -594,18 +615,36 @@ const Blog = () => {
             </div>
 
             <h1 className="blog-detail-title">{selectedBlog.title}</h1>
+
+            {/* Target Audience Section */}
+            {selectedBlog.detailedContent?.targetAudience && (
+              <div className="target-audience-section">
+                <div className="target-audience-header">
+                  <Target size={20} />
+                  <h3>This Article is For:</h3>
+                </div>
+                <ul className="target-audience-list">
+                  {selectedBlog.detailedContent.targetAudience.ideal.map((person, idx) => (
+                    <li key={idx}>
+                      <CheckCircle size={16} />
+                      <span>{person}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="prerequisites">
+                  <strong>Prerequisites:</strong> {selectedBlog.detailedContent.targetAudience.requirements}
+                </p>
+              </div>
+            )}
             
             <div className="blog-detail-body">
-              {/* Lead Paragraph */}
               <p className="lead-paragraph">{selectedBlog.detailedContent?.lead || selectedBlog.excerpt}</p>
               
-              {/* Main Sections */}
               {selectedBlog.detailedContent?.sections?.map((section, index) => (
                 <div key={index} className="content-section">
                   <h2>{section.title}</h2>
                   <p>{section.content}</p>
                   
-                  {/* Subsections */}
                   {section.subsections?.map((subsection, subIndex) => (
                     <div key={subIndex} className="subsection">
                       <h3>{subsection.title}</h3>
@@ -615,7 +654,6 @@ const Blog = () => {
                 </div>
               ))}
 
-              {/* Highlight Section */}
               {selectedBlog.detailedContent?.highlight && (
                 <div className="content-highlight">
                   <Lightbulb size={24} />
@@ -625,14 +663,74 @@ const Blog = () => {
                 </div>
               )}
 
-              {/* Quote */}
               {selectedBlog.detailedContent?.quote && (
                 <div className="content-quote">
                   "{selectedBlog.detailedContent.quote}"
                 </div>
               )}
 
-              {/* Pitfalls Section */}
+              {/* Quick Start Guide */}
+              {selectedBlog.detailedContent?.quickStartGuide && (
+                <div className="quick-start-section">
+                  <div className="quick-start-header">
+                    <Zap size={24} />
+                    <h2>{selectedBlog.detailedContent.quickStartGuide.title}</h2>
+                  </div>
+                  <div className="quick-start-steps">
+                    {selectedBlog.detailedContent.quickStartGuide.steps.map((step, idx) => (
+                      <div key={idx} className="quick-start-step">
+                        <div className="step-number">{idx + 1}</div>
+                        <p>{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Measurement Guide */}
+              {selectedBlog.detailedContent?.measurementGuide && (
+                <div className="measurement-section">
+                  <h2>{selectedBlog.detailedContent.measurementGuide.title}</h2>
+                  <div className="metrics-grid">
+                    {selectedBlog.detailedContent.measurementGuide.metrics.map((metric, idx) => (
+                      <div key={idx} className="metric-card">
+                        <h4>{metric.name}</h4>
+                        <div className="metric-target">
+                          <Award size={18} />
+                          <span>Target: {metric.target}</span>
+                        </div>
+                        <p className="metric-meaning">{metric.meaning}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Implementation Guide */}
+              {selectedBlog.detailedContent?.implementationGuide && (
+                <div className="implementation-section">
+                  <h2>{selectedBlog.detailedContent.implementationGuide.title}</h2>
+                  <div className="implementation-phases">
+                    {selectedBlog.detailedContent.implementationGuide.phases.map((phase, idx) => (
+                      <div key={idx} className="phase-card">
+                        <div className="phase-header">
+                          <span className="phase-label">{phase.week || phase.quarter}</span>
+                          <h4>{phase.focus}</h4>
+                        </div>
+                        <ul className="phase-actions">
+                          {phase.actions.map((action, actionIdx) => (
+                            <li key={actionIdx}>
+                              <CheckCircle size={14} />
+                              <span>{action}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {selectedBlog.detailedContent?.pitfalls && selectedBlog.detailedContent.pitfalls.length > 0 && (
                 <div className="content-section">
                   <h2>Common Pitfalls to Avoid</h2>
@@ -656,7 +754,6 @@ const Blog = () => {
                 </div>
               )}
 
-              {/* Case Study Section */}
               {selectedBlog.detailedContent?.caseStudy && (
                 <div className="case-study-section">
                   <div className="case-study-header">
@@ -670,12 +767,13 @@ const Blog = () => {
                 </div>
               )}
 
-              {/* Advanced Tools Section */}
               {selectedBlog.detailedContent?.advancedTools && selectedBlog.detailedContent.advancedTools.length > 0 && (
                 <div className="content-section">
-                  <h2>Advanced Tools & Resources</h2>
+                  <h2>Tools & Resources</h2>
                   <p>
-                    Take your implementation to the next level with these professional-grade tools:
+                    {selectedBlog.difficulty === 'beginner' 
+                      ? 'Get started with these easy-to-use tools:'
+                      : 'Take your implementation to the next level with these professional-grade tools:'}
                   </p>
                   
                   <div className="tools-grid">
@@ -689,7 +787,6 @@ const Blog = () => {
                 </div>
               )}
 
-              {/* Applications Section */}
               {selectedBlog.detailedContent?.applications && (
                 <div className="content-section">
                   <h2>Real-World Applications</h2>
@@ -697,7 +794,6 @@ const Blog = () => {
                 </div>
               )}
 
-              {/* Conclusion Section */}
               {selectedBlog.detailedContent?.conclusion && (
                 <div className="content-section">
                   <h2>Moving Forward</h2>
@@ -705,17 +801,31 @@ const Blog = () => {
                 </div>
               )}
 
-              {/* CTA Section */}
-              <div className="content-cta">
-                <h3>Ready to Get Started?</h3>
-                <p>Apply these insights to your projects and watch your results transform. Remember, the best time to start is now.</p>
-                <button className="cta-btn" style={{ background: selectedBlog.gradient }}>
-                  Implement These Strategies
-                </button>
-              </div>
+              {/* Next Steps CTA */}
+              {selectedBlog.detailedContent?.nextSteps ? (
+                <div className="next-steps-section">
+                  <h3>{selectedBlog.detailedContent.nextSteps.title}</h3>
+                  <p>{selectedBlog.detailedContent.nextSteps.content}</p>
+                  <div className="cta-buttons">
+                    <button className="cta-btn primary" style={{ background: selectedBlog.gradient }}>
+                      {selectedBlog.detailedContent.nextSteps.cta.primary}
+                    </button>
+                    <button className="cta-btn secondary">
+                      {selectedBlog.detailedContent.nextSteps.cta.secondary}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="content-cta">
+                  <h3>Ready to Get Started?</h3>
+                  <p>Apply these insights to your projects and watch your results transform. Remember, the best time to start is now.</p>
+                  <button className="cta-btn" style={{ background: selectedBlog.gradient }}>
+                    Implement These Strategies
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Author Bio */}
             <div className="author-bio">
               <div className="author-avatar">
                 {selectedBlog.author.charAt(0)}
@@ -728,7 +838,6 @@ const Blog = () => {
               </div>
             </div>
 
-            {/* Related Articles */}
             {relatedBlogs.length > 0 && (
               <div className="related-articles">
                 <h3>Related Articles</h3>
@@ -757,6 +866,7 @@ const Blog = () => {
                             <IconComponent size={14} />
                             <span>{post.category}</span>
                           </div>
+                          {post.difficulty && getDifficultyBadge(post.difficulty)}
                           <h4>{post.title}</h4>
                           <div className="related-meta">
                             <span>{post.readTime}</span>
@@ -802,7 +912,342 @@ const Blog = () => {
           to { transform: rotate(360deg); }
         }
 
-        /* Hero Section */
+        /* Difficulty Badge */
+        .difficulty-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid;
+          padding: 4px 12px;
+          border-radius: 50px;
+          font-size: 0.75rem;
+          font-weight: 600;
+        }
+
+        .blog-difficulty-badge {
+          position: absolute;
+          top: 16px;
+          right: 16px;
+        }
+
+        .meta-badges {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+
+        /* Target Audience Section */
+        .target-audience-section {
+          background: rgba(106, 0, 255, 0.05);
+          border: 1px solid rgba(106, 0, 255, 0.2);
+          border-radius: 16px;
+          padding: 24px;
+          margin: 30px 0;
+        }
+
+        .target-audience-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+
+        .target-audience-header h3 {
+          margin: 0;
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: #00d4ff;
+        }
+
+        .target-audience-header svg {
+          color: #00d4ff;
+        }
+
+        .target-audience-list {
+          list-style: none;
+          padding: 0;
+          margin: 0 0 16px;
+        }
+
+        .target-audience-list li {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 0;
+          font-size: 1rem;
+        }
+
+        .target-audience-list svg {
+          color: #10b981;
+          flex-shrink: 0;
+        }
+
+        .prerequisites {
+          margin: 16px 0 0;
+          padding: 12px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 8px;
+          font-size: 0.95rem;
+          line-height: 1.6;
+        }
+
+        .prerequisites strong {
+          color: #00d4ff;
+        }
+
+        /* Quick Start Section */
+        .quick-start-section {
+          background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+          border: 1px solid rgba(16, 185, 129, 0.3);
+          border-radius: 16px;
+          padding: 30px;
+          margin: 50px 0;
+        }
+
+        .quick-start-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 24px;
+        }
+
+        .quick-start-header svg {
+          color: #10b981;
+        }
+
+        .quick-start-header h2 {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        .quick-start-header h2::after {
+          display: none;
+        }
+
+        .quick-start-steps {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .quick-start-step {
+          display: flex;
+          gap: 16px;
+          align-items: flex-start;
+          background: rgba(255, 255, 255, 0.03);
+          padding: 16px;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .quick-start-step:hover {
+          background: rgba(255, 255, 255, 0.05);
+          transform: translateX(5px);
+        }
+
+        .step-number {
+          background: linear-gradient(135deg, #10b981, #3b82f6);
+          color: white;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+
+        .quick-start-step p {
+          margin: 0;
+          line-height: 1.6;
+        }
+
+        /* Measurement Section */
+        .measurement-section {
+          margin: 50px 0;
+        }
+
+        .metrics-grid {
+          display: grid;
+          gap: 20px;
+          margin-top: 30px;
+        }
+
+        @media (min-width: 768px) {
+          .metrics-grid {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          }
+        }
+
+        .metric-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 20px;
+          transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+          border-color: #6a00ff;
+          transform: translateY(-5px);
+        }
+
+        .metric-card h4 {
+          margin: 0 0 12px;
+          font-size: 1.1rem;
+          color: #00d4ff;
+        }
+
+        .metric-target {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
+          font-weight: 600;
+          color: #10b981;
+        }
+
+        .metric-target svg {
+          flex-shrink: 0;
+        }
+
+        .metric-meaning {
+          margin: 0;
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.7);
+          line-height: 1.5;
+        }
+
+        /* Implementation Section */
+        .implementation-section {
+          margin: 50px 0;
+        }
+
+        .implementation-phases {
+          display: grid;
+          gap: 24px;
+          margin-top: 30px;
+        }
+
+        .phase-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 24px;
+          transition: all 0.3s ease;
+        }
+
+        .phase-card:hover {
+          border-color: #6a00ff;
+        }
+
+        .phase-header {
+          margin-bottom: 16px;
+        }
+
+        .phase-label {
+          display: inline-block;
+          background: linear-gradient(135deg, #6a00ff, #00d4ff);
+          color: white;
+          padding: 4px 12px;
+          border-radius: 20px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          margin-bottom: 8px;
+        }
+
+        .phase-header h4 {
+          margin: 8px 0 0;
+          font-size: 1.2rem;
+          color: #fff;
+        }
+
+        .phase-actions {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+
+        .phase-actions li {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 8px 0;
+          font-size: 0.95rem;
+          line-height: 1.6;
+        }
+
+        .phase-actions svg {
+          color: #10b981;
+          flex-shrink: 0;
+          margin-top: 4px;
+        }
+
+        /* Next Steps Section */
+        .next-steps-section {
+          background: linear-gradient(135deg, rgba(106, 0, 255, 0.1), rgba(0, 212, 255, 0.1));
+          border: 1px solid rgba(106, 0, 255, 0.3);
+          padding: 40px;
+          border-radius: 20px;
+          text-align: center;
+          margin: 60px 0;
+        }
+
+        .next-steps-section h3 {
+          font-size: 2rem;
+          margin: 0 0 16px;
+        }
+
+        .next-steps-section p {
+          margin: 0 0 32px;
+          font-size: 1.1rem;
+          color: rgba(255, 255, 255, 0.8);
+          line-height: 1.7;
+        }
+
+        .cta-buttons {
+          display: flex;
+          gap: 16px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .cta-btn {
+          border: none;
+          color: #fff;
+          padding: 16px 32px;
+          border-radius: 12px;
+          font-weight: 800;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .cta-btn.primary {
+          box-shadow: 0 20px 40px rgba(106, 0, 255, 0.3);
+        }
+
+        .cta-btn.secondary {
+          background: rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cta-btn:hover {
+          transform: translateY(-3px);
+        }
+
+        .cta-btn.primary:hover {
+          box-shadow: 0 25px 50px rgba(106, 0, 255, 0.5);
+        }
+
+        .cta-btn.secondary:hover {
+          background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Rest of the existing styles... */
         .blog-hero {
           position: relative;
           padding: 60px 20px 40px;
@@ -890,7 +1335,6 @@ const Blog = () => {
           }
         }
 
-        /* Search Container */
         .blog-search-container {
           max-width: 600px;
           margin: 0 auto;
@@ -995,7 +1439,6 @@ const Blog = () => {
           display: inline-block;
         }
 
-        /* Mobile Search Styles */
         @media (max-width: 767px) {
           .blog-search-container.expanded {
             position: fixed;
@@ -1039,7 +1482,6 @@ const Blog = () => {
           }
         }
 
-        /* Category Filter */
         .blog-filters {
           padding: 40px 20px;
           border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -1264,7 +1706,6 @@ const Blog = () => {
           box-shadow: 0 10px 20px rgba(106, 0, 255, 0.3);
         }
 
-        /* Blog Detail */
         .blog-detail {
           animation: slideIn 0.5s ease;
         }
@@ -1351,27 +1792,6 @@ const Blog = () => {
           background: rgba(255, 255, 255, 0.1);
           transform: translateY(-2px);
           border-color: #6a00ff;
-        }
-
-        .action-btn::after {
-          content: attr(title);
-          position: absolute;
-          bottom: -40px;
-          left: 50%;
-          transform: translateX(-50%);
-          background: rgba(0, 0, 0, 0.9);
-          color: white;
-          padding: 6px 12px;
-          border-radius: 6px;
-          font-size: 0.8rem;
-          white-space: nowrap;
-          opacity: 0;
-          transition: opacity 0.2s;
-          pointer-events: none;
-        }
-
-        .action-btn:hover::after {
-          opacity: 1;
         }
 
         .blog-detail-hero {
@@ -1509,16 +1929,6 @@ const Blog = () => {
           margin-bottom: 24px;
         }
 
-        .blog-detail-body ul, .blog-detail-body ol {
-          margin: 24px 0;
-          padding-left: 24px;
-        }
-
-        .blog-detail-body li {
-          margin-bottom: 12px;
-          line-height: 1.7;
-        }
-
         .subsection {
           background: rgba(255, 255, 255, 0.02);
           border-left: 3px solid;
@@ -1589,7 +1999,6 @@ const Blog = () => {
           }
         }
 
-        /* Pitfalls Grid */
         .pitfalls-grid {
           display: grid;
           gap: 20px;
@@ -1636,7 +2045,6 @@ const Blog = () => {
           line-height: 1.6;
         }
 
-        /* Case Study Section */
         .case-study-section {
           background: linear-gradient(135deg, rgba(106, 0, 255, 0.1), rgba(0, 212, 255, 0.1));
           border: 1px solid rgba(106, 0, 255, 0.3);
@@ -1678,7 +2086,6 @@ const Blog = () => {
           line-height: 1.7;
         }
 
-        /* Tools Grid */
         .tools-grid {
           display: grid;
           gap: 16px;
@@ -1753,30 +2160,6 @@ const Blog = () => {
           .content-cta p {
             font-size: 1.1rem;
           }
-        }
-
-        .cta-btn {
-          border: none;
-          color: #fff;
-          padding: 16px 32px;
-          border-radius: 12px;
-          font-weight: 800;
-          font-size: 1rem;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 20px 40px rgba(106, 0, 255, 0.3);
-        }
-
-        @media (min-width: 768px) {
-          .cta-btn {
-            padding: 18px 40px;
-            font-size: 1.1rem;
-          }
-        }
-
-        .cta-btn:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 25px 50px rgba(106, 0, 255, 0.5);
         }
 
         .author-bio {
@@ -1945,14 +2328,6 @@ const Blog = () => {
 
           .back-btn {
             padding: 10px;
-          }
-
-          .content-cta {
-            padding: 20px;
-          }
-
-          .content-cta h3 {
-            font-size: 1.5rem;
           }
 
           .author-bio {
