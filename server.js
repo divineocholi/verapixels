@@ -701,25 +701,14 @@ const blogPosts = [
 
 // ========== BLOG API ROUTES ==========
 
-// Get all blog posts
+
 app.get('/api/blogs', (req, res) => {
   try {
-    const formattedBlogs = blogPosts.map(blog => ({
-      id: blog.id,
-      title: blog.title,
-      excerpt: blog.excerpt,
-      author: blog.author,
-      readTime: blog.readTime,
-      date: blog.date,
-      category: blog.category,
-      gradient: blog.gradient,
-      image: blog.image
-    }));
-
+    // ✅ Return FULL blog posts with detailedContent
     res.json({
       success: true,
-      blogs: formattedBlogs,
-      count: formattedBlogs.length
+      blogs: blogPosts, // Send complete data
+      count: blogPosts.length
     });
   } catch (error) {
     console.error('Error fetching blogs:', error);
