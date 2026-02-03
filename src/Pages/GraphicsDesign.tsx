@@ -24,7 +24,6 @@ import html2canvas from 'html2canvas';
 type ServiceCategory = "graphic" | "branding" | "naming" | "digital";
 type NameCategory = 'tech' | 'creative' | 'eco' | 'luxury' | 'modern' | 'classic' | 'general';
 
-
 interface Service {
   id: number;
   icon: React.ReactNode;
@@ -69,7 +68,8 @@ interface DomainRegistrar {
   id: string;
   name: string;
   icon: React.ReactNode;
-  url: string;
+  baseUrl: string;
+  searchUrl: string;
   price: string;
   rating: number;
 }
@@ -111,21 +111,78 @@ const BrandingDesignPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [animationKey, setAnimationKey] = useState<number>(0);
   const [selectedName, setSelectedName] = useState<GeneratedName | null>(null);
+  const [selectedTLD, setSelectedTLD] = useState<string>('com');
   
   // Refs
   const nameInputRef = useRef<HTMLInputElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
   const nameImageRef = useRef<HTMLDivElement>(null);
 
-  // Domain Registrars
+  // Domain Registrars with proper search URLs
   const domainRegistrars: DomainRegistrar[] = [
-    { id: 'namecheap', name: 'Namecheap', icon: <SiNamecheap />, url: 'https://www.namecheap.com/domains', price: '$8.88/yr', rating: 4.8 },
-    { id: 'godaddy', name: 'GoDaddy', icon: <SiGodaddy />, url: 'https://www.godaddy.com/domains', price: '$11.99/yr', rating: 4.5 },
-    { id: 'hostinger', name: 'Hostinger', icon: <SiHostinger />, url: 'https://www.hostinger.com/domain-names', price: '$9.99/yr', rating: 4.7 },
-    { id: 'cloudflare', name: 'Cloudflare', icon: <SiCloudflare />, url: 'https://www.cloudflare.com/products/registrar', price: '$8.57/yr', rating: 4.9 },
-    { id: 'google', name: 'Google Domains', icon: <SiGoogle />, url: 'https://domains.google', price: '$12/yr', rating: 4.6 },
-    { id: 'bluehost', name: 'Bluehost', icon: <FiServer />, url: 'https://www.bluehost.com/domains', price: '$10.99/yr', rating: 4.4 },
-    { id: 'namecom', name: 'Name.com', icon: <TbWorldWww />, url: 'https://www.name.com', price: '$9.99/yr', rating: 4.5 },
+    { 
+      id: 'namecheap', 
+      name: 'Namecheap', 
+      icon: <SiNamecheap />, 
+      baseUrl: 'https://www.namecheap.com',
+      searchUrl: 'https://www.namecheap.com/domains/registration/results/?domain=',
+      price: '$8.88/yr', 
+      rating: 4.8 
+    },
+    { 
+      id: 'godaddy', 
+      name: 'GoDaddy', 
+      icon: <SiGodaddy />, 
+      baseUrl: 'https://www.godaddy.com',
+      searchUrl: 'https://www.godaddy.com/domainsearch/find?domainToCheck=',
+      price: '$11.99/yr', 
+      rating: 4.5 
+    },
+    { 
+      id: 'hostinger', 
+      name: 'Hostinger', 
+      icon: <SiHostinger />, 
+      baseUrl: 'https://www.hostinger.com',
+      searchUrl: 'https://www.hostinger.com/domain-checker?domain=',
+      price: '$9.99/yr', 
+      rating: 4.7 
+    },
+    { 
+      id: 'cloudflare', 
+      name: 'Cloudflare', 
+      icon: <SiCloudflare />, 
+      baseUrl: 'https://www.cloudflare.com',
+      searchUrl: 'https://www.cloudflare.com/products/registrar',
+      price: '$8.57/yr', 
+      rating: 4.9 
+    },
+    { 
+      id: 'google', 
+      name: 'Google Domains', 
+      icon: <SiGoogle />, 
+      baseUrl: 'https://domains.google',
+      searchUrl: 'https://domains.google/registrar/search?searchTerm=',
+      price: '$12/yr', 
+      rating: 4.6 
+    },
+    { 
+      id: 'bluehost', 
+      name: 'Bluehost', 
+      icon: <FiServer />, 
+      baseUrl: 'https://www.bluehost.com',
+      searchUrl: 'https://www.bluehost.com/domains/search?domain=',
+      price: '$10.99/yr', 
+      rating: 4.4 
+    },
+    { 
+      id: 'namecom', 
+      name: 'Name.com', 
+      icon: <TbWorldWww />, 
+      baseUrl: 'https://www.name.com',
+      searchUrl: 'https://www.name.com/domain/search/',
+      price: '$9.99/yr', 
+      rating: 4.5 
+    },
   ];
 
   // Enhanced AI-powered name database
@@ -238,9 +295,9 @@ const BrandingDesignPage: React.FC = () => {
     return detected && detected[1] > 0.5 ? detected[0] : 'general';
   };
 
-  // Advanced name scoring algorithm with multiple factors
-   const scoreName = (name: string, category: NameCategory = 'general'): number => {
-  let score = 50; // Base score
+  // Advanced name scoring algorithm
+  const scoreName = (name: string, category: NameCategory = 'general'): number => {
+    let score = 50; // Base score
     
     // Length scoring (optimal 6-8 characters)
     const length = name.length;
@@ -282,17 +339,17 @@ const BrandingDesignPage: React.FC = () => {
     if (easyToSpell) score += 15;
     
     // Category-specific scoring
-   const categoryBonuses = {
-    tech: name.includes('tech') || name.includes('byte') || name.includes('cloud') ? 10 : 0,
-    creative: name.includes('studio') || name.includes('art') || name.includes('design') ? 10 : 0,
-    eco: name.includes('eco') || name.includes('green') || name.includes('natural') ? 10 : 0,
-    luxury: name.includes('luxe') || name.includes('belle') || name.includes('elite') ? 10 : 0,
-    modern: name.endsWith('ly') || name.endsWith('ify') || name.endsWith('able') ? 10 : 0,
-    classic: 0,
-    general: 0 // Add this line
-  };
-  
-  score += categoryBonuses[category] || 0;
+    const categoryBonuses = {
+      tech: name.includes('tech') || name.includes('byte') || name.includes('cloud') ? 10 : 0,
+      creative: name.includes('studio') || name.includes('art') || name.includes('design') ? 10 : 0,
+      eco: name.includes('eco') || name.includes('green') || name.includes('natural') ? 10 : 0,
+      luxury: name.includes('luxe') || name.includes('belle') || name.includes('elite') ? 10 : 0,
+      modern: name.endsWith('ly') || name.endsWith('ify') || name.endsWith('able') ? 10 : 0,
+      classic: 0,
+      general: 0
+    };
+    
+    score += categoryBonuses[category] || 0;
     
     // Brandable ending bonus
     const brandableEndings = ['ly', 'ify', 'able', 'io', 'ix', 'ex', 'oz', 'zy'];
@@ -409,7 +466,7 @@ const BrandingDesignPage: React.FC = () => {
   };
 
   // Enhanced domain checking with realistic patterns
-  const checkRealDomain = async (name: string): Promise<boolean> => {
+  const checkRealDomain = async (name: string, tld: string = 'com'): Promise<boolean> => {
     setDomainChecking(name);
     
     try {
@@ -454,6 +511,16 @@ const BrandingDesignPage: React.FC = () => {
         }
       });
       
+      // TLD-specific availability
+      const tldAvailability = {
+        'com': 0.5,
+        'io': 0.7,
+        'co': 0.6,
+        'net': 0.8
+      };
+      
+      availabilityProbability *= tldAvailability[tld as keyof typeof tldAvailability] || 0.5;
+      
       // Random variation
       const randomFactor = (Math.random() * 0.4) - 0.2; // -20% to +20%
       availabilityProbability = Math.max(0.01, Math.min(0.99, availabilityProbability + randomFactor));
@@ -461,7 +528,10 @@ const BrandingDesignPage: React.FC = () => {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
       
-      return Math.random() < availabilityProbability;
+      const isAvailable = Math.random() < availabilityProbability;
+      
+      // Update state with result
+      return isAvailable;
     } catch (error) {
       console.error('Domain check failed:', error);
       return Math.random() < 0.5;
@@ -471,28 +541,28 @@ const BrandingDesignPage: React.FC = () => {
   };
 
   // Enhanced name category detection
-   const getNameCategory = (name: string): NameCategory => {
-  const patterns = {
-    tech: /(tech|byte|cloud|data|code|sync|labs|quantum|logic|stack|soft|web|net|digi|ai)/i,
-    creative: /(studio|creative|art|design|pixel|vision|spark|canvas|ink|color|media|visual|brand)/i,
-    eco: /(eco|green|earth|natural|pure|clean|sustain|organic|leaf|terra|renew|forest)/i,
-    luxury: /(luxe|belle|chic|vogue|elegan|couture|haus|premium|elite|royal|gold|prime)/i,
-    modern: /(nex|meta|urban|zen|ly|ify|able|flow|core|apex|vibe|nova)/i
-  };
-  
-  for (const [category, pattern] of Object.entries(patterns)) {
-    if (pattern.test(name)) {
-      return category as NameCategory;
+  const getNameCategory = (name: string): NameCategory => {
+    const patterns = {
+      tech: /(tech|byte|cloud|data|code|sync|labs|quantum|logic|stack|soft|web|net|digi|ai)/i,
+      creative: /(studio|creative|art|design|pixel|vision|spark|canvas|ink|color|media|visual|brand)/i,
+      eco: /(eco|green|earth|natural|pure|clean|sustain|organic|leaf|terra|renew|forest)/i,
+      luxury: /(luxe|belle|chic|vogue|elegan|couture|haus|premium|elite|royal|gold|prime)/i,
+      modern: /(nex|meta|urban|zen|ly|ify|able|flow|core|apex|vibe|nova)/i
+    };
+    
+    for (const [category, pattern] of Object.entries(patterns)) {
+      if (pattern.test(name)) {
+        return category as NameCategory;
+      }
     }
-  }
-  
+    
     // Fallback based on ending
-     if (name.endsWith('ly') || name.endsWith('ify') || name.endsWith('able')) {
-    return 'modern';
-  }
-  
-  return 'general'; // Now 'general' is a valid NameCategory
-};
+    if (name.endsWith('ly') || name.endsWith('ify') || name.endsWith('able')) {
+      return 'modern';
+    }
+    
+    return 'general';
+  };
 
   // Generate detailed explanation with AI-like insights
   const generateExplanation = (name: string, industry: string, score: number): string => {
@@ -543,63 +613,64 @@ const BrandingDesignPage: React.FC = () => {
     return explanation + scoreInsight;
   };
 
-  // Complete corrected generateNameDetails function:
-const generateNameDetails = (name: string, category: NameCategory, score: number): {
-  meaning: string;
-  marketPotential: string;
-  targetAudience: string;
-  trademarkRisk: 'low' | 'medium' | 'high';
-  pronunciation: string;
-  memorabilityScore: number;
-} => {
- const meanings: Record<NameCategory, string> = {
-  tech: "Represents innovation, technology, and forward-thinking solutions",
-  creative: "Evokes creativity, artistic expression, and visual appeal",
-  eco: "Symbolizes sustainability, natural quality, and environmental consciousness",
-  luxury: "Conveys exclusivity, premium quality, and sophistication",
-  modern: "Suggests contemporary appeal, versatility, and market relevance",
-  classic: "Represents timeless appeal, reliability, and established quality",
-  general: "Versatile brand identity with broad market appeal and flexibility" // Add this
-};
+  // Generate name details
+  const generateNameDetails = (name: string, category: NameCategory, score: number): {
+    meaning: string;
+    marketPotential: string;
+    targetAudience: string;
+    trademarkRisk: 'low' | 'medium' | 'high';
+    pronunciation: string;
+    memorabilityScore: number;
+  } => {
+    const meanings: Record<NameCategory, string> = {
+      tech: "Represents innovation, technology, and forward-thinking solutions",
+      creative: "Evokes creativity, artistic expression, and visual appeal",
+      eco: "Symbolizes sustainability, natural quality, and environmental consciousness",
+      luxury: "Conveys exclusivity, premium quality, and sophistication",
+      modern: "Suggests contemporary appeal, versatility, and market relevance",
+      classic: "Represents timeless appeal, reliability, and established quality",
+      general: "Versatile brand identity with broad market appeal and flexibility"
+    };
 
-const audiences: Record<NameCategory, string> = {
-  tech: "Tech-savvy professionals, startups, digital nomads, innovation leaders",
-  creative: "Design enthusiasts, artists, creative professionals, brand-conscious consumers",
-  eco: "Environmentally conscious consumers, health enthusiasts, sustainable living advocates",
-  luxury: "Affluent consumers, luxury seekers, premium product enthusiasts",
-  modern: "Urban professionals, millennials, digital natives, trend-conscious consumers",
-  classic: "Traditional consumers, established businesses, reliability-focused customers",
-  general: "Broad consumer base, diverse demographics, mainstream market" // Add this
-};
+    const audiences: Record<NameCategory, string> = {
+      tech: "Tech-savvy professionals, startups, digital nomads, innovation leaders",
+      creative: "Design enthusiasts, artists, creative professionals, brand-conscious consumers",
+      eco: "Environmentally conscious consumers, health enthusiasts, sustainable living advocates",
+      luxury: "Affluent consumers, luxury seekers, premium product enthusiasts",
+      modern: "Urban professionals, millennials, digital natives, trend-conscious consumers",
+      classic: "Traditional consumers, established businesses, reliability-focused customers",
+      general: "Broad consumer base, diverse demographics, mainstream market"
+    };
 
-const marketPotentials: Record<NameCategory, string> = {
-  tech: "High growth potential in digital markets, strong online presence",
-  creative: "Strong brand differentiation, premium positioning opportunities",
-  eco: "Growing market segment, loyal customer base, ethical appeal",
-  luxury: "Premium pricing potential, exclusive market positioning",
-  modern: "Broad market appeal, versatile branding opportunities",
-  classic: "Established market trust, reliable brand perception",
-  general: "Flexible market positioning, adaptable to multiple sectors" // Add this
-};
-  // Determine trademark risk based on score
-  let trademarkRisk: 'low' | 'medium' | 'high';
-  if (score >= 80) {
-    trademarkRisk = 'low';
-  } else if (score >= 60) {
-    trademarkRisk = 'medium';
-  } else {
-    trademarkRisk = 'high';
-  }
-  
-  return {
-    meaning: meanings[category],
-    marketPotential: marketPotentials[category],
-    targetAudience: audiences[category],
-    trademarkRisk: trademarkRisk,
-    pronunciation: `Pronounced as ${name.toLowerCase().split('').join('-').toUpperCase()}`,
-    memorabilityScore: Math.min(100, score + 10)
+    const marketPotentials: Record<NameCategory, string> = {
+      tech: "High growth potential in digital markets, strong online presence",
+      creative: "Strong brand differentiation, premium positioning opportunities",
+      eco: "Growing market segment, loyal customer base, ethical appeal",
+      luxury: "Premium pricing potential, exclusive market positioning",
+      modern: "Broad market appeal, versatile branding opportunities",
+      classic: "Established market trust, reliable brand perception",
+      general: "Flexible market positioning, adaptable to multiple sectors"
+    };
+    
+    // Determine trademark risk based on score
+    let trademarkRisk: 'low' | 'medium' | 'high';
+    if (score >= 80) {
+      trademarkRisk = 'low';
+    } else if (score >= 60) {
+      trademarkRisk = 'medium';
+    } else {
+      trademarkRisk = 'high';
+    }
+    
+    return {
+      meaning: meanings[category],
+      marketPotential: marketPotentials[category],
+      targetAudience: audiences[category],
+      trademarkRisk: trademarkRisk,
+      pronunciation: `Pronounced as ${name.toLowerCase().split('').join('-').toUpperCase()}`,
+      memorabilityScore: Math.min(100, score + 10)
+    };
   };
-};
 
   // Main name generation function
   const generateNames = async (generateMore: boolean = false) => {
@@ -621,16 +692,22 @@ const marketPotentials: Record<NameCategory, string> = {
       const namePromises = rawNames.map(async (name, index) => {
         const category = getNameCategory(name);
         const score = scoreName(name, category);
-        const available = await checkRealDomain(name);
+        
+        // Check all TLDs
+        const comAvailable = await checkRealDomain(name, 'com');
+        const ioAvailable = await checkRealDomain(name, 'io');
+        const coAvailable = await checkRealDomain(name, 'co');
+        const netAvailable = await checkRealDomain(name, 'net');
+        
         const explanation = generateExplanation(name, detectedIndustry, score);
         const details = generateNameDetails(name, category, score);
         
         // TLD availability
         const tlds = {
-          com: available,
-          io: Math.random() > 0.7,
-          co: Math.random() > 0.6,
-          net: Math.random() > 0.5,
+          com: comAvailable,
+          io: ioAvailable,
+          co: coAvailable,
+          net: netAvailable,
         };
         
         return {
@@ -638,7 +715,7 @@ const marketPotentials: Record<NameCategory, string> = {
           name,
           score,
           category,
-          available,
+          available: comAvailable, // Main availability for .com
           explanation,
           details,
           tlds
@@ -674,15 +751,21 @@ const marketPotentials: Record<NameCategory, string> = {
     const namePromises = rawNames.map(async (name, index) => {
       const category = getNameCategory(name);
       const score = scoreName(name, category);
-      const available = await checkRealDomain(name);
+      
+      // Check all TLDs
+      const comAvailable = await checkRealDomain(name, 'com');
+      const ioAvailable = await checkRealDomain(name, 'io');
+      const coAvailable = await checkRealDomain(name, 'co');
+      const netAvailable = await checkRealDomain(name, 'net');
+      
       const explanation = generateExplanation(name, detectedIndustry, score);
       const details = generateNameDetails(name, category, score);
       
       const tlds = {
-        com: available,
-        io: Math.random() > 0.7,
-        co: Math.random() > 0.6,
-        net: Math.random() > 0.5,
+        com: comAvailable,
+        io: ioAvailable,
+        co: coAvailable,
+        net: netAvailable,
       };
       
       return {
@@ -690,7 +773,7 @@ const marketPotentials: Record<NameCategory, string> = {
         name,
         score,
         category,
-        available,
+        available: comAvailable,
         explanation,
         details,
         tlds
@@ -760,38 +843,45 @@ const marketPotentials: Record<NameCategory, string> = {
   };
 
   // Check single domain
-  const checkSingleDomain = async (name: GeneratedName | SavedName) => {
-    const available = await checkRealDomain(name.name);
+  const checkSingleDomain = async (name: GeneratedName | SavedName, tld: string = 'com') => {
+    const available = await checkRealDomain(name.name, tld);
     
     // Update saved names
     setSavedNames(prev => 
-      prev.map(n => n.id === name.id ? { ...n, available } : n)
+      prev.map(n => n.id === name.id ? { 
+        ...n, 
+        available: tld === 'com' ? available : n.available,
+        tlds: tld === 'com' ? { ...n.tlds, [tld]: available } : n.tlds
+      } : n)
     );
     
     // Update naming results
     setNamingResults(prev => 
-      prev.map(n => n.id === name.id ? { ...n, available } : n)
+      prev.map(n => n.id === name.id ? { 
+        ...n, 
+        available: tld === 'com' ? available : n.available,
+        tlds: tld === 'com' ? { ...n.tlds, [tld]: available } : n.tlds
+      } : n)
     );
     
     return available;
   };
 
-  // Open registrar
-  const openRegistrar = (registrar: DomainRegistrar, name: string) => {
-    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const domain = `${cleanName}.com`;
+  // Open registrar with pre-filled domain
+  const openRegistrar = (registrar: DomainRegistrar, name: string, tld: string = 'com') => {
+    const cleanName = name.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    const fullDomain = `${cleanName}.${tld}`;
     
-    const registrarUrls: Record<string, string> = {
-      'namecheap': `https://www.namecheap.com/domains/registration/results/?domain=${domain}`,
-      'godaddy': `https://www.godaddy.com/domainsearch/find?domainToCheck=${domain}`,
-      'hostinger': `https://www.hostinger.com/domain-checker?domain=${domain}`,
-      'cloudflare': `https://www.cloudflare.com/products/registrar/#domain-search`,
-      'google': `https://domains.google/registrar/search?searchTerm=${domain}`,
-      'bluehost': `https://www.bluehost.com/domains/search?domain=${domain}`,
-      'namecom': `https://www.name.com/domain/search/${domain}`
-    };
+    // Construct the full URL with pre-filled domain
+    let fullUrl = registrar.searchUrl + fullDomain;
     
-    window.open(registrarUrls[registrar.id] || registrar.url, '_blank');
+    // Special handling for different registrars
+    if (registrar.id === 'cloudflare') {
+      // Cloudflare doesn't have direct search, open main page
+      fullUrl = registrar.baseUrl;
+    }
+    
+    window.open(fullUrl, '_blank', 'noopener,noreferrer');
   };
 
   // Get category color
@@ -803,7 +893,7 @@ const marketPotentials: Record<NameCategory, string> = {
       luxury: '#ffd700',
       modern: '#00bfff',
       classic: '#64748b',
-      general: '#64748b' // Add this line
+      general: '#64748b'
     };
     return colors[category];
   };
@@ -1032,7 +1122,7 @@ const marketPotentials: Record<NameCategory, string> = {
 
   return (
     <div className="branding-design-page">
-      {/* Animated Background with new colors */}
+      {/* Animated Background */}
       <div className="branding-bg">
         <div className="grid-pattern"></div>
         <div className="floating-elements">
@@ -1055,20 +1145,7 @@ const marketPotentials: Record<NameCategory, string> = {
           <div className="name-image-container">
             <div className="name-image-bg"></div>
             <div className="name-image-content">
-              <h1 className="name-image-text" style={{ 
-                fontFamily: "'Poppins', sans-serif",
-                fontSize: '4rem',
-                fontWeight: 800,
-                color: 'white',
-                textShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
-                background: 'linear-gradient(135deg, #0063f4, #00bfff)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                padding: '2rem',
-                borderRadius: '20px',
-                backdropFilter: 'blur(10px)',
-                border: '2px solid rgba(255, 255, 255, 0.1)'
-              }}>
+              <h1 className="name-image-text">
                 {selectedName.name}
               </h1>
               <div className="name-image-meta">
@@ -1274,9 +1351,16 @@ const marketPotentials: Record<NameCategory, string> = {
                           <div className="name-tlds">
                             <span className="tld-label">AI Suggests:</span>
                             {Object.entries(result.tlds).map(([tld, available]) => (
-                              <span key={tld} className={`tld-badge ${available ? 'available' : 'taken'}`}>
+                              <button
+                                key={tld}
+                                className={`tld-badge ${available ? 'available' : 'taken'}`}
+                                onClick={() => {
+                                  setSelectedTLD(tld);
+                                  setShowDomainPopup(result);
+                                }}
+                              >
                                 .{tld}
-                              </span>
+                              </button>
                             ))}
                           </div>
                           
@@ -1297,9 +1381,13 @@ const marketPotentials: Record<NameCategory, string> = {
                             </button>
                             <button 
                               className="name-action-btn domain-btn"
-                              onClick={() => setShowDomainPopup(result)}
+                              onClick={() => {
+                                setSelectedTLD('com');
+                                setShowDomainPopup(result);
+                              }}
+                              disabled={!result.available}
                             >
-                              <FiGlobe /> Registrars
+                              <FiGlobe /> Register
                             </button>
                             <button 
                               className="name-action-btn details-btn"
@@ -1438,8 +1526,7 @@ const marketPotentials: Record<NameCategory, string> = {
                   {service.features.map((feature, idx) => (
                     <div key={idx} className="service-feature">
                       <FiCheckCircle className="feature-icon" />
-                    <span className="feature-text">{feature}</span>
-
+                      <span className="feature-text">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -1477,80 +1564,6 @@ const marketPotentials: Record<NameCategory, string> = {
                 <p className="feature-desc">{feature.desc}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* AI Portfolio Section */}
-      <section className="portfolio-section">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">
-              AI Brand <span className="highlight">Success Stories</span>
-            </h2>
-            <p className="section-desc">
-              See AI-transformed brands from idea to identity
-            </p>
-          </div>
-
-          <div className="portfolio-filters">
-            <button 
-              className={`filter-btn ${activeCategory === "all" ? "active" : ""}`}
-              onClick={() => setActiveCategory("all")}
-            >
-              <FiGrid /> All AI Work
-            </button>
-            {services.map(service => (
-              <button 
-                key={service.id}
-                className={`filter-btn ${activeCategory === service.category ? "active" : ""}`}
-                onClick={() => setActiveCategory(service.category)}
-              >
-                {service.icon} {service.title}
-              </button>
-            ))}
-          </div>
-
-          <div className="portfolio-grid">
-            {filteredPortfolio.map((item, idx) => (
-              <div key={idx} className="portfolio-item">
-                <div className="portfolio-image-wrapper">
-                  <img src={item.image} alt={item.title} className="portfolio-image" />
-                  <div className="portfolio-overlay">
-                    <div className="portfolio-category">{item.category}</div>
-                    <h4 className="portfolio-title">{item.title}</h4>
-                    <p className="portfolio-desc">{item.description}</p>
-                    <button className="view-btn">
-                      View AI Case Study <FiArrowRight />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final AI CTA */}
-      <section className="final-cta">
-        <div className="container">
-          <div className="cta-card">
-            <GiLightBulb className="cta-icon" />
-            <h2 className="cta-title">Ready for AI Branding?</h2>
-            <p className="cta-text">
-              Let our AI create a memorable brand that resonates with your audience 
-              and drives business growth with data-driven intelligence.
-            </p>
-            <div className="cta-actions">
-              <button className="cta-btn-primary" onClick={() => generateNames(false)}>
-                <GiLightBulb />
-                Start AI Naming Now
-              </button>
-              <button className="cta-btn-secondary">
-                <FiMail />
-                AI Brand Consultation
-              </button>
-            </div>
           </div>
         </div>
       </section>
@@ -1650,88 +1663,46 @@ const marketPotentials: Record<NameCategory, string> = {
         </div>
       )}
 
-      {/* Service Details Popup */}
-      {showServicePopup && (
-        <div className="popup-overlay">
-          <div className="popup-container service-details-popup" ref={popupRef}>
-            <div className="popup-header">
-              <h3>{showServicePopup.details.title}</h3>
-              <button className="popup-close" onClick={() => setShowServicePopup(null)}>
-                <FiX />
-              </button>
-            </div>
-            <div className="popup-content">
-              <div className="service-details">
-                <div className="service-icon-large">
-                  {showServicePopup.icon}
-                </div>
-                <p className="service-description-large">{showServicePopup.details.description}</p>
-                
-                <div className="details-section">
-                  <h4>AI Process</h4>
-                  <ul>
-                    {showServicePopup.details.process.map((step, idx) => (
-                      <li key={idx}>{step}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="details-section">
-                  <h4>AI Deliverables</h4>
-                  <ul>
-                    {showServicePopup.details.deliverables.map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
-                
-                <div className="details-meta">
-                  <div className="meta-item">
-                    <span className="meta-label">AI Timeline:</span>
-                    <span className="meta-value">{showServicePopup.details.timeline}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">AI Starting Price:</span>
-                    <span className="meta-value highlight">{showServicePopup.details.price}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="popup-actions">
-                <button className="popup-btn primary">
-                  <FiPhone /> Book AI Service
-                </button>
-                <button className="popup-btn secondary" onClick={() => setShowServicePopup(null)}>
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Domain Registrar Popup */}
       {showDomainPopup && (
         <div className="popup-overlay">
           <div className="popup-container domain-registrar-popup" ref={popupRef}>
             <div className="popup-header">
-              <h3>Register <span className="domain-name">{showDomainPopup.name}.com</span></h3>
+              <h3>Register <span className="domain-name">{showDomainPopup.name}.{selectedTLD}</span></h3>
               <button className="popup-close" onClick={() => setShowDomainPopup(null)}>
                 <FiX />
               </button>
             </div>
             <div className="popup-content">
               <div className="domain-status-display">
-                <div className={`status-badge ${showDomainPopup.available ? 'available' : 'taken'}`}>
-                  {showDomainPopup.available ? 'AI: Domain Available' : 'AI: Domain Taken'}
+                <div className={`status-badge ${showDomainPopup.tlds[selectedTLD as keyof typeof showDomainPopup.tlds] ? 'available' : 'taken'}`}>
+                  {showDomainPopup.tlds[selectedTLD as keyof typeof showDomainPopup.tlds] 
+                    ? `AI: Domain .${selectedTLD} Available` 
+                    : `AI: Domain .${selectedTLD} Taken`}
                 </div>
                 <p className="status-note">
-                  {showDomainPopup.available 
+                  {showDomainPopup.tlds[selectedTLD as keyof typeof showDomainPopup.tlds] 
                     ? 'This domain is available for registration!' 
-                    : 'This domain is already registered. Try our AI other suggestions.'}
+                    : 'This domain is already registered. Try other TLDs or names.'}
                 </p>
               </div>
               
-              {showDomainPopup.available && (
+              <div className="tld-selector">
+                <h4>Available TLDs:</h4>
+                <div className="tld-buttons">
+                  {Object.entries(showDomainPopup.tlds).map(([tld, available]) => (
+                    <button
+                      key={tld}
+                      className={`tld-select-btn ${selectedTLD === tld ? 'active' : ''} ${available ? 'available' : 'taken'}`}
+                      onClick={() => setSelectedTLD(tld)}
+                    >
+                      .{tld} {available ? '✓' : '✗'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {showDomainPopup.tlds[selectedTLD as keyof typeof showDomainPopup.tlds] && (
                 <>
                   <div className="registrars-list">
                     <h4>AI Recommended Registrars</h4>
@@ -1747,20 +1718,20 @@ const marketPotentials: Record<NameCategory, string> = {
                         </div>
                         <button 
                           className="registrar-btn"
-                          onClick={() => openRegistrar(registrar, showDomainPopup.name)}
+                          onClick={() => openRegistrar(registrar, showDomainPopup.name, selectedTLD)}
                         >
-                          <FiExternalLink /> AI Register
+                          <FiExternalLink /> Register .{selectedTLD}
                         </button>
                       </div>
                     ))}
                   </div>
                   
                   <div className="domain-actions">
-                    <button className="action-btn secondary" onClick={() => checkSingleDomain(showDomainPopup)}>
-                      <FiRefreshCw /> AI Re-check
+                    <button className="action-btn secondary" onClick={() => checkSingleDomain(showDomainPopup, selectedTLD)}>
+                      <FiRefreshCw /> Re-check .{selectedTLD}
                     </button>
                     <button className="action-btn primary" onClick={() => saveName(showDomainPopup)}>
-                      <FiSave /> AI Save Name
+                      <FiSave /> Save Name
                     </button>
                   </div>
                 </>
@@ -1838,20 +1809,24 @@ const marketPotentials: Record<NameCategory, string> = {
                     className="action-btn primary"
                     onClick={() => saveNameAsImage(showNameDetails)}
                   >
-                    <FiImageIcon /> Save as AI Image
+                    <FiImageIcon /> Save as Image
                   </button>
                   <button 
                     className="action-btn secondary"
                     onClick={() => saveName(showNameDetails)}
                   >
-                    <FiSave /> AI Save Name
+                    <FiSave /> Save Name
                   </button>
                   {showNameDetails.available && (
                     <button 
                       className="action-btn tertiary"
-                      onClick={() => setShowDomainPopup(showNameDetails)}
+                      onClick={() => {
+                        setSelectedTLD('com');
+                        setShowDomainPopup(showNameDetails);
+                        setShowNameDetails(null);
+                      }}
                     >
-                      <FiGlobe /> AI Register Domain
+                      <FiGlobe /> Register Domain
                     </button>
                   )}
                 </div>
@@ -1881,23 +1856,26 @@ const marketPotentials: Record<NameCategory, string> = {
                         <span className="saved-category" style={{ backgroundColor: getCategoryColor(saved.category) }}>
                           {saved.category}
                         </span>
-                        <span className="saved-date">AI Saved: {saved.date}</span>
-                        <span className="saved-score">AI Score: {saved.score}</span>
+                        <span className="saved-date">Saved: {saved.date}</span>
+                        <span className="saved-score">Score: {saved.score}</span>
                         <span className={`saved-status ${saved.available ? 'available' : 'taken'}`}>
                           {saved.available ? 'Available' : 'Taken'}
                         </span>
                       </div>
                     </div>
                     <div className="saved-actions">
-                      <button className="saved-action-btn" onClick={() => checkSingleDomain(saved)}>
-                        <FiGlobe /> AI Check
+                      <button className="saved-action-btn" onClick={() => {
+                        const savedNameObj = saved as GeneratedName;
+                        checkSingleDomain(savedNameObj);
+                      }}>
+                        <FiGlobe /> Check
                       </button>
                       <button className="saved-action-btn" onClick={() => {
                         const found = namingResults.find(n => n.name === saved.name) || saved as GeneratedName;
                         setShowNameDetails(found as GeneratedName);
                         setShowSavedNames(false);
                       }}>
-                        <FiInfo /> AI Details
+                        <FiInfo /> Details
                       </button>
                     </div>
                   </div>
@@ -1912,7 +1890,7 @@ const marketPotentials: Record<NameCategory, string> = {
                   link.href = dataUri;
                   link.click();
                 }}>
-                  <FiDownload /> AI Download All
+                  <FiDownload /> Download All
                 </button>
                 <button className="popup-btn secondary" onClick={() => setShowSavedNames(false)}>
                   Close
@@ -1923,9 +1901,9 @@ const marketPotentials: Record<NameCategory, string> = {
         </div>
       )}
 
-      {/* CSS Styles */}
+          {/* CSS Styles */}
       <style>{`
-        /* Base Styles with new color scheme */
+        /* ========== BASE STYLES ========== */
         * {
           margin: 0;
           padding: 0;
@@ -1981,6 +1959,21 @@ const marketPotentials: Record<NameCategory, string> = {
           width: 100%;
         }
 
+        .name-image-text {
+          font-family: "'Poppins', sans-serif";
+          font-size: 4rem;
+          font-weight: 800;
+          color: 'white';
+          text-shadow: '0 4px 20px rgba(0, 0, 0, 0.5)';
+          background: 'linear-gradient(135deg, #0063f4, #00bfff)';
+          -webkit-background-clip: 'text';
+          -webkit-text-fill-color: 'transparent';
+          padding: '2rem';
+          border-radius: '20px';
+          backdrop-filter: 'blur(10px)';
+          border: '2px solid rgba(255, 255, 255, 0.1)';
+        }
+
         .name-image-meta {
           display: flex;
           justify-content: center;
@@ -2019,7 +2012,7 @@ const marketPotentials: Record<NameCategory, string> = {
           font-size: 0.9rem;
         }
 
-        /* Animated Background */
+        /* ========== ANIMATED BACKGROUND ========== */
         .branding-bg {
           position: fixed;
           inset: 0;
@@ -2096,6 +2089,7 @@ const marketPotentials: Record<NameCategory, string> = {
           100% { transform: translate(100px, -100px) scale(1.2); }
         }
 
+        /* ========== CONTAINER ========== */
         .container {
           max-width: 1400px;
           margin: 0 auto;
@@ -2104,7 +2098,7 @@ const marketPotentials: Record<NameCategory, string> = {
           z-index: 1;
         }
 
-        /* Hero Section */
+        /* ========== HERO SECTION ========== */
         .branding-hero {
           min-height: 100vh;
           display: flex;
@@ -2177,7 +2171,7 @@ const marketPotentials: Record<NameCategory, string> = {
           animation: fadeInUp 1s ease 0.4s both;
         }
 
-        /* Naming Tool */
+        /* ========== NAMING TOOL ========== */
         .naming-tool {
           background: rgba(255, 255, 255, 0.03);
           border: 1px solid rgba(255, 255, 255, 0.08);
@@ -2360,7 +2354,7 @@ const marketPotentials: Record<NameCategory, string> = {
           font-weight: 600;
         }
 
-        /* Results Section */
+        /* ========== RESULTS SECTION ========== */
         .naming-results {
           margin-top: 32px;
           animation: slideInUp 0.8s ease 0.2s both;
@@ -2469,7 +2463,7 @@ const marketPotentials: Record<NameCategory, string> = {
           cursor: not-allowed;
         }
 
-        /* Name Cards */
+        /* ========== NAME CARDS ========== */
         .names-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -2672,6 +2666,9 @@ const marketPotentials: Record<NameCategory, string> = {
           border-radius: 12px;
           font-weight: 600;
           transition: all 0.3s ease;
+          cursor: pointer;
+          border: none;
+          font-family: inherit;
         }
 
         .tld-badge.available {
@@ -2707,6 +2704,8 @@ const marketPotentials: Record<NameCategory, string> = {
           justify-content: center;
           gap: 8px;
           transition: all 0.3s ease;
+          border: none;
+          font-family: inherit;
         }
 
         .name-action-btn:hover:not(:disabled) {
@@ -2814,7 +2813,7 @@ const marketPotentials: Record<NameCategory, string> = {
           box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
         }
 
-        /* Hero CTA */
+        /* ========== HERO CTA ========== */
         .hero-cta {
           display: flex;
           gap: 16px;
@@ -2860,12 +2859,63 @@ const marketPotentials: Record<NameCategory, string> = {
           transform: translateY(-3px);
         }
 
-        /* Hero Visual */
+        /* ========== HERO VISUAL ========== */
         .hero-visual {
           position: relative;
           height: 600px;
           perspective: 1500px;
           animation: fadeInUp 1s ease 0.6s both;
+        }
+
+        .floating-icons {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+
+        .float-icon {
+          position: absolute;
+          width: 60px;
+          height: 60px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 191, 255, 0.15);
+          border: 1px solid rgba(0, 191, 255, 0.3);
+          border-radius: 16px;
+          color: #00bfff;
+          font-size: 28px;
+          backdrop-filter: blur(10px);
+          animation: floatIcon 3s ease-in-out infinite;
+        }
+
+        .icon-0, .icon-4 {
+          top: 10%;
+          right: 5%;
+          animation-delay: 0s;
+        }
+
+        .icon-1, .icon-5 {
+          top: 50%;
+          right: 0%;
+          animation-delay: 0.5s;
+        }
+
+        .icon-2, .icon-6 {
+          bottom: 20%;
+          right: 8%;
+          animation-delay: 1s;
+        }
+
+        .icon-3, .icon-7 {
+          top: 30%;
+          left: 5%;
+          animation-delay: 1.5s;
+        }
+
+        @keyframes floatIcon {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-25px) rotate(5deg); }
         }
 
         .brand-showcase {
@@ -2942,58 +2992,7 @@ const marketPotentials: Record<NameCategory, string> = {
           filter: brightness(1.2);
         }
 
-        .floating-icons {
-          position: absolute;
-          inset: 0;
-          pointer-events: none;
-        }
-
-        .float-icon {
-          position: absolute;
-          width: 60px;
-          height: 60px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(0, 191, 255, 0.15);
-          border: 1px solid rgba(0, 191, 255, 0.3);
-          border-radius: 16px;
-          color: #00bfff;
-          font-size: 28px;
-          backdrop-filter: blur(10px);
-          animation: floatIcon 3s ease-in-out infinite;
-        }
-
-        .icon-0, .icon-4 {
-          top: 10%;
-          right: 5%;
-          animation-delay: 0s;
-        }
-
-        .icon-1, .icon-5 {
-          top: 50%;
-          right: 0%;
-          animation-delay: 0.5s;
-        }
-
-        .icon-2, .icon-6 {
-          bottom: 20%;
-          right: 8%;
-          animation-delay: 1s;
-        }
-
-        .icon-3, .icon-7 {
-          top: 30%;
-          left: 5%;
-          animation-delay: 1.5s;
-        }
-
-        @keyframes floatIcon {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(-25px) rotate(5deg); }
-        }
-
-        /* Section Header */
+        /* ========== SECTION HEADER ========== */
         .section-header {
           text-align: center;
           margin-bottom: 80px;
@@ -3022,7 +3021,7 @@ const marketPotentials: Record<NameCategory, string> = {
           line-height: 1.6;
         }
 
-        /* Process Steps */
+        /* ========== PROCESS STEPS ========== */
         .naming-process {
           padding: 100px 0;
           background: rgba(255, 255, 255, 0.01);
@@ -3095,7 +3094,7 @@ const marketPotentials: Record<NameCategory, string> = {
           color: rgba(255, 255, 255, 0.7);
         }
 
-        /* Services Section */
+        /* ========== SERVICES SECTION ========== */
         .services-section {
           padding: 100px 0;
         }
@@ -3164,17 +3163,15 @@ const marketPotentials: Record<NameCategory, string> = {
           max-width: 400px;
         }
 
-       .service-features {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-bottom: 40px;
-  max-width: 520px;
-  margin-inline: auto;
-  align-items: center;
-
-}
-
+        .service-features {
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          margin-bottom: 40px;
+          max-width: 520px;
+          margin-inline: auto;
+          align-items: center;
+        }
 
         .service-feature svg {
           color: #00bfff;
@@ -3206,7 +3203,7 @@ const marketPotentials: Record<NameCategory, string> = {
           box-shadow: 0 10px 30px rgba(0, 191, 255, 0.4);
         }
 
-        /* Features Section */
+        /* ========== FEATURES SECTION ========== */
         .features-section {
           padding: 100px 0;
           background: rgba(255, 255, 255, 0.01);
@@ -3270,257 +3267,7 @@ const marketPotentials: Record<NameCategory, string> = {
           color: rgba(255, 255, 255, 0.7);
         }
 
-        /* Portfolio Section */
-        .portfolio-section {
-          padding: 100px 0;
-        }
-
-        .portfolio-filters {
-          display: flex;
-          gap: 16px;
-          justify-content: center;
-          flex-wrap: wrap;
-          margin-bottom: 60px;
-        }
-
-        .filter-btn {
-          padding: 14px 28px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 50px;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          transition: all 0.3s ease;
-        }
-
-        .filter-btn:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(0, 191, 255, 0.3);
-          transform: translateY(-2px);
-        }
-
-        .filter-btn.active {
-          background: rgba(0, 191, 255, 0.2);
-          border-color: #00bfff;
-          color: white;
-        }
-
-        .portfolio-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-          gap: 32px;
-        }
-
-        .portfolio-item {
-          border-radius: 20px;
-          overflow: hidden;
-          transition: transform 0.3s ease;
-          transform-style: preserve-3d;
-        }
-
-        .portfolio-item:hover {
-          transform: translateY(-8px) rotateX(5deg);
-        }
-
-        .portfolio-image-wrapper {
-          position: relative;
-          overflow: hidden;
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .portfolio-image {
-          width: 100%;
-          height: 350px;
-          object-fit: cover;
-          display: block;
-          transition: transform 0.5s ease;
-        }
-
-        .portfolio-item:hover .portfolio-image {
-          transform: scale(1.1);
-        }
-
-        .portfolio-overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent);
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-end;
-          padding: 32px;
-          opacity: 0;
-          transition: opacity 0.4s ease;
-        }
-
-        .portfolio-item:hover .portfolio-overlay {
-          opacity: 1;
-        }
-
-        .portfolio-category {
-          display: inline-block;
-          padding: 6px 16px;
-          background: rgba(0, 191, 255, 0.8);
-          border-radius: 20px;
-          font-size: 0.85rem;
-          font-weight: 700;
-          color: white;
-          margin-bottom: 12px;
-          align-self: flex-start;
-        }
-
-        .portfolio-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-bottom: 8px;
-          color: white;
-        }
-
-        .portfolio-desc {
-          font-size: 1rem;
-          color: rgba(255, 255, 255, 0.8);
-          margin-bottom: 20px;
-        }
-
-        .view-btn {
-          align-self: flex-start;
-          padding: 12px 24px;
-          background: #00bfff;
-          border: none;
-          border-radius: 8px;
-          color: white;
-          font-weight: 600;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          transition: all 0.3s ease;
-        }
-
-        .view-btn:hover {
-          background: #00ff88;
-          transform: translateX(5px);
-        }
-
-        /* Final CTA */
-        .final-cta {
-          padding: 100px 0 120px;
-        }
-
-        .cta-card {
-          max-width: 1000px;
-          margin: 0 auto;
-          padding: 80px 60px;
-          background: linear-gradient(135deg, rgba(0, 99, 244, 0.15), rgba(0, 255, 136, 0.1));
-          border: 1px solid rgba(0, 99, 244, 0.3);
-          border-radius: 32px;
-          text-align: center;
-          position: relative;
-          overflow: hidden;
-          backdrop-filter: blur(20px);
-          transform-style: preserve-3d;
-        }
-
-        .cta-card::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at 50% 50%, rgba(0, 99, 244, 0.2), transparent 70%);
-          opacity: 0.5;
-        }
-
-        .cta-icon {
-          font-size: 64px;
-          color: #00bfff;
-          margin: 0 auto 32px;
-          animation: pulse 2s ease-in-out infinite;
-          position: relative;
-          z-index: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        @keyframes pulse {
-          0%, 100% { transform: scale(1) rotate(0deg); }
-          50% { transform: scale(1.1) rotate(5deg); }
-        }
-
-        .cta-title {
-          font-size: clamp(28px, 5vw, 48px);
-          font-weight: 800;
-          margin-bottom: 20px;
-          position: relative;
-          z-index: 1;
-          line-height: 1.2;
-        }
-
-        .cta-text {
-          font-size: 1.25rem;
-          line-height: 1.8;
-          color: rgba(255, 255, 255, 0.75);
-          margin-bottom: 48px;
-          max-width: 700px;
-          margin-left: auto;
-          margin-right: auto;
-          position: relative;
-          z-index: 1;
-        }
-
-        .cta-actions {
-          display: flex;
-          gap: 20px;
-          justify-content: center;
-          flex-wrap: wrap;
-          position: relative;
-          z-index: 1;
-        }
-
-        .cta-btn-primary, .cta-btn-secondary {
-          padding: 18px 36px;
-          border-radius: 12px;
-          font-size: 1.05rem;
-          font-weight: 700;
-          border: none;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          transition: all 0.3s ease;
-        }
-
-        .cta-btn-primary {
-          background: linear-gradient(135deg, #0063f4, #00bfff);
-          color: white;
-          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
-        }
-
-        .cta-btn-primary:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 15px 40px rgba(0, 99, 244, 0.6);
-        }
-
-        .cta-btn-secondary {
-          background: rgba(0, 191, 255, 0.2);
-          color: white;
-          border: 2px solid #00bfff;
-        }
-
-        .cta-btn-secondary:hover {
-          background: #00bfff;
-          transform: translateY(-3px);
-        }
-
-        /* Popup Overlay */
+        /* ========== POPUP OVERLAY ========== */
         .popup-overlay {
           position: fixed;
           inset: 0;
@@ -3593,6 +3340,8 @@ const marketPotentials: Record<NameCategory, string> = {
           font-size: 20px;
           cursor: pointer;
           transition: all 0.3s ease;
+          border: none;
+          font-family: inherit;
         }
 
         .popup-close:hover {
@@ -3606,7 +3355,7 @@ const marketPotentials: Record<NameCategory, string> = {
           padding: 32px;
         }
 
-        /* Name Search Popup */
+        /* ========== SEARCH POPUP ========== */
         .name-search-popup {
           max-width: 600px;
         }
@@ -3634,6 +3383,7 @@ const marketPotentials: Record<NameCategory, string> = {
           color: white;
           font-size: 1rem;
           font-family: inherit;
+          border: 1px solid;
         }
 
         .search-box input:focus {
@@ -3763,6 +3513,8 @@ const marketPotentials: Record<NameCategory, string> = {
           justify-content: center;
           gap: 6px;
           transition: all 0.3s ease;
+          border: none;
+          font-family: inherit;
         }
 
         .search-action-btn:hover {
@@ -3810,6 +3562,7 @@ const marketPotentials: Record<NameCategory, string> = {
           cursor: pointer;
           border: none;
           transition: all 0.3s ease;
+          font-family: inherit;
         }
 
         .popup-btn.primary {
@@ -3833,7 +3586,187 @@ const marketPotentials: Record<NameCategory, string> = {
           transform: translateY(-2px);
         }
 
-        /* Name Details Popup */
+        /* ========== DOMAIN REGISTRAR POPUP ========== */
+        .domain-registrar-popup {
+          max-width: 600px;
+        }
+
+        .domain-name {
+          color: #00bfff;
+          font-weight: 800;
+        }
+
+        .domain-status-display {
+          text-align: center;
+          margin-bottom: 32px;
+          padding: 24px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 16px;
+        }
+
+        .status-badge {
+          display: inline-block;
+          padding: 10px 24px;
+          border-radius: 20px;
+          font-weight: 700;
+          font-size: 1.1rem;
+          margin-bottom: 16px;
+        }
+
+        .status-badge.available {
+          background: rgba(0, 255, 136, 0.2);
+          color: #00ff88;
+          border: 2px solid rgba(0, 255, 136, 0.4);
+        }
+
+        .status-badge.taken {
+          background: rgba(255, 107, 157, 0.2);
+          color: #ff6b9d;
+          border: 2px solid rgba(255, 107, 157, 0.4);
+        }
+
+        .status-note {
+          color: rgba(255, 255, 255, 0.7);
+          line-height: 1.6;
+        }
+
+        .registrars-list {
+          margin-bottom: 32px;
+        }
+
+        .registrars-list h4 {
+          font-size: 1.2rem;
+          color: white;
+          margin-bottom: 20px;
+          text-align: center;
+        }
+
+        .registrar-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 20px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
+          margin-bottom: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .registrar-card:hover {
+          background: rgba(0, 191, 255, 0.05);
+          border-color: rgba(0, 191, 255, 0.3);
+          transform: translateX(5px);
+        }
+
+        .registrar-icon {
+          font-size: 32px;
+          color: #00bfff;
+        }
+
+        .registrar-info {
+          flex: 1;
+        }
+
+        .registrar-info h5 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: white;
+          margin-bottom: 6px;
+        }
+
+        .registrar-meta {
+          display: flex;
+          gap: 16px;
+        }
+
+        .price {
+          color: #00ff88;
+          font-weight: 600;
+        }
+
+        .rating {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 0.9rem;
+        }
+
+        .registrar-btn {
+          padding: 10px 20px;
+          background: rgba(0, 191, 255, 0.15);
+          border: 1px solid #00bfff;
+          border-radius: 10px;
+          color: #00bfff;
+          font-weight: 600;
+          font-size: 0.9rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+          border: none;
+          font-family: inherit;
+        }
+
+        .registrar-btn:hover {
+          background: #00bfff;
+          color: white;
+          transform: translateY(-2px);
+        }
+
+        .domain-actions {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+        }
+
+        .action-btn {
+          padding: 16px 32px;
+          border-radius: 12px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          transition: all 0.3s ease;
+          font-family: inherit;
+        }
+
+        .action-btn.primary {
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          color: white;
+        }
+
+        .action-btn.primary:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
+        }
+
+        .action-btn.secondary {
+          background: rgba(0, 255, 136, 0.2);
+          color: #00ff88;
+          border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .action-btn.secondary:hover {
+          background: rgba(0, 255, 136, 0.3);
+          transform: translateY(-3px);
+        }
+
+        .action-btn.tertiary {
+          background: rgba(255, 107, 157, 0.2);
+          color: #ff6b9d;
+          border: 1px solid rgba(255, 107, 157, 0.3);
+        }
+
+        .action-btn.tertiary:hover {
+          background: rgba(255, 107, 157, 0.3);
+          transform: translateY(-3px);
+        }
+
+        /* ========== NAME DETAILS POPUP ========== */
         .name-details-popup {
           max-width: 700px;
         }
@@ -3981,278 +3914,7 @@ const marketPotentials: Record<NameCategory, string> = {
           margin-top: 32px;
         }
 
-        .action-btn {
-          padding: 16px 32px;
-          border-radius: 12px;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          border: none;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          transition: all 0.3s ease;
-        }
-
-        .action-btn.primary {
-          background: linear-gradient(135deg, #0063f4, #00bfff);
-          color: white;
-        }
-
-        .action-btn.primary:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
-        }
-
-        .action-btn.secondary {
-          background: rgba(0, 255, 136, 0.2);
-          color: #00ff88;
-          border: 1px solid rgba(0, 255, 136, 0.3);
-        }
-
-        .action-btn.secondary:hover {
-          background: rgba(0, 255, 136, 0.3);
-          transform: translateY(-3px);
-        }
-
-        .action-btn.tertiary {
-          background: rgba(255, 107, 157, 0.2);
-          color: #ff6b9d;
-          border: 1px solid rgba(255, 107, 157, 0.3);
-        }
-
-        .action-btn.tertiary:hover {
-          background: rgba(255, 107, 157, 0.3);
-          transform: translateY(-3px);
-        }
-
-        /* Service Details Popup */
-        .service-details-popup {
-          max-width: 700px;
-        }
-
-        .service-icon-large {
-          font-size: 64px;
-          color: #00bfff;
-          margin-bottom: 24px;
-          display: flex;
-          justify-content: center;
-        }
-
-        .service-description-large {
-          font-size: 1.1rem;
-          line-height: 1.8;
-          color: rgba(255, 255, 255, 0.8);
-          margin-bottom: 32px;
-          text-align: center;
-        }
-
-        .details-section {
-          margin-bottom: 32px;
-        }
-
-        .details-section h4 {
-          font-size: 1.2rem;
-          font-weight: 700;
-          color: white;
-          margin-bottom: 16px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .details-section h4::before {
-          content: '';
-          width: 4px;
-          height: 20px;
-          background: #00bfff;
-          border-radius: 2px;
-        }
-
-        .details-section ul {
-          list-style: none;
-          padding-left: 0;
-        }
-
-        .details-section li {
-          padding: 10px 0;
-          color: rgba(255, 255, 255, 0.7);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .details-section li:before {
-          content: '✓';
-          color: #00ff88;
-          font-weight: bold;
-        }
-
-        .details-meta {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 20px;
-          background: rgba(0, 191, 255, 0.05);
-          padding: 24px;
-          border-radius: 16px;
-          margin-bottom: 32px;
-        }
-
-        .meta-item {
-          text-align: center;
-        }
-
-        .meta-label {
-          display: block;
-          font-size: 0.9rem;
-          color: rgba(255, 255, 255, 0.6);
-          margin-bottom: 8px;
-        }
-
-        .meta-value {
-          font-size: 1.2rem;
-          font-weight: 700;
-          color: white;
-        }
-
-        .meta-value.highlight {
-          color: #00bfff;
-        }
-
-        /* Domain Registrar Popup */
-        .domain-registrar-popup {
-          max-width: 600px;
-        }
-
-        .domain-name {
-          color: #00bfff;
-          font-weight: 800;
-        }
-
-        .domain-status-display {
-          text-align: center;
-          margin-bottom: 32px;
-          padding: 24px;
-          background: rgba(255, 255, 255, 0.03);
-          border-radius: 16px;
-        }
-
-        .status-badge {
-          display: inline-block;
-          padding: 10px 24px;
-          border-radius: 20px;
-          font-weight: 700;
-          font-size: 1.1rem;
-          margin-bottom: 16px;
-        }
-
-        .status-badge.available {
-          background: rgba(0, 255, 136, 0.2);
-          color: #00ff88;
-          border: 2px solid rgba(0, 255, 136, 0.4);
-        }
-
-        .status-badge.taken {
-          background: rgba(255, 107, 157, 0.2);
-          color: #ff6b9d;
-          border: 2px solid rgba(255, 107, 157, 0.4);
-        }
-
-        .status-note {
-          color: rgba(255, 255, 255, 0.7);
-          line-height: 1.6;
-        }
-
-        .registrars-list {
-          margin-bottom: 32px;
-        }
-
-        .registrars-list h4 {
-          font-size: 1.2rem;
-          color: white;
-          margin-bottom: 20px;
-          text-align: center;
-        }
-
-        .registrar-card {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-          padding: 20px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 16px;
-          margin-bottom: 12px;
-          transition: all 0.3s ease;
-        }
-
-        .registrar-card:hover {
-          background: rgba(0, 191, 255, 0.05);
-          border-color: rgba(0, 191, 255, 0.3);
-          transform: translateX(5px);
-        }
-
-        .registrar-icon {
-          font-size: 32px;
-          color: #00bfff;
-        }
-
-        .registrar-info {
-          flex: 1;
-        }
-
-        .registrar-info h5 {
-          font-size: 1.1rem;
-          font-weight: 600;
-          color: white;
-          margin-bottom: 6px;
-        }
-
-        .registrar-meta {
-          display: flex;
-          gap: 16px;
-        }
-
-        .price {
-          color: #00ff88;
-          font-weight: 600;
-        }
-
-        .rating {
-          color: rgba(255, 255, 255, 0.6);
-          font-size: 0.9rem;
-        }
-
-        .registrar-btn {
-          padding: 10px 20px;
-          background: rgba(0, 191, 255, 0.15);
-          border: 1px solid #00bfff;
-          border-radius: 10px;
-          color: #00bfff;
-          font-weight: 600;
-          font-size: 0.9rem;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: all 0.3s ease;
-        }
-
-        .registrar-btn:hover {
-          background: #00bfff;
-          color: white;
-          transform: translateY(-2px);
-        }
-
-        .domain-actions {
-          display: flex;
-          gap: 12px;
-          justify-content: center;
-        }
-
-        /* Saved Names Popup */
+        /* ========== SAVED NAMES POPUP ========== */
         .saved-names-popup {
           max-width: 600px;
         }
@@ -4340,6 +4002,8 @@ const marketPotentials: Record<NameCategory, string> = {
           align-items: center;
           gap: 6px;
           transition: all 0.3s ease;
+          border: none;
+          font-family: inherit;
         }
 
         .saved-action-btn:hover {
@@ -4347,7 +4011,7 @@ const marketPotentials: Record<NameCategory, string> = {
           transform: translateY(-2px);
         }
 
-        /* Loading Spinner */
+        /* ========== LOADING SPINNER ========== */
         .spinner {
           width: 24px;
           height: 24px;
@@ -4357,7 +4021,7 @@ const marketPotentials: Record<NameCategory, string> = {
           animation: spin 1s linear infinite;
         }
 
-        /* Responsive Design */
+        /* ========== RESPONSIVE DESIGN ========== */
         @media (max-width: 1200px) {
           .hero-grid {
             gap: 60px;
@@ -4444,16 +4108,8 @@ const marketPotentials: Record<NameCategory, string> = {
             grid-template-columns: 1fr;
           }
           
-          .portfolio-grid {
-            grid-template-columns: 1fr;
-          }
-          
           .section-title {
             font-size: 28px;
-          }
-          
-          .cta-actions {
-            flex-direction: column;
           }
           
           .footer-actions {
@@ -4501,10 +4157,6 @@ const marketPotentials: Record<NameCategory, string> = {
             padding: 24px;
           }
           
-          .cta-card {
-            padding: 40px 24px;
-          }
-          
           .cta-btn-primary, .cta-btn-secondary {
             width: 100%;
             justify-content: center;
@@ -4529,7 +4181,7 @@ const marketPotentials: Record<NameCategory, string> = {
           }
         }
 
-        /* Scrollbar Styling */
+        /* ========== SCROLLBAR STYLING ========== */
         ::-webkit-scrollbar {
           width: 8px;
         }
@@ -4547,6 +4199,8 @@ const marketPotentials: Record<NameCategory, string> = {
         ::-webkit-scrollbar-thumb:hover {
           background: rgba(0, 191, 255, 0.7);
         }
+
+        /* ========== YOUR ENHANCED STYLES (keep this section) ========== */
       `}</style>
     </div>
   );

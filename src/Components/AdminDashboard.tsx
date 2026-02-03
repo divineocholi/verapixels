@@ -5478,7 +5478,6 @@ const fetchConversations = async () => {
 
     console.log('📧 Sending confirmation email to:', bookingData.email);
     
-    // Call your backend API instead of EmailJS
     const response = await fetch(`${SOCKET_URL}/api/consultations/send-confirmation`, {
       method: 'POST',
       headers: {
@@ -5501,15 +5500,15 @@ const fetchConversations = async () => {
     const result = await response.json();
     
     if (result.success) {
-      console.log('✅ Confirmation email sent via backend:', result);
+      console.log('✅ Confirmation email sent successfully:', result);
       return result;
     } else {
-      console.error('❌ Error from backend email service:', result.error);
-      return null;
+      console.error('❌ Error sending confirmation email:', result.error);
+      throw new Error(result.error || 'Failed to send email');
     }
   } catch (error) {
-    console.error('❌ Error sending confirmation email:', error);
-    return null;
+    console.error('❌ Error in sendUserConfirmationEmail:', error);
+    throw error;
   }
 };
 

@@ -973,6 +973,51 @@ app.post('/api/test-email', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// ========== SEND CONFIRMATION EMAIL ROUTE ==========
+app.post('/api/consultations/send-confirmation', async (req, res) => {
+  try {
+    const {
+      userName, userEmail, phone, contact_method,
+      booking_date, booking_time, business_time, user_timezone,
+      message, consultation_id
+    } = req.body;
+
+    console.log('📧 Sending confirmation email for consultation:', consultation_id);
+
+    // Send user confirmation using your email service
+    const result = await sendUserConfirmation({
+      userName,
+      userEmail,
+      contactMethod: contact_method,
+      bookingDate: booking_date,
+      bookingTime: booking_time,
+      businessTime: business_time,
+      userTimezone: user_timezone,
+      consultationId: consultation_id
+    });
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Confirmation email sent successfully',
+        messageId: result.messageId
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error || 'Failed to send confirmation email'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error in send-confirmation endpoint:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to send confirmation email'
+    });
+  }
+});
 // ========== ADMIN API ROUTES ==========
 
 // Create admin invite endpoint
@@ -1701,6 +1746,7 @@ io.on("connection", (socket) => {
       };
       handleAdminMessage(formattedData);
     });
+
     
     // ========== ADMIN STATUS CHANGE ==========
     socket.on('admin_status_change', (data) => {
@@ -1732,7 +1778,7 @@ io.on("connection", (socket) => {
   } catch (error) {
     console.error('❌ Failed to send admin alert:', error);
   }
-  
+
       // Create notification for all admins
       const notification = {
         notification_id: data.notificationId || `notif_${Date.now()}`,
