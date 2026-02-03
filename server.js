@@ -973,7 +973,6 @@ app.post('/api/test-email', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 // ========== ADMIN API ROUTES ==========
 
 // Create admin invite endpoint

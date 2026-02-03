@@ -1,34 +1,19 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 // ============================================================
-// ZOHO SMTP CONNECTION — this never changes unless you
-// switch email providers. It reads from your .env file.
+// RESEND API SETUP — works on Render (no port restrictions)
+// Add RESEND_API_KEY to your .env file
 // ============================================================
-const transporter = nodemailer.createTransport({
-  host: 'smtp.zoho.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.ZOHO_USER,  // info@verapixels.com
-    pass: process.env.ZOHO_PASS   // your password / app password
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Test the connection when the server starts
-transporter.verify()
-  .then(() => console.log('✅ Zoho SMTP connected successfully'))
-  .catch((err) => console.error('❌ Zoho SMTP failed:', err.message));
+// Your verified sender email
+const FROM_EMAIL = process.env.FROM_EMAIL || 'info@verapixels.com';
 
+console.log('📧 Resend email service initialized');
+console.log('📧 Sending from:', FROM_EMAIL);
 
 // ============================================================
 // BASE LAYOUT WRAPPER
-// ============================================================
-// This is the "frame" that wraps every single email you send.
-// Edit this ONE place to change the look of ALL your emails:
-//   - background color
-//   - max width
-//   - border radius
-//   - footer text
 // ============================================================
 const baseTemplate = (headerGradient, headerContent, bodyContent) => `
 <!DOCTYPE html>
@@ -52,8 +37,6 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
     overflow: hidden;
     border: 1px solid #334155;
   ">
-
-    <!-- ===== HEADER (gradient banner at top) ===== -->
     <div style="
       background: ${headerGradient};
       padding: 36px 32px;
@@ -61,16 +44,12 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
     ">
       ${headerContent}
     </div>
-
-    <!-- ===== BODY (main content area) ===== -->
     <div style="
       padding: 36px 32px;
       background: #1e293b;
     ">
       ${bodyContent}
     </div>
-
-    <!-- ===== FOOTER (same on every email) ===== -->
     <div style="
       padding: 24px 32px;
       background: #0f172a;
@@ -84,19 +63,14 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
         If you have questions, reply to this email or call <strong style="color: #94a3b8;">+234 707 1333 709</strong>
       </p>
     </div>
-
   </div>
 </body>
 </html>
 `;
 
-
 // ============================================================
-// REUSABLE SMALL PIECES — use these inside your templates
-// to keep things consistent without copy-pasting HTML
+// REUSABLE COMPONENTS
 // ============================================================
-
-// A single row in an info table (label on left, value on right)
 const tableRow = (label, value) => `
   <tr style="border-bottom: 1px solid #334155;">
     <td style="padding: 14px 0; font-weight: 600; color: #64748b; width: 42%; font-size: 14px;">${label}</td>
@@ -104,7 +78,6 @@ const tableRow = (label, value) => `
   </tr>
 `;
 
-// A highlighted info box (like a callout / alert)
 const infoBox = (bgColor, borderColor, textColor, content) => `
   <div style="
     background: ${bgColor};
@@ -117,41 +90,35 @@ const infoBox = (bgColor, borderColor, textColor, content) => `
   </div>
 `;
 
-
 // ============================================================
-// CORE SEND FUNCTION
-// All the helpers below call this. You never need to call
-// this directly — just use sendAdminNotification, etc.
+// CORE SEND FUNCTION (Resend version)
 // ============================================================
 export const sendEmail = async ({ to, subject, html, replyTo }) => {
   try {
-    const info = await transporter.sendMail({
-      from: `Verapixels <${process.env.ZOHO_USER}>`,
-      to,
+    const { data, error } = await resend.emails.send({
+      from: `Verapixels <${FROM_EMAIL}>`,
+      to: [to],
       subject,
       html,
-      replyTo: replyTo || undefined
+      reply_to: replyTo || FROM_EMAIL
     });
 
-    console.log('📧 Email sent:', { to, subject, messageId: info.messageId });
-    return { success: true, messageId: info.messageId };
+    if (error) {
+      console.error('❌ Resend email failed:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log('📧 Email sent via Resend:', { to, subject, id: data.id });
+    return { success: true, messageId: data.id };
 
   } catch (error) {
-    console.error('❌ Email failed:', error.message);
+    console.error('❌ Resend error:', error);
     return { success: false, error: error.message };
   }
 };
 
-
 // ============================================================
 // EMAIL 1: ADMIN NOTIFICATION
-// ————————————————————————————————————————————————————————————
-// WHO RECEIVES IT: You (info@verapixels.com)
-// WHEN: A user books a consultation
-// WHAT IT SHOWS: All the user's booking details
-//
-// ➡️  TO EDIT THIS EMAIL, change the content inside
-//     the baseTemplate() call below.
 // ============================================================
 export const sendAdminNotification = async ({
   userName, userEmail, userPhone, contactMethod,
@@ -188,29 +155,21 @@ export const sendAdminNotification = async ({
   `;
 
   const html = baseTemplate(
-    'linear-gradient(135deg, #0063f4, #00bfff)',   // header gradient color
+    'linear-gradient(135deg, #0063f4, #00bfff)',
     header,
     body
   );
 
   return await sendEmail({
-    to: process.env.ZOHO_USER,   // sends to your own inbox
+    to: FROM_EMAIL,
     subject,
     html,
-    replyTo: userEmail            // hitting "reply" goes to the user
+    replyTo: userEmail
   });
 };
 
-
 // ============================================================
 // EMAIL 2: USER CONFIRMATION
-// ————————————————————————————————————————————————————————————
-// WHO RECEIVES IT: The user who just booked
-// WHEN: Right after a successful booking
-// WHAT IT SHOWS: Their booking summary + reassurance
-//
-// ➡️  TO EDIT THIS EMAIL, change the content inside
-//     the baseTemplate() call below.
 // ============================================================
 export const sendUserConfirmation = async ({
   userName, userEmail, contactMethod,
@@ -229,7 +188,6 @@ export const sendUserConfirmation = async ({
       Your free consultation has been scheduled. Here are your details:
     </p>
 
-    <!-- The booking summary box -->
     <div style="
       background: rgba(14, 165, 233, 0.08);
       border: 1px solid rgba(14, 165, 233, 0.25);
@@ -254,7 +212,7 @@ export const sendUserConfirmation = async ({
   `;
 
   const html = baseTemplate(
-    'linear-gradient(135deg, #059669, #10b981)',   // green header for "confirmed" feel
+    'linear-gradient(135deg, #059669, #10b981)',
     header,
     body
   );
@@ -263,20 +221,12 @@ export const sendUserConfirmation = async ({
     to: userEmail,
     subject,
     html,
-    replyTo: process.env.ZOHO_USER
+    replyTo: FROM_EMAIL
   });
 };
 
-
 // ============================================================
 // EMAIL 3: URGENT ADMIN CHAT ALERT
-// ————————————————————————————————————————————————————————————
-// WHO RECEIVES IT: You (info@verapixels.com)
-// WHEN: A user clicks "Talk to Human" in the chatbot
-// WHAT IT SHOWS: Conversation ID + what the user said
-//
-// ➡️  TO EDIT THIS EMAIL, change the content inside
-//     the baseTemplate() call below.
 // ============================================================
 export const sendAdminChatNotification = async ({
   conversationId, reason, messagePreview
@@ -306,13 +256,13 @@ export const sendAdminChatNotification = async ({
   `;
 
   const html = baseTemplate(
-    'linear-gradient(135deg, #dc2626, #f97316)',   // red/orange header for urgency
+    'linear-gradient(135deg, #dc2626, #f97316)',
     header,
     body
   );
 
   return await sendEmail({
-    to: process.env.ZOHO_USER,
+    to: FROM_EMAIL,
     subject,
     html
   });
