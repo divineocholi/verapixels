@@ -10,6 +10,7 @@ import {
   Heart,
   AlertCircle
 } from 'lucide-react';
+import logo from "../assets/verapixels_icon_logo_final.jpg";
 import { Client, Databases, ID, Query } from 'appwrite';
 
 const Footer = () => {
@@ -229,7 +230,7 @@ const Footer = () => {
             {/* Company Info */}
             <div className="footer-col footer-brand">
               <div className="brand-logo">
-                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%23667eea'/%3E%3Ctext x='24' y='32' text-anchor='middle' fill='white' font-size='24' font-weight='bold' font-family='Arial'%3EV%3C/text%3E%3C/svg%3E" alt="Verapixels" />
+                <img src={logo} alt="Verapixels Logo" />
                 <span>Verapixels</span>
               </div>
               <p className="brand-description">
@@ -336,7 +337,7 @@ const Footer = () => {
         <div className="container">
           <div className="footer-bottom-content">
             <p className="copyright">
-              © {new Date().getFullYear()} Verapixels. All rights reserved.
+             <p>© 2025–{new Date().getFullYear()} Verapixels. All rights reserved.</p>
             </p>
             <p className="made-with">
               Made with <Heart className="heart-icon" size={16} /> by Verapixels Team

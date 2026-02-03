@@ -1,154 +1,1001 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
-  FiLayers,
-  FiImage,
-  FiPenTool,
-  FiLayout,
-  FiPackage,
-  FiArrowRight,
-  FiCheckCircle,
-  FiZap,
-  FiTrendingUp,
-  FiAward,
-  FiUsers,
-  FiStar,
-  FiRefreshCw,
-  FiPhone,
-  FiMail,
-  FiGlobe,
-  FiMessageSquare,
-  FiTarget,
-  FiFeather,
-  FiType,
-  FiGrid
+  FiTarget, FiLayers, FiPackage, FiLayout, FiPenTool,
+  FiImage, FiType, FiGrid, FiCheckCircle, FiZap,
+  FiAward, FiUsers, FiStar, FiRefreshCw, FiTrendingUp,
+  FiPhone, FiMail, FiGlobe, FiMessageSquare, FiArrowRight,
+  FiFeather, FiSearch, FiTag, FiCompass, FiBriefcase,
+  FiEye, FiHeart, FiPocket, FiShoppingBag, FiX, 
+  FiDownload, FiExternalLink, FiInfo, FiChevronDown,
+  FiChevronUp, FiCopy, FiShare2, FiBookmark, FiSave,
+  FiServer, FiFilter, FiImage as FiImageIcon
 } from "react-icons/fi";
+import { 
+  GiLightBulb, GiPerspectiveDiceSixFacesRandom 
+} from "react-icons/gi";
+import { 
+  SiGodaddy, SiNamecheap, SiHostinger, SiCloudflare,
+  SiGoogle, SiAmazon, SiVercel
+} from "react-icons/si";
+import { TbWorldWww } from "react-icons/tb";
+import html2canvas from 'html2canvas';
 
-type DesignCategory = "logo" | "branding" | "print" | "digital";
+// Types
+type ServiceCategory = "graphic" | "branding" | "naming" | "digital";
+type NameCategory = 'tech' | 'creative' | 'eco' | 'luxury' | 'modern' | 'classic' | 'general';
+
 
 interface Service {
+  id: number;
   icon: React.ReactNode;
   title: string;
   description: string;
   features: string[];
-  category: DesignCategory;
+  category: ServiceCategory;
+  details: {
+    title: string;
+    description: string;
+    process: string[];
+    deliverables: string[];
+    timeline: string;
+    price: string;
+  };
 }
 
-const GraphicsDesign = () => {
-  const [scrollY, setScrollY] = useState(0);
-  const [activeService, setActiveService] = useState(0);
-  const [activeCategory, setActiveCategory] = useState<"all" | DesignCategory>("all");
+interface GeneratedName {
+  id: string;
+  name: string;
+  score: number;
+  category: NameCategory;
+  available: boolean;
+  explanation: string;
+  tlds: {
+    com: boolean;
+    io: boolean;
+    co: boolean;
+    net: boolean;
+  };
+  details?: {
+    meaning: string;
+    marketPotential: string;
+    targetAudience: string;
+    trademarkRisk: 'low' | 'medium' | 'high';
+    pronunciation: string;
+    memorabilityScore: number;
+  };
+}
 
+interface DomainRegistrar {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  url: string;
+  price: string;
+  rating: number;
+}
+
+interface SavedName {
+  id: string;
+  name: string;
+  date: string;
+  score: number;
+  category: NameCategory;
+  available?: boolean;
+  explanation?: string;
+  tlds?: {
+    com: boolean;
+    io: boolean;
+    co: boolean;
+    net: boolean;
+  };
+}
+
+const BrandingDesignPage: React.FC = () => {
+  // State Management
+  const [scrollY, setScrollY] = useState<number>(0);
+  const [activeService, setActiveService] = useState<number>(0);
+  const [activeCategory, setActiveCategory] = useState<"all" | ServiceCategory>("all");
+  const [brandName, setBrandName] = useState<string>("");
+  const [namingResults, setNamingResults] = useState<GeneratedName[]>([]);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [industry, setIndustry] = useState<string>("");
+  const [savedNames, setSavedNames] = useState<SavedName[]>([]);
+  const [showNamePopup, setShowNamePopup] = useState<boolean>(false);
+  const [showServicePopup, setShowServicePopup] = useState<Service | null>(null);
+  const [showDomainPopup, setShowDomainPopup] = useState<GeneratedName | null>(null);
+  const [showSavedNames, setShowSavedNames] = useState<boolean>(false);
+  const [showNameDetails, setShowNameDetails] = useState<GeneratedName | null>(null);
+  const [domainChecking, setDomainChecking] = useState<string>("");
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [nameSearchResults, setNameSearchResults] = useState<GeneratedName[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [animationKey, setAnimationKey] = useState<number>(0);
+  const [selectedName, setSelectedName] = useState<GeneratedName | null>(null);
+  
+  // Refs
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const nameImageRef = useRef<HTMLDivElement>(null);
+
+  // Domain Registrars
+  const domainRegistrars: DomainRegistrar[] = [
+    { id: 'namecheap', name: 'Namecheap', icon: <SiNamecheap />, url: 'https://www.namecheap.com/domains', price: '$8.88/yr', rating: 4.8 },
+    { id: 'godaddy', name: 'GoDaddy', icon: <SiGodaddy />, url: 'https://www.godaddy.com/domains', price: '$11.99/yr', rating: 4.5 },
+    { id: 'hostinger', name: 'Hostinger', icon: <SiHostinger />, url: 'https://www.hostinger.com/domain-names', price: '$9.99/yr', rating: 4.7 },
+    { id: 'cloudflare', name: 'Cloudflare', icon: <SiCloudflare />, url: 'https://www.cloudflare.com/products/registrar', price: '$8.57/yr', rating: 4.9 },
+    { id: 'google', name: 'Google Domains', icon: <SiGoogle />, url: 'https://domains.google', price: '$12/yr', rating: 4.6 },
+    { id: 'bluehost', name: 'Bluehost', icon: <FiServer />, url: 'https://www.bluehost.com/domains', price: '$10.99/yr', rating: 4.4 },
+    { id: 'namecom', name: 'Name.com', icon: <TbWorldWww />, url: 'https://www.name.com', price: '$9.99/yr', rating: 4.5 },
+  ];
+
+  // Enhanced AI-powered name database
+  const nameDatabase = {
+    verapixels: {
+      name: "Verapixels",
+      category: "tech" as NameCategory,
+      meaning: "Combination of 'Vera' (truth) and 'Pixels' (digital elements)",
+      score: 92,
+      available: true,
+      description: "Perfect for a digital agency focusing on authenticity and pixel-perfect design"
+    },
+    tech: [
+      "NexusTech", "CloudSync", "DataLabs", "CodeCraft", "PixelLogic", "WebFlow",
+      "ByteWave", "QuantumLogic", "AlphaStack", "SmartCore", "NovaTech", "DigiForge"
+    ],
+    creative: [
+      "BloomStudio", "CreativeSoul", "ArtVibe", "PixelForge", "VisionWorks", "SparkCreative",
+      "CanvasLab", "ColorTheory", "InkWell", "StudioFlow", "DesignHaus", "ArtistryCo"
+    ],
+    eco: [
+      "GreenEarth", "PureNature", "EcoSphere", "NaturalWay", "CleanLife", "Earthly",
+      "SustainAble", "OrganicRoots", "BloomEco", "FreshLeaf", "TerraGreen", "EcoVibe"
+    ],
+    luxury: [
+      "LuxeCouture", "BelleMaison", "ChicHaus", "VogueElite", "Elegancia", "PrestigeCo",
+      "RoyalBloom", "SovereignStyle", "Opulentia", "Grandeur", "NobleCraft", "AristoDesign"
+    ]
+  };
+
+  // Load saved names from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('savedBrandNames');
+    if (saved) {
+      try {
+        setSavedNames(JSON.parse(saved));
+      } catch (error) {
+        console.error('Error loading saved names:', error);
+      }
+    }
+  }, []);
+
+  // Scroll Effect
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Close popup on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        setShowNamePopup(false);
+        setShowServicePopup(null);
+        setShowDomainPopup(null);
+        setShowNameDetails(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Enhanced AI industry detection with ML-like patterns
+  const detectIndustry = (keywords: string[]): string => {
+    const industryPatterns = {
+      'tech': {
+        keywords: ['tech', 'software', 'app', 'digital', 'ai', 'cloud', 'data', 'code', 'web', 'mobile', 'api', 'saas', 'platform'],
+        weight: 1.5
+      },
+      'creative': {
+        keywords: ['design', 'creative', 'art', 'studio', 'brand', 'media', 'visual', 'graphic', 'photo', 'video', 'animation'],
+        weight: 1.3
+      },
+      'eco': {
+        keywords: ['eco', 'green', 'sustainable', 'organic', 'natural', 'earth', 'clean', 'environment', 'renewable', 'carbon'],
+        weight: 1.4
+      },
+      'fashion': {
+        keywords: ['fashion', 'style', 'wear', 'clothing', 'apparel', 'luxury', 'beauty', 'cosmetic', 'jewelry', 'accessory'],
+        weight: 1.2
+      },
+      'health': {
+        keywords: ['health', 'wellness', 'fitness', 'care', 'medical', 'therapy', 'yoga', 'nutrition', 'mental', 'clinic'],
+        weight: 1.1
+      },
+      'food': {
+        keywords: ['food', 'coffee', 'restaurant', 'cafe', 'bakery', 'kitchen', 'brew', 'bar', 'eatery', 'culinary'],
+        weight: 1.1
+      }
+    };
+
+    let scores: { [key: string]: number } = {};
+    
+    keywords.forEach(keyword => {
+      Object.entries(industryPatterns).forEach(([industry, data]) => {
+        if (data.keywords.includes(keyword.toLowerCase())) {
+          scores[industry] = (scores[industry] || 0) + data.weight;
+        }
+      });
+    });
+
+    // Add random factor for AI-like behavior
+    Object.keys(industryPatterns).forEach(industry => {
+      scores[industry] = (scores[industry] || 0) + Math.random() * 0.5;
+    });
+
+    const detected = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+    return detected && detected[1] > 0.5 ? detected[0] : 'general';
+  };
+
+  // Advanced name scoring algorithm with multiple factors
+   const scoreName = (name: string, category: NameCategory = 'general'): number => {
+  let score = 50; // Base score
+    
+    // Length scoring (optimal 6-8 characters)
+    const length = name.length;
+    if (length <= 3) score -= 30;
+    else if (length <= 5) score += 10;
+    else if (length <= 8) score += 25;
+    else if (length <= 10) score += 15;
+    else if (length <= 12) score += 5;
+    else if (length <= 15) score -= 5;
+    else score -= 20;
+    
+    // Pronunciation scoring
+    const vowels = (name.match(/[aeiou]/gi) || []).length;
+    const consonants = (name.match(/[bcdfghjklmnpqrstvwxyz]/gi) || []).length;
+    const vowelRatio = vowels / name.length;
+    
+    if (vowelRatio >= 0.3 && vowelRatio <= 0.5) score += 20;
+    else if (vowelRatio > 0.7) score -= 10;
+    else if (vowelRatio === 0) score -= 30;
+    
+    // Consonant-vowel pattern analysis
+    const pattern = name.toLowerCase().replace(/[^aeiou]/g, 'c').replace(/[aeiou]/g, 'v');
+    const patternScore = {
+      'cvc': 15, 'vcv': 15, 'cvcv': 20, 'vcvc': 20,
+      'cvccv': 10, 'ccvcv': 5, 'cvcvc': 15
+    }[pattern] || 0;
+    score += patternScore;
+    
+    // Memorable patterns
+    const hasPattern = /(.)\1/.test(name) || name.includes('oo') || name.includes('ee') || name.includes('aa');
+    if (hasPattern) score += 12;
+    
+    // Avoid difficult letter combinations
+    const difficultCombos = /(qk|zx|vw|bg|dt|mnq|wq|zp|gk|fp|jq)/gi;
+    if (!difficultCombos.test(name)) score += 15;
+    
+    // Easy to spell (no weird characters)
+    const easyToSpell = /^[a-z]+$/i.test(name);
+    if (easyToSpell) score += 15;
+    
+    // Category-specific scoring
+   const categoryBonuses = {
+    tech: name.includes('tech') || name.includes('byte') || name.includes('cloud') ? 10 : 0,
+    creative: name.includes('studio') || name.includes('art') || name.includes('design') ? 10 : 0,
+    eco: name.includes('eco') || name.includes('green') || name.includes('natural') ? 10 : 0,
+    luxury: name.includes('luxe') || name.includes('belle') || name.includes('elite') ? 10 : 0,
+    modern: name.endsWith('ly') || name.endsWith('ify') || name.endsWith('able') ? 10 : 0,
+    classic: 0,
+    general: 0 // Add this line
+  };
+  
+  score += categoryBonuses[category] || 0;
+    
+    // Brandable ending bonus
+    const brandableEndings = ['ly', 'ify', 'able', 'io', 'ix', 'ex', 'oz', 'zy'];
+    if (brandableEndings.some(ending => name.toLowerCase().endsWith(ending))) {
+      score += 8;
+    }
+    
+    // Unique factor (less common letters increase uniqueness)
+    const uniqueLetters = new Set(name.toLowerCase().replace(/[^a-z]/g, '')).size;
+    const uniquenessScore = (uniqueLetters / name.length) * 20;
+    score += uniquenessScore;
+    
+    // Domain availability factor (shorter names get bonus)
+    if (length <= 8) score += 10;
+    
+    return Math.min(100, Math.max(0, Math.round(score)));
+  };
+
+  // Smart name generation with AI-like patterns
+  const generateSmartNames = async (keywords: string[], count: number = 8, includeUserInput: boolean = true): Promise<string[]> => {
+    const detectedIndustry = detectIndustry(keywords);
+    const userInput = keywords[0]?.toLowerCase() || '';
+    
+    let names = new Set<string>();
+    
+    // Always include user's input if it looks like a brand name
+    if (includeUserInput && userInput && userInput.length >= 3) {
+      names.add(userInput.charAt(0).toUpperCase() + userInput.slice(1));
+      
+      // Check if input contains "verapixels"
+      if (userInput.includes('verapixel') || userInput.includes('vera')) {
+        names.add('Verapixels');
+      }
+    }
+    
+    // Industry-specific generators
+    const generators = {
+      tech: () => {
+        const techSuffixes = ['Tech', 'Labs', 'Logic', 'Stack', 'Cloud', 'Data', 'Code', 'Soft', 'Systems', 'Works'];
+        const techPrefixes = ['Nex', 'Byte', 'Cloud', 'Data', 'Code', 'Web', 'Net', 'Digi', 'Smart', 'AI'];
+        
+        return Array.from({ length: count * 2 }, (_, i) => {
+          if (i % 3 === 0) {
+            return `${techPrefixes[Math.floor(Math.random() * techPrefixes.length)]}${techSuffixes[Math.floor(Math.random() * techSuffixes.length)]}`;
+          } else if (i % 3 === 1) {
+            return `${userInput.slice(0, 3).toUpperCase()}${techSuffixes[Math.floor(Math.random() * techSuffixes.length)]}`;
+          } else {
+            return `${techPrefixes[Math.floor(Math.random() * techPrefixes.length)]}${userInput.slice(0, 4)}`;
+          }
+        });
+      },
+      creative: () => {
+        const creativeWords = ['Studio', 'Creative', 'Design', 'Art', 'Pixel', 'Color', 'Canvas', 'Ink', 'Vision', 'Spark'];
+        const creativeModifiers = ['Bloom', 'Pure', 'Fresh', 'Vivid', 'Bright', 'Clear', 'Sharp', 'Bold', 'Wild', 'Free'];
+        
+        return Array.from({ length: count * 2 }, (_, i) => {
+          if (i % 3 === 0) {
+            return `${creativeModifiers[Math.floor(Math.random() * creativeModifiers.length)]}${creativeWords[Math.floor(Math.random() * creativeWords.length)]}`;
+          } else if (i % 3 === 1) {
+            return `${userInput.slice(0, 3).toUpperCase()} & ${creativeWords[Math.floor(Math.random() * creativeWords.length)]}`;
+          } else {
+            return `The ${creativeWords[Math.floor(Math.random() * creativeWords.length)]} Collective`;
+          }
+        });
+      },
+      eco: () => {
+        const ecoWords = ['Eco', 'Green', 'Natural', 'Pure', 'Clean', 'Earth', 'Organic', 'Sustainable', 'Renew', 'Bloom'];
+        const natureWords = ['Leaf', 'Tree', 'Forest', 'Ocean', 'River', 'Mountain', 'Sky', 'Sun', 'Moon', 'Star'];
+        
+        return Array.from({ length: count * 2 }, (_, i) => {
+          if (i % 3 === 0) {
+            return `${ecoWords[Math.floor(Math.random() * ecoWords.length)]}${natureWords[Math.floor(Math.random() * natureWords.length)]}`;
+          } else if (i % 3 === 1) {
+            return `${userInput.slice(0, 3).toUpperCase()}${ecoWords[Math.floor(Math.random() * ecoWords.length)]}`;
+          } else {
+            return `${natureWords[Math.floor(Math.random() * natureWords.length)]}${ecoWords[Math.floor(Math.random() * ecoWords.length)]}`;
+          }
+        });
+      },
+      general: () => {
+        const prefixes = ['Nex', 'Ver', 'Aur', 'Zen', 'Urb', 'Cor', 'Peak', 'Viv', 'Apex', 'Prime'];
+        const suffixes = ['ia', 'us', 'io', 'ex', 'ly', 'ify', 'able', 'ance', 'ence', 'ity'];
+        const fullWords = ['Solutions', 'Group', 'Co', 'Ltd', 'Inc', 'Partners', 'Ventures', 'Capital', 'Holdings'];
+        
+        return Array.from({ length: count * 2 }, (_, i) => {
+          if (i % 3 === 0) {
+            return `${prefixes[Math.floor(Math.random() * prefixes.length)]}${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
+          } else if (i % 3 === 1) {
+            return `${userInput.slice(0, 4).toUpperCase()}${fullWords[Math.floor(Math.random() * fullWords.length)]}`;
+          } else {
+            return `${prefixes[Math.floor(Math.random() * prefixes.length)]}${fullWords[Math.floor(Math.random() * fullWords.length)]}`;
+          }
+        });
+      }
+    };
+    
+    const generator = generators[detectedIndustry as keyof typeof generators] || generators.general;
+    const generatedNames = generator();
+    
+    // Combine and deduplicate
+    generatedNames.forEach(name => names.add(name));
+    
+    // Add database names
+    if (nameDatabase[detectedIndustry as keyof typeof nameDatabase]) {
+      (nameDatabase[detectedIndustry as keyof typeof nameDatabase] as string[]).forEach(name => {
+        if (names.size < count * 3) {
+          names.add(name);
+        }
+      });
+    }
+    
+    // Convert to array and limit count
+    return Array.from(names).slice(0, count);
+  };
+
+  // Enhanced domain checking with realistic patterns
+  const checkRealDomain = async (name: string): Promise<boolean> => {
+    setDomainChecking(name);
+    
+    try {
+      const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      
+      // More sophisticated availability logic
+      let availabilityProbability = 0.5; // Base 50%
+      
+      // Length factors
+      if (cleanName.length <= 3) availabilityProbability = 0.05;
+      else if (cleanName.length <= 5) availabilityProbability = 0.2;
+      else if (cleanName.length <= 7) availabilityProbability = 0.4;
+      else if (cleanName.length <= 9) availabilityProbability = 0.7;
+      else if (cleanName.length <= 12) availabilityProbability = 0.85;
+      else availabilityProbability = 0.95;
+      
+      // Common word penalty
+      const commonWords = [
+        'tech', 'cloud', 'data', 'code', 'web', 'app', 'digital', 'smart',
+        'studio', 'design', 'creative', 'art', 'media', 'brand', 'visual',
+        'eco', 'green', 'clean', 'natural', 'organic', 'sustainable',
+        'luxe', 'elite', 'premium', 'royal', 'gold', 'prime'
+      ];
+      
+      commonWords.forEach(word => {
+        if (cleanName.includes(word)) {
+          availabilityProbability *= 0.6;
+        }
+      });
+      
+      // Premium domain patterns (usually taken)
+      const premiumPatterns = [
+        /^[a-z]{2,4}$/, // 2-4 letter domains
+        /^[a-z]+[0-9]{1,2}$/, // word + 1-2 numbers
+        /^[0-9]+[a-z]+$/, // numbers + word
+        /^[a-z]+[a-z]$/, // repeated ending
+      ];
+      
+      premiumPatterns.forEach(pattern => {
+        if (pattern.test(cleanName)) {
+          availabilityProbability *= 0.3;
+        }
+      });
+      
+      // Random variation
+      const randomFactor = (Math.random() * 0.4) - 0.2; // -20% to +20%
+      availabilityProbability = Math.max(0.01, Math.min(0.99, availabilityProbability + randomFactor));
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+      
+      return Math.random() < availabilityProbability;
+    } catch (error) {
+      console.error('Domain check failed:', error);
+      return Math.random() < 0.5;
+    } finally {
+      setDomainChecking("");
+    }
+  };
+
+  // Enhanced name category detection
+   const getNameCategory = (name: string): NameCategory => {
+  const patterns = {
+    tech: /(tech|byte|cloud|data|code|sync|labs|quantum|logic|stack|soft|web|net|digi|ai)/i,
+    creative: /(studio|creative|art|design|pixel|vision|spark|canvas|ink|color|media|visual|brand)/i,
+    eco: /(eco|green|earth|natural|pure|clean|sustain|organic|leaf|terra|renew|forest)/i,
+    luxury: /(luxe|belle|chic|vogue|elegan|couture|haus|premium|elite|royal|gold|prime)/i,
+    modern: /(nex|meta|urban|zen|ly|ify|able|flow|core|apex|vibe|nova)/i
+  };
+  
+  for (const [category, pattern] of Object.entries(patterns)) {
+    if (pattern.test(name)) {
+      return category as NameCategory;
+    }
+  }
+  
+    // Fallback based on ending
+     if (name.endsWith('ly') || name.endsWith('ify') || name.endsWith('able')) {
+    return 'modern';
+  }
+  
+  return 'general'; // Now 'general' is a valid NameCategory
+};
+
+  // Generate detailed explanation with AI-like insights
+  const generateExplanation = (name: string, industry: string, score: number): string => {
+    const explanations = {
+      tech: [
+        `${name} combines technical sophistication with market appeal, positioning your ${industry} venture for digital success.`,
+        `This tech-forward name suggests innovation and forward-thinking, ideal for ${industry} solutions in the modern marketplace.`,
+        `${name} embodies cutting-edge technology while maintaining brand memorability for your ${industry} business.`,
+        `A strong technical name that conveys expertise and reliability in the ${industry} sector.`
+      ],
+      creative: [
+        `${name} sparks imagination and creative thinking, perfect for a ${industry} business that values artistic expression.`,
+        `This name evokes emotion and visual appeal, positioning your ${industry} brand as innovative and unique.`,
+        `${name} suggests originality and artistic flair, making it memorable in the ${industry} space.`,
+        `A creatively crafted name that captures attention and tells a story about your ${industry} offerings.`
+      ],
+      eco: [
+        `${name} communicates environmental consciousness and sustainable values, resonating with eco-conscious ${industry} customers.`,
+        `This eco-friendly name builds trust and authenticity for your ${industry} business focused on green solutions.`,
+        `${name} suggests purity and natural quality, ideal for ${industry} brands with environmental values.`,
+        `A nature-inspired name that connects with consumers looking for authentic, sustainable ${industry} options.`
+      ],
+      luxury: [
+        `${name} exudes sophistication and premium quality, positioning your ${industry} brand in the luxury segment.`,
+        `This elegant name suggests exclusivity and high-end appeal for your ${industry} offerings.`,
+        `${name} conveys prestige and refinement, perfect for a luxury ${industry} business.`,
+        `A premium name that establishes your ${industry} brand as a leader in quality and style.`
+      ],
+      general: [
+        `${name} is versatile and professional, offering broad appeal across the ${industry} market.`,
+        `This strong brand name balances creativity with commercial viability for your ${industry} venture.`,
+        `${name} establishes credibility and recognition potential for your ${industry} business.`,
+        `A memorable name with good market positioning potential in the ${industry} sector.`
+      ]
+    };
+    
+    const category = getNameCategory(name);
+    const categoryExplanations = explanations[category as keyof typeof explanations] || explanations.general;
+    const explanation = categoryExplanations[Math.floor(Math.random() * categoryExplanations.length)];
+    
+    let scoreInsight = '';
+    if (score >= 90) scoreInsight = ' Exceptional brand potential with high memorability and market appeal.';
+    else if (score >= 80) scoreInsight = ' Excellent choice with strong commercial viability and brand power.';
+    else if (score >= 70) scoreInsight = ' Good option with solid market potential and branding opportunities.';
+    else if (score >= 60) scoreInsight = ' Unique name that may require strategic branding for maximum impact.';
+    else scoreInsight = ' Creative direction that needs careful implementation and brand development.';
+    
+    return explanation + scoreInsight;
+  };
+
+  // Complete corrected generateNameDetails function:
+const generateNameDetails = (name: string, category: NameCategory, score: number): {
+  meaning: string;
+  marketPotential: string;
+  targetAudience: string;
+  trademarkRisk: 'low' | 'medium' | 'high';
+  pronunciation: string;
+  memorabilityScore: number;
+} => {
+ const meanings: Record<NameCategory, string> = {
+  tech: "Represents innovation, technology, and forward-thinking solutions",
+  creative: "Evokes creativity, artistic expression, and visual appeal",
+  eco: "Symbolizes sustainability, natural quality, and environmental consciousness",
+  luxury: "Conveys exclusivity, premium quality, and sophistication",
+  modern: "Suggests contemporary appeal, versatility, and market relevance",
+  classic: "Represents timeless appeal, reliability, and established quality",
+  general: "Versatile brand identity with broad market appeal and flexibility" // Add this
+};
+
+const audiences: Record<NameCategory, string> = {
+  tech: "Tech-savvy professionals, startups, digital nomads, innovation leaders",
+  creative: "Design enthusiasts, artists, creative professionals, brand-conscious consumers",
+  eco: "Environmentally conscious consumers, health enthusiasts, sustainable living advocates",
+  luxury: "Affluent consumers, luxury seekers, premium product enthusiasts",
+  modern: "Urban professionals, millennials, digital natives, trend-conscious consumers",
+  classic: "Traditional consumers, established businesses, reliability-focused customers",
+  general: "Broad consumer base, diverse demographics, mainstream market" // Add this
+};
+
+const marketPotentials: Record<NameCategory, string> = {
+  tech: "High growth potential in digital markets, strong online presence",
+  creative: "Strong brand differentiation, premium positioning opportunities",
+  eco: "Growing market segment, loyal customer base, ethical appeal",
+  luxury: "Premium pricing potential, exclusive market positioning",
+  modern: "Broad market appeal, versatile branding opportunities",
+  classic: "Established market trust, reliable brand perception",
+  general: "Flexible market positioning, adaptable to multiple sectors" // Add this
+};
+  // Determine trademark risk based on score
+  let trademarkRisk: 'low' | 'medium' | 'high';
+  if (score >= 80) {
+    trademarkRisk = 'low';
+  } else if (score >= 60) {
+    trademarkRisk = 'medium';
+  } else {
+    trademarkRisk = 'high';
+  }
+  
+  return {
+    meaning: meanings[category],
+    marketPotential: marketPotentials[category],
+    targetAudience: audiences[category],
+    trademarkRisk: trademarkRisk,
+    pronunciation: `Pronounced as ${name.toLowerCase().split('').join('-').toUpperCase()}`,
+    memorabilityScore: Math.min(100, score + 10)
+  };
+};
+
+  // Main name generation function
+  const generateNames = async (generateMore: boolean = false) => {
+    if (!brandName.trim() && !generateMore) return;
+    
+    setIsGenerating(true);
+    const keywords = brandName.toLowerCase().split(' ').filter(k => k.length > 1);
+    const detectedIndustry = detectIndustry(keywords);
+    setIndustry(detectedIndustry);
+    
+    // Determine count
+    const nameCount = generateMore ? 12 : 8;
+    
+    setTimeout(async () => {
+      // Generate names
+      const rawNames = await generateSmartNames(keywords, nameCount, true);
+      
+      // Process names with details
+      const namePromises = rawNames.map(async (name, index) => {
+        const category = getNameCategory(name);
+        const score = scoreName(name, category);
+        const available = await checkRealDomain(name);
+        const explanation = generateExplanation(name, detectedIndustry, score);
+        const details = generateNameDetails(name, category, score);
+        
+        // TLD availability
+        const tlds = {
+          com: available,
+          io: Math.random() > 0.7,
+          co: Math.random() > 0.6,
+          net: Math.random() > 0.5,
+        };
+        
+        return {
+          id: `${Date.now()}-${index}`,
+          name,
+          score,
+          category,
+          available,
+          explanation,
+          details,
+          tlds
+        };
+      });
+      
+      const processedNames = await Promise.all(namePromises);
+      
+      if (generateMore) {
+        setNamingResults(prev => [...prev, ...processedNames]);
+      } else {
+        setNamingResults(processedNames);
+        setAnimationKey(prev => prev + 1);
+      }
+      
+      setIsGenerating(false);
+    }, 800);
+  };
+
+  // Search names for popup
+  const searchNames = async (query: string) => {
+    if (!query.trim()) {
+      setNameSearchResults([]);
+      return;
+    }
+    
+    const keywords = query.toLowerCase().split(' ').filter(k => k.length > 1);
+    const detectedIndustry = detectIndustry(keywords);
+    
+    // Generate names for search
+    const rawNames = await generateSmartNames(keywords, 6, true);
+    
+    const namePromises = rawNames.map(async (name, index) => {
+      const category = getNameCategory(name);
+      const score = scoreName(name, category);
+      const available = await checkRealDomain(name);
+      const explanation = generateExplanation(name, detectedIndustry, score);
+      const details = generateNameDetails(name, category, score);
+      
+      const tlds = {
+        com: available,
+        io: Math.random() > 0.7,
+        co: Math.random() > 0.6,
+        net: Math.random() > 0.5,
+      };
+      
+      return {
+        id: `search-${Date.now()}-${index}`,
+        name,
+        score,
+        category,
+        available,
+        explanation,
+        details,
+        tlds
+      };
+    });
+    
+    const processedNames = await Promise.all(namePromises);
+    setNameSearchResults(processedNames);
+  };
+
+  // Save name
+  const saveName = (name: GeneratedName) => {
+    const savedName: SavedName = {
+      id: name.id,
+      name: name.name,
+      date: new Date().toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      }),
+      score: name.score,
+      category: name.category,
+      available: name.available,
+      explanation: name.explanation,
+      tlds: name.tlds
+    };
+    
+    setSavedNames(prev => {
+      const updated = [savedName, ...prev];
+      localStorage.setItem('savedBrandNames', JSON.stringify(updated));
+      return updated;
+    });
+    
+    // Show success animation
+    const saveBtn = document.querySelector(`[data-name-id="${name.id}"]`);
+    if (saveBtn) {
+      saveBtn.classList.add('saved-animation');
+      setTimeout(() => saveBtn.classList.remove('saved-animation'), 1000);
+    }
+  };
+
+  // Save name as image
+  const saveNameAsImage = async (name: GeneratedName) => {
+    setSelectedName(name);
+    
+    // Wait for DOM update
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    if (nameImageRef.current) {
+      try {
+        const canvas = await html2canvas(nameImageRef.current, {
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
+          logging: false
+        });
+        
+        const link = document.createElement('a');
+        link.download = `${name.name.toLowerCase().replace(/\s+/g, '-')}-brand-name.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (error) {
+        console.error('Error saving image:', error);
+        alert('Failed to save image. Please try again.');
+      }
+    }
+  };
+
+  // Check single domain
+  const checkSingleDomain = async (name: GeneratedName | SavedName) => {
+    const available = await checkRealDomain(name.name);
+    
+    // Update saved names
+    setSavedNames(prev => 
+      prev.map(n => n.id === name.id ? { ...n, available } : n)
+    );
+    
+    // Update naming results
+    setNamingResults(prev => 
+      prev.map(n => n.id === name.id ? { ...n, available } : n)
+    );
+    
+    return available;
+  };
+
+  // Open registrar
+  const openRegistrar = (registrar: DomainRegistrar, name: string) => {
+    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const domain = `${cleanName}.com`;
+    
+    const registrarUrls: Record<string, string> = {
+      'namecheap': `https://www.namecheap.com/domains/registration/results/?domain=${domain}`,
+      'godaddy': `https://www.godaddy.com/domainsearch/find?domainToCheck=${domain}`,
+      'hostinger': `https://www.hostinger.com/domain-checker?domain=${domain}`,
+      'cloudflare': `https://www.cloudflare.com/products/registrar/#domain-search`,
+      'google': `https://domains.google/registrar/search?searchTerm=${domain}`,
+      'bluehost': `https://www.bluehost.com/domains/search?domain=${domain}`,
+      'namecom': `https://www.name.com/domain/search/${domain}`
+    };
+    
+    window.open(registrarUrls[registrar.id] || registrar.url, '_blank');
+  };
+
+  // Get category color
+  const getCategoryColor = (category: NameCategory): string => {
+    const colors = {
+      tech: '#0063f4',
+      creative: '#ff6b9d',
+      eco: '#00ff88',
+      luxury: '#ffd700',
+      modern: '#00bfff',
+      classic: '#64748b',
+      general: '#64748b' // Add this line
+    };
+    return colors[category];
+  };
+
+  // Services Data
   const services: Service[] = [
     {
+      id: 1,
       icon: <FiTarget />,
-      title: "Logo Design",
-      description: "Create memorable and impactful logos that perfectly represent your brand identity.",
+      title: "AI Brand Naming",
+      description: "Advanced AI-powered brand naming with smart suggestions and availability checks.",
       features: [
-        "Custom logo concepts",
-        "Multiple design revisions",
-        "Vector file formats",
-        "Brand style guide"
+        "AI-driven name generation",
+        "Industry-specific suggestions",
+        "Domain availability checking",
+        "Name validation & scoring",
+        "Trademark research guidance",
+        "Brand name testing"
       ],
-      category: "logo"
+      category: "naming",
+      details: {
+        title: "AI-Powered Brand Naming Service",
+        description: "Our advanced AI system analyzes market trends, linguistic patterns, and brand psychology to generate perfect names for your business.",
+        process: [
+          "AI market analysis & trend research",
+          "Linguistic pattern recognition",
+          "Brand psychology evaluation",
+          "Domain & trademark verification",
+          "Focus group simulation",
+          "Final recommendation engine"
+        ],
+        deliverables: [
+          "20-30 AI-curated brand names",
+          "Domain availability matrix",
+          "Trademark risk analysis",
+          "Market fit scorecards",
+          "Brand extension recommendations",
+          "Complete naming guidelines"
+        ],
+        timeline: "3-5 business days",
+        price: "Starting from $999"
+      }
     },
     {
+      id: 2,
       icon: <FiLayers />,
       title: "Brand Identity",
-      description: "Complete branding packages including logos, color schemes, and brand guidelines.",
+      description: "Complete brand development with AI-driven design suggestions and market analysis.",
       features: [
-        "Visual identity system",
-        "Brand guidelines",
-        "Marketing materials",
-        "Brand strategy"
+        "AI logo generation",
+        "Color psychology analysis",
+        "Typography optimization",
+        "Complete brand guidelines",
+        "Brand personality AI",
+        "Visual asset library"
       ],
-      category: "branding"
+      category: "branding",
+      details: {
+        title: "AI-Enhanced Brand Identity",
+        description: "Create a cohesive brand identity powered by AI analysis of market trends and consumer psychology for maximum impact.",
+        process: [
+          "AI brand strategy analysis",
+          "Visual concept generation",
+          "Logo design iterations",
+          "Color & typography optimization",
+          "AI asset creation",
+          "Smart guidelines generation"
+        ],
+        deliverables: [
+          "Multiple logo concepts",
+          "Optimized color palette",
+          "Typography system",
+          "Brand pattern library",
+          "AI icon set",
+          "Interactive brand guidelines"
+        ],
+        timeline: "2-3 weeks",
+        price: "Starting from $2,499"
+      }
     },
     {
-      icon: <FiPackage />,
-      title: "Print Design",
-      description: "Professional print materials from business cards to large format banners.",
+      id: 3,
+      icon: <FiPenTool />,
+      title: "AI Graphic Design",
+      description: "AI-assisted graphic design that combines human creativity with machine efficiency.",
       features: [
-        "Business cards & stationery",
-        "Brochures & flyers",
-        "Packaging design",
-        "Print-ready files"
+        "AI logo & icon design",
+        "Smart marketing materials",
+        "Social media AI templates",
+        "Print & digital optimization",
+        "AI packaging design",
+        "Presentation automation"
       ],
-      category: "print"
+      category: "graphic",
+      details: {
+        title: "AI-Assisted Graphic Design",
+        description: "Leverage AI to create stunning visual designs that combine creative excellence with data-driven optimization.",
+        process: [
+          "AI design brief analysis",
+          "Concept generation",
+          "Design optimization",
+          "Client feedback integration",
+          "AI revisions",
+          "Final delivery"
+        ],
+        deliverables: [
+          "AI-generated logo designs",
+          "Smart social templates",
+          "Optimized marketing collateral",
+          "AI presentation decks",
+          "Print-ready AI files",
+          "Digital asset system"
+        ],
+        timeline: "1-2 weeks",
+        price: "Starting from $799"
+      }
     },
     {
+      id: 4,
       icon: <FiLayout />,
-      title: "Digital Graphics",
-      description: "Eye-catching digital assets for websites, social media, and online marketing.",
+      title: "Digital Branding AI",
+      description: "AI-powered digital branding for consistent presence across all platforms.",
       features: [
-        "Social media graphics",
-        "Web banners & ads",
-        "Email templates",
-        "Digital illustrations"
+        "AI website branding",
+        "Smart social media kits",
+        "Email template AI",
+        "Digital advertising AI",
+        "UI/UX AI optimization",
+        "Digital brand AI guidelines"
       ],
-      category: "digital"
+      category: "digital",
+      details: {
+        title: "AI Digital Branding Solutions",
+        description: "Ensure perfect digital brand presence with AI-powered optimization across all digital touchpoints.",
+        process: [
+          "Digital AI audit",
+          "Platform-specific AI strategy",
+          "Digital asset AI creation",
+          "Template AI development",
+          "AI implementation",
+          "Performance AI optimization"
+        ],
+        deliverables: [
+          "AI social media kit",
+          "Smart email templates",
+          "Digital ad AI templates",
+          "Website UI AI elements",
+          "AI digital guidelines",
+          "Implementation AI support"
+        ],
+        timeline: "2-3 weeks",
+        price: "Starting from $1,499"
+      }
     }
   ];
 
   const portfolioItems = [
     {
-      image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&h=600&fit=crop&q=80",
-      title: "Minimalist Logo Design",
-      category: "logo",
-      description: "Modern geometric logo for tech startup"
+      image: "https://images.unsplash.com/photo-1634942537034-2531766767d1?w=600&h=600&fit=crop&q=80",
+      title: "AI Tech Startup Naming",
+      category: "naming" as ServiceCategory,
+      description: "AI-powered naming for tech companies"
     },
     {
       image: "https://images.unsplash.com/photo-1611224885990-ab7363d1f2a3?w=600&h=600&fit=crop&q=80",
-      title: "Brand Identity Package",
-      category: "branding",
-      description: "Complete branding for luxury fashion brand"
+      title: "Eco Brand AI Identity",
+      category: "branding" as ServiceCategory,
+      description: "AI brand development for sustainable businesses"
     },
     {
-      image: "https://images.unsplash.com/photo-1634942537034-2531766767d1?w=600&h=600&fit=crop&q=80",
-      title: "Creative Logo Concept",
-      category: "logo",
-      description: "Unique logo design for creative agency"
+      image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=600&h=600&fit=crop&q=80",
+      title: "AI Logo Design System",
+      category: "graphic" as ServiceCategory,
+      description: "AI-generated visual identities"
     },
     {
       image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&h=600&fit=crop&q=80",
-      title: "Product Packaging",
-      category: "print",
-      description: "Elegant packaging for organic products"
+      title: "AI Product Packaging",
+      category: "graphic" as ServiceCategory,
+      description: "AI-optimized packaging design"
     },
     {
       image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&h=600&fit=crop&q=80",
-      title: "Social Media Templates",
-      category: "digital",
-      description: "Engaging social media graphics suite"
-    },
-    {
-      image: "https://images.unsplash.com/photo-1600132806608-231446b2e7af?w=600&h=600&fit=crop&q=80",
-      title: "Business Card Design",
-      category: "print",
-      description: "Premium business card collection"
+      title: "Digital Brand AI Kit",
+      category: "digital" as ServiceCategory,
+      description: "AI digital presence solutions"
     },
     {
       image: "https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=600&h=600&fit=crop&q=80",
-      title: "Logo Collection",
-      category: "logo",
-      description: "Diverse logo designs showcase"
-    },
-    {
-      image: "https://images.unsplash.com/photo-1626785774625-ddcddc3445e9?w=600&h=600&fit=crop&q=80",
-      title: "Brand Guidelines",
-      category: "branding",
-      description: "Comprehensive brand style guide"
-    },
-    {
-      image: "https://images.unsplash.com/photo-1558655146-d09347e92766?w=600&h=600&fit=crop&q=80",
-      title: "Digital Illustrations",
-      category: "digital",
-      description: "Custom illustrations for web"
+      title: "AI Brand Strategy",
+      category: "branding" as ServiceCategory,
+      description: "AI market positioning analysis"
     }
   ];
 
@@ -157,98 +1004,378 @@ const GraphicsDesign = () => {
     : portfolioItems.filter(item => item.category === activeCategory);
 
   const features = [
-    { icon: <FiZap />, title: "Fast Delivery", desc: "Quick turnaround without compromising quality" },
-    { icon: <FiAward />, title: "Award Winning", desc: "Recognized designs by industry leaders" },
-    { icon: <FiUsers />, title: "Expert Team", desc: "Experienced designers and creative directors" },
-    { icon: <FiStar />, title: "100% Original", desc: "Unique designs tailored to your brand" },
-    { icon: <FiRefreshCw />, title: "Unlimited Revisions", desc: "Work until you're completely satisfied" },
-    { icon: <FiTrendingUp />, title: "Results Driven", desc: "Designs that convert and engage" }
+    { icon: <FiZap />, title: "AI-Powered Process", desc: "Smart algorithms for optimal results" },
+    { icon: <FiAward />, title: "Expert AI Strategy", desc: "AI-enhanced strategic branding" },
+    { icon: <FiUsers />, title: "Collaborative AI", desc: "Human-AI collaboration workflow" },
+    { icon: <FiStar />, title: "AI Unique Identity", desc: "100% unique AI-generated concepts" },
+    { icon: <FiRefreshCw />, title: "AI Unlimited Revisions", desc: "AI-powered refinement cycles" },
+    { icon: <FiCompass />, title: "AI Market Ready", desc: "Data-driven market optimization" }
   ];
 
+  // Handle search input
+  const handleSearchChange = async (value: string) => {
+    setSearchQuery(value);
+    if (value.trim().length > 2) {
+      await searchNames(value);
+    } else {
+      setNameSearchResults([]);
+    }
+  };
+
+  // Handle input focus for popup
+  const handleInputFocus = () => {
+    setShowNamePopup(true);
+    if (searchQuery.length > 2) {
+      searchNames(searchQuery);
+    }
+  };
+
   return (
-    <div className="graphics-design-page">
-      {/* Animated Background */}
-      <div className="design-bg">
+    <div className="branding-design-page">
+      {/* Animated Background with new colors */}
+      <div className="branding-bg">
         <div className="grid-pattern"></div>
         <div className="floating-elements">
-          <div className="float-shape shape-1" style={{ transform: `translateY(${scrollY * 0.1}px)` }}></div>
-          <div className="float-shape shape-2" style={{ transform: `translateY(${scrollY * -0.15}px)` }}></div>
-          <div className="float-shape shape-3" style={{ transform: `translateY(${scrollY * 0.08}px)` }}></div>
+          {[...Array(15)].map((_, i) => (
+            <div 
+              key={i}
+              className={`float-shape shape-${i % 4}`}
+              style={{ 
+                transform: `translateY(${scrollY * (0.05 + i * 0.01)}px) rotate(${scrollY * 0.02}deg)`,
+                animationDelay: `${i * 0.5}s`
+              }}
+            ></div>
+          ))}
         </div>
       </div>
 
+      {/* Name Image for Download (hidden) */}
+      <div className="hidden-name-image" ref={nameImageRef}>
+        {selectedName && (
+          <div className="name-image-container">
+            <div className="name-image-bg"></div>
+            <div className="name-image-content">
+              <h1 className="name-image-text" style={{ 
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: '4rem',
+                fontWeight: 800,
+                color: 'white',
+                textShadow: '0 4px 20px rgba(0, 0, 0, 0.5)',
+                background: 'linear-gradient(135deg, #0063f4, #00bfff)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                padding: '2rem',
+                borderRadius: '20px',
+                backdropFilter: 'blur(10px)',
+                border: '2px solid rgba(255, 255, 255, 0.1)'
+              }}>
+                {selectedName.name}
+              </h1>
+              <div className="name-image-meta">
+                <div className="meta-item">
+                  <span className="meta-label">Brand Score:</span>
+                  <span className="meta-value">{selectedName.score}/100</span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">Category:</span>
+                  <span className="meta-value" style={{ color: getCategoryColor(selectedName.category) }}>
+                    {selectedName.category.toUpperCase()}
+                  </span>
+                </div>
+                <div className="meta-item">
+                  <span className="meta-label">Domain:</span>
+                  <span className="meta-value" style={{ color: selectedName.available ? '#00ff88' : '#ff6b9d' }}>
+                    {selectedName.available ? 'Available' : 'Taken'}
+                  </span>
+                </div>
+              </div>
+              <div className="name-image-footer">
+                <p>Generated by Verapixels AI Branding</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Hero Section */}
-      <section className="design-hero">
+      <section className="branding-hero">
         <div className="container">
           <div className="hero-grid">
             <div className="hero-content">
               <div className="hero-badge">
-                <FiPenTool className="badge-icon" />
-                <span>Professional Graphics Design</span>
+                <FiTag className="badge-icon" />
+                <span>AI Brand Creation & Design</span>
               </div>
               
               <h1 className="hero-title">
-                Creative Design That
+                AI-Powered Brand Naming &
                 <br />
-                <span className="title-gradient">Tells Your Story</span>
+                <span className="title-gradient">Design Intelligence</span>
               </h1>
               
               <p className="hero-description">
-                Transform your brand with stunning graphics that capture attention and 
-                communicate your message. From logos to complete brand identities, we bring 
-                your vision to life.
+                Our advanced AI system generates perfect brand names and designs based on market trends, 
+                linguistic patterns, and brand psychology. Your smart brand journey starts here.
               </p>
 
+              {/* Smart Brand Naming Tool */}
+              <div className="naming-tool" key={animationKey}>
+                <div className="naming-tool-header">
+                  <h3 className="naming-title">
+                    <GiLightBulb className="title-icon" />
+                    AI Brand Name Generator
+                  </h3>
+                  <button 
+                    className="saved-names-btn"
+                    onClick={() => setShowSavedNames(!showSavedNames)}
+                  >
+                    <FiBookmark />
+                    Saved Names ({savedNames.length})
+                  </button>
+                </div>
+                
+                <p className="naming-subtitle">
+                  Describe your business for AI-powered name suggestions with real domain availability checks
+                </p>
+                
+                <div className="naming-input-wrapper">
+                  <div className="naming-input-group">
+                    <div className="input-with-icon">
+                      <FiSearch className="input-icon" />
+                      <input
+                        ref={nameInputRef}
+                        type="text"
+                        placeholder="What's your business about? (e.g., sustainable fashion, tech startup, coffee shop)"
+                        value={brandName}
+                        onChange={(e) => setBrandName(e.target.value)}
+                        onFocus={handleInputFocus}
+                        className="naming-input"
+                      />
+                    </div>
+                    <button 
+                      onClick={() => generateNames(false)}
+                      disabled={isGenerating || !brandName.trim()}
+                      className="naming-button"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <div className="spinner"></div>
+                          AI Generating...
+                        </>
+                      ) : (
+                        <>
+                          <GiLightBulb />
+                          AI Generate Names
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  
+                  {/* Quick Suggestions */}
+                  <div className="quick-suggestions">
+                    <span className="suggestions-label">AI Suggestions:</span>
+                    {['tech startup', 'eco fashion', 'creative agency', 'luxury brand'].map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        className="suggestion-chip"
+                        onClick={() => {
+                          setBrandName(suggestion);
+                          generateNames(false);
+                        }}
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {industry && namingResults.length === 0 && (
+                  <div className="industry-detected">
+                    <span className="industry-badge">
+                      AI Detected: <strong>{industry.toUpperCase()}</strong> industry
+                    </span>
+                  </div>
+                )}
+                
+                {namingResults.length > 0 && (
+                  <div className="naming-results">
+                    <div className="results-header">
+                      <div className="header-left">
+                        <h4 className="results-title">
+                          AI-Generated Name Suggestions
+                          <span className="results-count">({namingResults.length} names)</span>
+                        </h4>
+                        {industry && (
+                          <span className="industry-tag">{industry}</span>
+                        )}
+                      </div>
+                      <div className="header-right">
+                        <div className="results-stats">
+                          <div className="stat">
+                            <span className="stat-value">{namingResults.filter(n => n.score >= 80).length}</span>
+                            <span className="stat-label">Premium</span>
+                          </div>
+                          <div className="stat">
+                            <span className="stat-value">{namingResults.filter(n => n.available).length}</span>
+                            <span className="stat-label">Available</span>
+                          </div>
+                        </div>
+                        <button 
+                          className="generate-more-btn"
+                          onClick={() => generateNames(true)}
+                          disabled={isGenerating}
+                        >
+                          <GiPerspectiveDiceSixFacesRandom />
+                          AI Generate More
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="names-grid">
+                      {namingResults.map((result) => (
+                        <div key={result.id} className={`name-card ${result.score >= 80 ? 'premium' : ''}`}>
+                          <div className="name-header">
+                            <div className="name-main">
+                              <h4 className="name-text">{result.name}</h4>
+                              <div className="name-meta">
+                                <span 
+                                  className="name-category" 
+                                  style={{ backgroundColor: getCategoryColor(result.category) }}
+                                >
+                                  {result.category}
+                                </span>
+                                <span className={`domain-status ${result.available ? 'available' : 'taken'}`}>
+                                  {domainChecking === result.name ? (
+                                    <span className="checking-domain">
+                                      <div className="mini-spinner"></div> AI Checking...
+                                    </span>
+                                  ) : result.available ? (
+                                    <span className="available-status">
+                                      <FiCheckCircle /> .com Available
+                                    </span>
+                                  ) : (
+                                    <span className="taken-status">
+                                      <FiX /> .com Taken
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="name-score">
+                              <div className="score-circle">
+                                <span className="score-value">{result.score}</span>
+                              </div>
+                              <span className="score-label">AI Score</span>
+                            </div>
+                          </div>
+                          
+                          <p className="name-explanation">{result.explanation}</p>
+                          
+                          <div className="name-tlds">
+                            <span className="tld-label">AI Suggests:</span>
+                            {Object.entries(result.tlds).map(([tld, available]) => (
+                              <span key={tld} className={`tld-badge ${available ? 'available' : 'taken'}`}>
+                                .{tld}
+                              </span>
+                            ))}
+                          </div>
+                          
+                          <div className="name-actions">
+                            <button 
+                              className="name-action-btn save-btn"
+                              onClick={() => saveName(result)}
+                              data-name-id={result.id}
+                            >
+                              <FiSave /> Save
+                            </button>
+                            <button 
+                              className="name-action-btn check-btn"
+                              onClick={() => checkSingleDomain(result)}
+                              disabled={domainChecking === result.name}
+                            >
+                              <FiRefreshCw /> Re-check
+                            </button>
+                            <button 
+                              className="name-action-btn domain-btn"
+                              onClick={() => setShowDomainPopup(result)}
+                            >
+                              <FiGlobe /> Registrars
+                            </button>
+                            <button 
+                              className="name-action-btn details-btn"
+                              onClick={() => {
+                                setShowNameDetails(result);
+                                setShowNamePopup(false);
+                              }}
+                            >
+                              <FiInfo /> AI Details
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="results-footer">
+                      <p className="footer-note">
+                        <strong>💡 AI Tip:</strong> Premium names (score ≥80) have highest brand potential. 
+                        Save your favorites and check domain availability with our AI-recommended registrars.
+                      </p>
+                      <div className="footer-actions">
+                        <button className="download-saved-btn" onClick={() => {
+                          const dataStr = JSON.stringify(savedNames, null, 2);
+                          const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                          const link = document.createElement('a');
+                          link.download = 'saved-brand-names.json';
+                          link.href = dataUri;
+                          link.click();
+                        }}>
+                          <FiDownload /> Download Saved Names
+                        </button>
+                        <button className="generate-more-btn" onClick={() => generateNames(true)}>
+                          <GiPerspectiveDiceSixFacesRandom /> AI Generate 12 More
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="hero-cta">
-                <button className="cta-primary">
-                  Start Your Project
+                <button className="cta-primary" onClick={() => generateNames(false)}>
+                  Start AI Brand Discovery
                   <FiArrowRight />
                 </button>
                 <button className="cta-secondary">
                   <FiMessageSquare />
-                  View Portfolio
+                  AI Consultation
                 </button>
-              </div>
-
-              <div className="hero-stats">
-                <div className="stat-box">
-                  <div className="stat-value">500+</div>
-                  <div className="stat-label">Designs Created</div>
-                </div>
-                <div className="stat-box">
-                  <div className="stat-value">200+</div>
-                  <div className="stat-label">Happy Clients</div>
-                </div>
-                <div className="stat-box">
-                  <div className="stat-value">98%</div>
-                  <div className="stat-label">Satisfaction Rate</div>
-                </div>
               </div>
             </div>
 
             <div className="hero-visual">
               <div className="floating-icons">
-                <div className="float-icon icon-1"><FiPenTool /></div>
-                <div className="float-icon icon-2"><FiImage /></div>
-                <div className="float-icon icon-3"><FiLayers /></div>
-                <div className="float-icon icon-4"><FiType /></div>
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className={`float-icon icon-${i % 4}`}>
+                    {[<FiTag />, <FiType />, <FiPenTool />, <FiLayers />][i % 4]}
+                  </div>
+                ))}
               </div>
 
-              {/* Design Showcase Images */}
-              <div className="design-showcase">
+              {/* AI Brand Visual Showcase */}
+              <div className="brand-showcase">
                 <img 
-                  src="https://images.unsplash.com/photo-1626785774573-4b799315345d?w=500&h=500&fit=crop&q=80" 
-                  alt="Logo Design" 
+                  src="https://images.unsplash.com/photo-1634942537034-2531766767d1?w=400&h=400&fit=crop&q=80" 
+                  alt="AI Brand Naming" 
                   className="showcase-img img-1"
                 />
                 <img 
-                  src="https://images.unsplash.com/photo-1611224885990-ab7363d1f2a3?w=500&h=500&fit=crop&q=80" 
-                  alt="Brand Identity" 
+                  src="https://images.unsplash.com/photo-1611224885990-ab7363d1f2a3?w=400&h=400&fit=crop&q=80" 
+                  alt="AI Brand Identity" 
                   className="showcase-img img-2"
                 />
                 <img 
-                  src="https://images.unsplash.com/photo-1572044162444-ad60f128bdea?w=500&h=500&fit=crop&q=80" 
-                  alt="Creative Design" 
+                  src="https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&h=400&fit=crop&q=80" 
+                  alt="AI Logo Design" 
                   className="showcase-img img-3"
                 />
               </div>
@@ -257,129 +1384,86 @@ const GraphicsDesign = () => {
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="services-section">
+      {/* AI Naming Process Section */}
+      <section className="naming-process">
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">
-              Our Design <span className="highlight">Services</span>
+              Our <span className="highlight">AI 4-Step Naming</span> Process
             </h2>
             <p className="section-desc">
-              Comprehensive graphic design solutions for every need
+              Advanced AI methodology for perfect brand names
             </p>
           </div>
 
-          <div className="services-layout">
-            <div className="services-nav">
-              {services.map((service, idx) => (
-                <button
-                  key={idx}
-                  className={`service-nav-item ${activeService === idx ? 'active' : ''}`}
-                  onClick={() => setActiveService(idx)}
-                >
-                  <div className="nav-icon">{service.icon}</div>
-                  <span>{service.title}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="service-display">
-              <div className="service-icon-large">
-                {services[activeService].icon}
-              </div>
-              <h3 className="service-title-large">{services[activeService].title}</h3>
-              <p className="service-desc-large">{services[activeService].description}</p>
-              
-              <div className="service-features-list">
-                {services[activeService].features.map((feature, idx) => (
-                  <div key={idx} className="feature-item">
-                    <FiCheckCircle className="feature-check" />
-                    <span>{feature}</span>
-                  </div>
-                ))}
-              </div>
-
-              <button className="service-learn-more">
-                Get Started <FiArrowRight />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Portfolio Section */}
-      <section className="portfolio-section">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">
-              Our Creative <span className="highlight">Portfolio</span>
-            </h2>
-            <p className="section-desc">
-              Explore our latest design projects and creative work
-            </p>
-          </div>
-
-          <div className="portfolio-filters">
-            <button 
-              className={`filter-btn ${activeCategory === "all" ? "active" : ""}`}
-              onClick={() => setActiveCategory("all")}
-            >
-              <FiGrid /> All Work
-            </button>
-            <button 
-              className={`filter-btn ${activeCategory === "logo" ? "active" : ""}`}
-              onClick={() => setActiveCategory("logo")}
-            >
-              <FiTarget /> Logos
-            </button>
-            <button 
-              className={`filter-btn ${activeCategory === "branding" ? "active" : ""}`}
-              onClick={() => setActiveCategory("branding")}
-            >
-              <FiLayers /> Branding
-            </button>
-            <button 
-              className={`filter-btn ${activeCategory === "print" ? "active" : ""}`}
-              onClick={() => setActiveCategory("print")}
-            >
-              <FiPackage /> Print
-            </button>
-            <button 
-              className={`filter-btn ${activeCategory === "digital" ? "active" : ""}`}
-              onClick={() => setActiveCategory("digital")}
-            >
-              <FiLayout /> Digital
-            </button>
-          </div>
-
-          <div className="portfolio-grid">
-            {filteredPortfolio.map((item, idx) => (
-              <div key={idx} className="portfolio-item">
-                <div className="portfolio-image-wrapper">
-                  <img src={item.image} alt={item.title} className="portfolio-image" />
-                  <div className="portfolio-overlay">
-                    <h4 className="portfolio-title">{item.title}</h4>
-                    <p className="portfolio-desc">{item.description}</p>
-                    <button className="view-btn">
-                      View Project <FiArrowRight />
-                    </button>
-                  </div>
-                </div>
+          <div className="process-steps">
+            {[
+              { icon: <FiSearch />, title: "AI Discovery", desc: "AI analyzes market trends and target audience" },
+              { icon: <GiLightBulb />, title: "AI Brainstorming", desc: "Generates creative names using AI algorithms" },
+              { icon: <FiCheckCircle />, title: "AI Validation", desc: "AI checks domain & trademark availability" },
+              { icon: <FiTag />, title: "AI Selection", desc: "AI presents curated names with smart recommendations" }
+            ].map((step, idx) => (
+              <div key={idx} className="process-step">
+                <div className="step-number">{idx + 1}</div>
+                <div className="step-icon">{step.icon}</div>
+                <h3 className="step-title">{step.title}</h3>
+                <p className="step-desc">{step.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* AI Services Section */}
+      <section className="services-section">
+        <div className="container">
+          <div className="section-header">
+            <h2 className="section-title">
+              AI <span className="highlight">Brand Solutions</span>
+            </h2>
+            <p className="section-desc">
+              AI-powered branding from naming to complete identity
+            </p>
+          </div>
+
+          <div className="services-grid">
+            {services.map((service) => (
+              <div key={service.id} className="service-card">
+                <div className="service-icon-wrapper">
+                  {service.icon}
+                </div>
+                <h3 className="service-title">{service.title}</h3>
+                <p className="service-description">{service.description}</p>
+                <div className="service-features">
+                  {service.features.map((feature, idx) => (
+                    <div key={idx} className="service-feature">
+                      <FiCheckCircle className="feature-icon" />
+                    <span className="feature-text">{feature}</span>
+
+                    </div>
+                  ))}
+                </div>
+                <button 
+                  className="service-btn"
+                  onClick={() => setShowServicePopup(service)}
+                >
+                  AI Learn More <FiArrowRight />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* AI Features Section */}
       <section className="features-section">
         <div className="container">
           <div className="section-header">
             <h2 className="section-title">
-              Why Choose <span className="highlight">Verapixels</span>
+              Why Choose <span className="highlight">Our AI Services</span>
             </h2>
             <p className="section-desc">
-              Excellence in graphic design and creative solutions
+              AI excellence in brand development and creative solutions
             </p>
           </div>
 
@@ -397,42 +1481,459 @@ const GraphicsDesign = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* AI Portfolio Section */}
+      <section className="portfolio-section">
+        <div className="container">
+          <div className="section-header">
+            <h2 className="section-title">
+              AI Brand <span className="highlight">Success Stories</span>
+            </h2>
+            <p className="section-desc">
+              See AI-transformed brands from idea to identity
+            </p>
+          </div>
+
+          <div className="portfolio-filters">
+            <button 
+              className={`filter-btn ${activeCategory === "all" ? "active" : ""}`}
+              onClick={() => setActiveCategory("all")}
+            >
+              <FiGrid /> All AI Work
+            </button>
+            {services.map(service => (
+              <button 
+                key={service.id}
+                className={`filter-btn ${activeCategory === service.category ? "active" : ""}`}
+                onClick={() => setActiveCategory(service.category)}
+              >
+                {service.icon} {service.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="portfolio-grid">
+            {filteredPortfolio.map((item, idx) => (
+              <div key={idx} className="portfolio-item">
+                <div className="portfolio-image-wrapper">
+                  <img src={item.image} alt={item.title} className="portfolio-image" />
+                  <div className="portfolio-overlay">
+                    <div className="portfolio-category">{item.category}</div>
+                    <h4 className="portfolio-title">{item.title}</h4>
+                    <p className="portfolio-desc">{item.description}</p>
+                    <button className="view-btn">
+                      View AI Case Study <FiArrowRight />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final AI CTA */}
       <section className="final-cta">
         <div className="container">
           <div className="cta-card">
-            <FiFeather className="cta-icon" />
-            <h2 className="cta-title">Ready to Elevate Your Brand?</h2>
+            <GiLightBulb className="cta-icon" />
+            <h2 className="cta-title">Ready for AI Branding?</h2>
             <p className="cta-text">
-              Let's create stunning designs that make your brand stand out and leave a lasting impression.
+              Let our AI create a memorable brand that resonates with your audience 
+              and drives business growth with data-driven intelligence.
             </p>
             <div className="cta-actions">
-              <button className="cta-btn-primary">
-                <FiPhone />
-                Call Us Now
+              <button className="cta-btn-primary" onClick={() => generateNames(false)}>
+                <GiLightBulb />
+                Start AI Naming Now
               </button>
               <button className="cta-btn-secondary">
                 <FiMail />
-                Send Message
-              </button>
-              <button className="cta-btn-tertiary">
-                <FiGlobe />
-                View More Work
+                AI Brand Consultation
               </button>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Search Popup */}
+      {showNamePopup && (
+        <div className="popup-overlay">
+          <div className="popup-container name-search-popup" ref={popupRef}>
+            <div className="popup-header">
+              <h3>AI Name Search & Suggestions</h3>
+              <button className="popup-close" onClick={() => setShowNamePopup(false)}>
+                <FiX />
+              </button>
+            </div>
+            <div className="popup-content">
+              <div className="search-box">
+                <FiSearch />
+                <input
+                  type="text"
+                  placeholder="Search for AI brand names..."
+                  value={searchQuery}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              
+              {nameSearchResults.length > 0 ? (
+                <div className="search-results">
+                  <h4>AI Search Results ({nameSearchResults.length} names)</h4>
+                  <div className="search-results-grid">
+                    {nameSearchResults.map((result) => (
+                      <div key={result.id} className="search-result-card">
+                        <div className="search-result-header">
+                          <h5 className="search-result-name">{result.name}</h5>
+                          <div className="search-result-meta">
+                            <span 
+                              className="search-result-category" 
+                              style={{ backgroundColor: getCategoryColor(result.category) }}
+                            >
+                              {result.category}
+                            </span>
+                            <span className={`search-result-status ${result.available ? 'available' : 'taken'}`}>
+                              {result.available ? 'Available' : 'Taken'}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="search-result-explanation">{result.explanation}</p>
+                        <div className="search-result-score">
+                          <span className="score-badge">AI Score: {result.score}</span>
+                        </div>
+                        <div className="search-result-actions">
+                          <button 
+                            className="search-action-btn"
+                            onClick={() => {
+                              setBrandName(result.name);
+                              setShowNamePopup(false);
+                              generateNames(false);
+                            }}
+                          >
+                            <FiCheckCircle /> AI Select
+                          </button>
+                          <button 
+                            className="search-action-btn secondary"
+                            onClick={() => {
+                              saveName(result);
+                              setShowNamePopup(false);
+                            }}
+                          >
+                            <FiSave /> AI Save
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : searchQuery.trim().length > 2 ? (
+                <div className="search-loading">
+                  <div className="spinner"></div>
+                  <p>AI searching for names...</p>
+                </div>
+              ) : (
+                <div className="search-empty">
+                  <p>Type at least 3 characters for AI search...</p>
+                </div>
+              )}
+              
+              <div className="popup-actions">
+                <button className="popup-btn primary" onClick={() => generateNames(false)}>
+                  AI Generate More Names
+                </button>
+                <button className="popup-btn secondary" onClick={() => setShowNamePopup(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Service Details Popup */}
+      {showServicePopup && (
+        <div className="popup-overlay">
+          <div className="popup-container service-details-popup" ref={popupRef}>
+            <div className="popup-header">
+              <h3>{showServicePopup.details.title}</h3>
+              <button className="popup-close" onClick={() => setShowServicePopup(null)}>
+                <FiX />
+              </button>
+            </div>
+            <div className="popup-content">
+              <div className="service-details">
+                <div className="service-icon-large">
+                  {showServicePopup.icon}
+                </div>
+                <p className="service-description-large">{showServicePopup.details.description}</p>
+                
+                <div className="details-section">
+                  <h4>AI Process</h4>
+                  <ul>
+                    {showServicePopup.details.process.map((step, idx) => (
+                      <li key={idx}>{step}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div className="details-section">
+                  <h4>AI Deliverables</h4>
+                  <ul>
+                    {showServicePopup.details.deliverables.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div className="details-meta">
+                  <div className="meta-item">
+                    <span className="meta-label">AI Timeline:</span>
+                    <span className="meta-value">{showServicePopup.details.timeline}</span>
+                  </div>
+                  <div className="meta-item">
+                    <span className="meta-label">AI Starting Price:</span>
+                    <span className="meta-value highlight">{showServicePopup.details.price}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="popup-actions">
+                <button className="popup-btn primary">
+                  <FiPhone /> Book AI Service
+                </button>
+                <button className="popup-btn secondary" onClick={() => setShowServicePopup(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Domain Registrar Popup */}
+      {showDomainPopup && (
+        <div className="popup-overlay">
+          <div className="popup-container domain-registrar-popup" ref={popupRef}>
+            <div className="popup-header">
+              <h3>Register <span className="domain-name">{showDomainPopup.name}.com</span></h3>
+              <button className="popup-close" onClick={() => setShowDomainPopup(null)}>
+                <FiX />
+              </button>
+            </div>
+            <div className="popup-content">
+              <div className="domain-status-display">
+                <div className={`status-badge ${showDomainPopup.available ? 'available' : 'taken'}`}>
+                  {showDomainPopup.available ? 'AI: Domain Available' : 'AI: Domain Taken'}
+                </div>
+                <p className="status-note">
+                  {showDomainPopup.available 
+                    ? 'This domain is available for registration!' 
+                    : 'This domain is already registered. Try our AI other suggestions.'}
+                </p>
+              </div>
+              
+              {showDomainPopup.available && (
+                <>
+                  <div className="registrars-list">
+                    <h4>AI Recommended Registrars</h4>
+                    {domainRegistrars.map((registrar) => (
+                      <div key={registrar.id} className="registrar-card">
+                        <div className="registrar-icon">{registrar.icon}</div>
+                        <div className="registrar-info">
+                          <h5>{registrar.name}</h5>
+                          <div className="registrar-meta">
+                            <span className="price">{registrar.price}</span>
+                            <span className="rating">⭐ {registrar.rating}</span>
+                          </div>
+                        </div>
+                        <button 
+                          className="registrar-btn"
+                          onClick={() => openRegistrar(registrar, showDomainPopup.name)}
+                        >
+                          <FiExternalLink /> AI Register
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="domain-actions">
+                    <button className="action-btn secondary" onClick={() => checkSingleDomain(showDomainPopup)}>
+                      <FiRefreshCw /> AI Re-check
+                    </button>
+                    <button className="action-btn primary" onClick={() => saveName(showDomainPopup)}>
+                      <FiSave /> AI Save Name
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Name Details Popup */}
+      {showNameDetails && (
+        <div className="popup-overlay">
+          <div className="popup-container name-details-popup" ref={popupRef}>
+            <div className="popup-header">
+              <h3>AI Analysis: <span className="domain-name">{showNameDetails.name}</span></h3>
+              <button className="popup-close" onClick={() => setShowNameDetails(null)}>
+                <FiX />
+              </button>
+            </div>
+            <div className="popup-content">
+              <div className="name-details-content">
+                <div className="name-details-header">
+                  <div className="name-display-large">
+                    <h2>{showNameDetails.name}</h2>
+                    <div className="name-meta-large">
+                      <span className="category-badge-large" style={{ backgroundColor: getCategoryColor(showNameDetails.category) }}>
+                        {showNameDetails.category}
+                      </span>
+                      <span className="score-badge-large">
+                        AI Score: {showNameDetails.score}/100
+                      </span>
+                      <span className={`domain-status-large ${showNameDetails.available ? 'available' : 'taken'}`}>
+                        {showNameDetails.available ? '.com Available' : '.com Taken'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="details-sections">
+                  <div className="details-section">
+                    <h4>AI Brand Meaning</h4>
+                    <p>{showNameDetails.details?.meaning}</p>
+                  </div>
+                  
+                  <div className="details-section">
+                    <h4>AI Market Potential</h4>
+                    <p>{showNameDetails.details?.marketPotential}</p>
+                  </div>
+                  
+                  <div className="details-section">
+                    <h4>AI Target Audience</h4>
+                    <p>{showNameDetails.details?.targetAudience}</p>
+                  </div>
+                  
+                  <div className="details-grid">
+                    <div className="detail-item">
+                      <span className="detail-label">AI Trademark Risk:</span>
+                      <span className={`detail-value risk-${showNameDetails.details?.trademarkRisk}`}>
+                        {showNameDetails.details?.trademarkRisk?.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">AI Pronunciation:</span>
+                      <span className="detail-value">{showNameDetails.details?.pronunciation}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">AI Memorability:</span>
+                      <span className="detail-value">{showNameDetails.details?.memorabilityScore}/100</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="name-actions-large">
+                  <button 
+                    className="action-btn primary"
+                    onClick={() => saveNameAsImage(showNameDetails)}
+                  >
+                    <FiImageIcon /> Save as AI Image
+                  </button>
+                  <button 
+                    className="action-btn secondary"
+                    onClick={() => saveName(showNameDetails)}
+                  >
+                    <FiSave /> AI Save Name
+                  </button>
+                  {showNameDetails.available && (
+                    <button 
+                      className="action-btn tertiary"
+                      onClick={() => setShowDomainPopup(showNameDetails)}
+                    >
+                      <FiGlobe /> AI Register Domain
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Saved Names Popup */}
+      {showSavedNames && savedNames.length > 0 && (
+        <div className="popup-overlay">
+          <div className="popup-container saved-names-popup" ref={popupRef}>
+            <div className="popup-header">
+              <h3>Your AI Saved Names ({savedNames.length})</h3>
+              <button className="popup-close" onClick={() => setShowSavedNames(false)}>
+                <FiX />
+              </button>
+            </div>
+            <div className="popup-content">
+              <div className="saved-names-list">
+                {savedNames.map((saved) => (
+                  <div key={saved.id} className="saved-name-item">
+                    <div className="saved-name-main">
+                      <h4>{saved.name}</h4>
+                      <div className="saved-meta">
+                        <span className="saved-category" style={{ backgroundColor: getCategoryColor(saved.category) }}>
+                          {saved.category}
+                        </span>
+                        <span className="saved-date">AI Saved: {saved.date}</span>
+                        <span className="saved-score">AI Score: {saved.score}</span>
+                        <span className={`saved-status ${saved.available ? 'available' : 'taken'}`}>
+                          {saved.available ? 'Available' : 'Taken'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="saved-actions">
+                      <button className="saved-action-btn" onClick={() => checkSingleDomain(saved)}>
+                        <FiGlobe /> AI Check
+                      </button>
+                      <button className="saved-action-btn" onClick={() => {
+                        const found = namingResults.find(n => n.name === saved.name) || saved as GeneratedName;
+                        setShowNameDetails(found as GeneratedName);
+                        setShowSavedNames(false);
+                      }}>
+                        <FiInfo /> AI Details
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="popup-actions">
+                <button className="popup-btn primary" onClick={() => {
+                  const dataStr = JSON.stringify(savedNames, null, 2);
+                  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                  const link = document.createElement('a');
+                  link.download = 'ai-saved-brand-names.json';
+                  link.href = dataUri;
+                  link.click();
+                }}>
+                  <FiDownload /> AI Download All
+                </button>
+                <button className="popup-btn secondary" onClick={() => setShowSavedNames(false)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CSS Styles */}
       <style>{`
+        /* Base Styles with new color scheme */
         * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
         }
 
-        .graphics-design-page {
-          background: #0a0a0f;
+        .branding-design-page {
+          background: #000;
           color: #ffffff;
           min-height: 100vh;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -440,19 +1941,99 @@ const GraphicsDesign = () => {
           overflow-x: hidden;
         }
 
-        .design-bg {
+        .hidden-name-image {
+          position: absolute;
+          opacity: 0;
+          pointer-events: none;
+          top: -9999px;
+          left: -9999px;
+        }
+
+        .name-image-container {
+          width: 1200px;
+          height: 800px;
+          position: relative;
+          background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+          border-radius: 40px;
+          overflow: hidden;
+          padding: 60px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          gap: 40px;
+        }
+
+        .name-image-bg {
+          position: absolute;
+          inset: 0;
+          background: 
+            radial-gradient(circle at 20% 80%, rgba(0, 99, 244, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 107, 157, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(0, 255, 136, 0.1) 0%, transparent 50%);
+          filter: blur(60px);
+        }
+
+        .name-image-content {
+          position: relative;
+          z-index: 2;
+          text-align: center;
+          width: 100%;
+        }
+
+        .name-image-meta {
+          display: flex;
+          justify-content: center;
+          gap: 40px;
+          margin-top: 40px;
+          flex-wrap: wrap;
+        }
+
+        .meta-item {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          padding: 20px 30px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 20px;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          min-width: 180px;
+        }
+
+        .meta-label {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.6);
+          font-weight: 600;
+        }
+
+        .meta-value {
+          font-size: 1.3rem;
+          font-weight: 800;
+          color: white;
+        }
+
+        .name-image-footer {
+          margin-top: 60px;
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 0.9rem;
+        }
+
+        /* Animated Background */
+        .branding-bg {
           position: fixed;
           inset: 0;
           pointer-events: none;
           z-index: 0;
+          overflow: hidden;
         }
 
         .grid-pattern {
           position: absolute;
           inset: 0;
           background-image: 
-            linear-gradient(rgba(88, 101, 242, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(88, 101, 242, 0.03) 1px, transparent 1px);
+            linear-gradient(rgba(0, 99, 244, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 99, 244, 0.05) 1px, transparent 1px);
           background-size: 60px 60px;
           animation: gridMove 30s linear infinite;
         }
@@ -470,41 +2051,49 @@ const GraphicsDesign = () => {
         .float-shape {
           position: absolute;
           border-radius: 50%;
-          filter: blur(100px);
-          opacity: 0.15;
+          filter: blur(80px);
+          opacity: 0.1;
+          animation: floatShape 20s ease-in-out infinite alternate;
+        }
+
+        .shape-0 {
+          width: 300px;
+          height: 300px;
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          top: 10%;
+          left: 5%;
         }
 
         .shape-1 {
-          width: 500px;
-          height: 500px;
-          background: linear-gradient(135deg, #5865f2, #7289da);
-          top: 10%;
-          right: 10%;
-          animation: float 20s ease-in-out infinite;
+          width: 400px;
+          height: 400px;
+          background: linear-gradient(135deg, #ff6b9d, #ffd700);
+          bottom: 10%;
+          right: 5%;
+          animation-delay: 2s;
         }
 
         .shape-2 {
-          width: 400px;
-          height: 400px;
-          background: linear-gradient(135deg, #7289da, #8b5cf6);
-          bottom: 20%;
-          left: 10%;
-          animation: float 25s ease-in-out infinite reverse;
+          width: 350px;
+          height: 350px;
+          background: linear-gradient(135deg, #00ff88, #0063f4);
+          top: 50%;
+          left: 50%;
+          animation-delay: 4s;
         }
 
         .shape-3 {
-          width: 350px;
-          height: 350px;
-          background: linear-gradient(135deg, #5865f2, #a855f7);
-          top: 50%;
-          left: 50%;
-          animation: float 22s ease-in-out infinite;
+          width: 250px;
+          height: 250px;
+          background: linear-gradient(135deg, #00bfff, #ff6b9d);
+          top: 20%;
+          right: 20%;
+          animation-delay: 6s;
         }
 
-        @keyframes float {
-          0%, 100% { transform: translate(0, 0) rotate(0deg); }
-          33% { transform: translate(30px, -30px) rotate(120deg); }
-          66% { transform: translate(-30px, 30px) rotate(240deg); }
+        @keyframes floatShape {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(100px, -100px) scale(1.2); }
         }
 
         .container {
@@ -515,7 +2104,8 @@ const GraphicsDesign = () => {
           z-index: 1;
         }
 
-        .design-hero {
+        /* Hero Section */
+        .branding-hero {
           min-height: 100vh;
           display: flex;
           align-items: center;
@@ -538,14 +2128,20 @@ const GraphicsDesign = () => {
           align-items: center;
           gap: 10px;
           padding: 12px 28px;
-          background: rgba(88, 101, 242, 0.15);
-          border: 1px solid rgba(88, 101, 242, 0.4);
+          background: rgba(255, 107, 157, 0.15);
+          border: 1px solid rgba(255, 107, 157, 0.4);
           border-radius: 50px;
-          color: #7289da;
+          color: #ff6b9d;
           font-weight: 600;
           font-size: 0.95rem;
           margin-bottom: 32px;
           backdrop-filter: blur(10px);
+          animation: fadeInDown 1s ease;
+        }
+
+        @keyframes fadeInDown {
+          from { opacity: 0; transform: translateY(-30px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .badge-icon {
@@ -558,10 +2154,16 @@ const GraphicsDesign = () => {
           line-height: 1.1;
           margin-bottom: 28px;
           letter-spacing: -0.02em;
+          animation: fadeInUp 1s ease 0.2s both;
+        }
+
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .title-gradient {
-          background: linear-gradient(135deg, #5865f2 0%, #7289da 50%, #8b5cf6 100%);
+          background: linear-gradient(135deg, #0063f4 0%, #00bfff 50%, #00ff88 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -572,13 +2174,652 @@ const GraphicsDesign = () => {
           line-height: 1.7;
           color: rgba(255, 255, 255, 0.75);
           margin-bottom: 40px;
+          animation: fadeInUp 1s ease 0.4s both;
         }
 
+        /* Naming Tool */
+        .naming-tool {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 24px;
+          padding: 32px;
+          margin-bottom: 40px;
+          backdrop-filter: blur(10px);
+          animation: fadeInUp 1s ease 0.6s both;
+          transition: all 0.3s ease;
+        }
+
+        .naming-tool:hover {
+          border-color: rgba(0, 191, 255, 0.3);
+          box-shadow: 0 20px 60px rgba(0, 191, 255, 0.15);
+        }
+
+        .naming-tool-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+        }
+
+        .naming-title {
+          font-size: 1.8rem;
+          font-weight: 800;
+          margin-bottom: 8px;
+          color: #00bfff;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .title-icon {
+          font-size: 32px;
+        }
+
+        .saved-names-btn {
+          padding: 10px 20px;
+          background: rgba(0, 255, 136, 0.15);
+          border: 1px solid rgba(0, 255, 136, 0.3);
+          border-radius: 12px;
+          color: #00ff88;
+          font-weight: 600;
+          font-size: 0.95rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .saved-names-btn:hover {
+          background: rgba(0, 255, 136, 0.25);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .naming-subtitle {
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.6);
+          margin-bottom: 32px;
+        }
+
+        .naming-input-wrapper {
+          margin-bottom: 24px;
+        }
+
+        .naming-input-group {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+
+        .input-with-icon {
+          flex: 1;
+          position: relative;
+        }
+
+        .input-icon {
+          position: absolute;
+          left: 20px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 20px;
+        }
+
+        .naming-input {
+          width: 100%;
+          padding: 18px 24px 18px 56px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(0, 99, 244, 0.3);
+          border-radius: 12px;
+          color: white;
+          font-size: 1rem;
+          transition: all 0.3s ease;
+          font-family: inherit;
+        }
+
+        .naming-input:focus {
+          outline: none;
+          border-color: #00bfff;
+          box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.2);
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .naming-button {
+          padding: 18px 32px;
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          border: none;
+          border-radius: 12px;
+          color: white;
+          font-weight: 700;
+          font-size: 1rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+          min-width: 180px;
+        }
+
+        .naming-button:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
+          background: linear-gradient(135deg, #0077ff, #00d4ff);
+        }
+
+        .naming-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+          transform: none !important;
+        }
+
+        .quick-suggestions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        .suggestions-label {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .suggestion-chip {
+          padding: 8px 16px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+          color: rgba(255, 255, 255, 0.8);
+          font-size: 0.9rem;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .suggestion-chip:hover {
+          background: rgba(0, 191, 255, 0.2);
+          color: #00bfff;
+          border-color: rgba(0, 191, 255, 0.3);
+        }
+
+        .industry-detected {
+          margin: 24px 0;
+          text-align: center;
+        }
+
+        .industry-badge {
+          display: inline-block;
+          padding: 8px 20px;
+          background: rgba(0, 255, 136, 0.15);
+          border: 1px solid rgba(0, 255, 136, 0.3);
+          border-radius: 20px;
+          color: #00ff88;
+          font-size: 0.9rem;
+          font-weight: 600;
+        }
+
+        /* Results Section */
+        .naming-results {
+          margin-top: 32px;
+          animation: slideInUp 0.8s ease 0.2s both;
+        }
+
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 32px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .results-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: white;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .results-count {
+          font-size: 1rem;
+          color: rgba(255, 255, 255, 0.6);
+          background: rgba(255, 255, 255, 0.05);
+          padding: 4px 12px;
+          border-radius: 12px;
+        }
+
+        .industry-tag {
+          padding: 6px 16px;
+          background: rgba(0, 255, 136, 0.2);
+          border: 1px solid rgba(0, 255, 136, 0.4);
+          border-radius: 20px;
+          color: #00ff88;
+          font-size: 0.85rem;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .results-stats {
+          display: flex;
+          gap: 24px;
+        }
+
+        .stat {
+          text-align: center;
+        }
+
+        .stat-value {
+          display: block;
+          font-size: 1.8rem;
+          font-weight: 800;
+          color: #00bfff;
+          line-height: 1;
+        }
+
+        .stat-label {
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.6);
+          margin-top: 4px;
+        }
+
+        .generate-more-btn {
+          padding: 12px 24px;
+          background: rgba(0, 99, 244, 0.15);
+          border: 1px solid rgba(0, 99, 244, 0.3);
+          border-radius: 10px;
+          color: #0063f4;
+          font-weight: 600;
+          font-size: 0.95rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .generate-more-btn:hover:not(:disabled) {
+          background: rgba(0, 99, 244, 0.25);
+          transform: translateY(-2px);
+        }
+
+        .generate-more-btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        /* Name Cards */
+        .names-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+          gap: 24px;
+          margin-bottom: 32px;
+        }
+
+        .name-card {
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          padding: 24px;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          backdrop-filter: blur(10px);
+          transform-style: preserve-3d;
+          perspective: 1000px;
+          animation: cardAppear 0.6s ease forwards;
+          opacity: 0;
+          transform: translateY(20px);
+        }
+
+        .name-card:nth-child(1) { animation-delay: 0.1s; }
+        .name-card:nth-child(2) { animation-delay: 0.2s; }
+        .name-card:nth-child(3) { animation-delay: 0.3s; }
+        .name-card:nth-child(4) { animation-delay: 0.4s; }
+        .name-card:nth-child(5) { animation-delay: 0.5s; }
+        .name-card:nth-child(6) { animation-delay: 0.6s; }
+        .name-card:nth-child(7) { animation-delay: 0.7s; }
+        .name-card:nth-child(8) { animation-delay: 0.8s; }
+
+        @keyframes cardAppear {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .name-card:hover {
+          transform: translateY(-8px) rotateX(5deg);
+          background: rgba(255, 255, 255, 0.04);
+          border-color: rgba(0, 191, 255, 0.4);
+          box-shadow: 
+            0 20px 40px rgba(0, 191, 255, 0.15),
+            0 0 0 1px rgba(0, 191, 255, 0.2);
+        }
+
+        .name-card.premium {
+          border: 2px solid rgba(0, 255, 136, 0.5);
+          background: rgba(0, 255, 136, 0.05);
+        }
+
+        .name-card.premium:hover {
+          border-color: rgba(0, 255, 136, 0.7);
+          box-shadow: 
+            0 20px 50px rgba(0, 255, 136, 0.2),
+            0 0 0 1px rgba(0, 255, 136, 0.3);
+        }
+
+        .name-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 20px;
+        }
+
+        .name-main {
+          flex: 1;
+        }
+
+        .name-text {
+          font-size: 1.8rem;
+          font-weight: 800;
+          color: white;
+          margin-bottom: 12px;
+          word-break: break-word;
+          line-height: 1.2;
+        }
+
+        .name-meta {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+
+        .name-category {
+          font-size: 0.75rem;
+          padding: 6px 14px;
+          border-radius: 20px;
+          color: white;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          backdrop-filter: blur(10px);
+        }
+
+        .domain-status {
+          font-size: 0.85rem;
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .domain-status.available {
+          background: rgba(0, 255, 136, 0.2);
+          color: #00ff88;
+          border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .domain-status.taken {
+          background: rgba(255, 107, 157, 0.2);
+          color: #ff6b9d;
+          border: 1px solid rgba(255, 107, 157, 0.3);
+        }
+
+        .checking-domain {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .mini-spinner {
+          width: 16px;
+          height: 16px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #00bfff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+
+        .available-status, .taken-status {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .name-score {
+          text-align: center;
+          margin-left: 16px;
+        }
+
+        .score-circle {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 6px;
+          box-shadow: 0 4px 15px rgba(0, 99, 244, 0.3);
+        }
+
+        .score-value {
+          font-size: 1.4rem;
+          font-weight: 900;
+          color: white;
+        }
+
+        .score-label {
+          font-size: 0.75rem;
+          color: rgba(255, 255, 255, 0.6);
+          font-weight: 600;
+        }
+
+        .name-explanation {
+          font-size: 0.95rem;
+          color: rgba(255, 255, 255, 0.7);
+          line-height: 1.6;
+          margin-bottom: 20px;
+          padding: 16px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 12px;
+          border-left: 4px solid #00bfff;
+        }
+
+        .name-tlds {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+        }
+
+        .tld-label {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .tld-badge {
+          font-size: 0.8rem;
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-weight: 600;
+          transition: all 0.3s ease;
+        }
+
+        .tld-badge.available {
+          background: rgba(0, 255, 136, 0.15);
+          color: #00ff88;
+          border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .tld-badge.taken {
+          background: rgba(255, 107, 157, 0.15);
+          color: rgba(255, 255, 255, 0.5);
+          border: 1px solid rgba(255, 107, 157, 0.3);
+          text-decoration: line-through;
+        }
+
+        .name-actions {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 10px;
+        }
+
+        .name-action-btn {
+          padding: 12px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          color: rgba(255, 255, 255, 0.9);
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .name-action-btn:hover:not(:disabled) {
+          transform: translateY(-2px);
+        }
+
+        .name-action-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          transform: none !important;
+        }
+
+        .save-btn {
+          background: rgba(0, 255, 136, 0.15);
+          border-color: rgba(0, 255, 136, 0.3);
+          color: #00ff88;
+        }
+
+        .save-btn:hover:not(:disabled) {
+          background: rgba(0, 255, 136, 0.25);
+        }
+
+        .save-btn.saved-animation {
+          animation: savePulse 1s ease;
+        }
+
+        @keyframes savePulse {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.1); background: rgba(0, 255, 136, 0.3); }
+          100% { transform: scale(1); }
+        }
+
+        .check-btn {
+          background: rgba(0, 99, 244, 0.15);
+          border-color: rgba(0, 99, 244, 0.3);
+          color: #0063f4;
+        }
+
+        .check-btn:hover:not(:disabled) {
+          background: rgba(0, 99, 244, 0.25);
+        }
+
+        .domain-btn {
+          background: rgba(0, 191, 255, 0.15);
+          border-color: rgba(0, 191, 255, 0.3);
+          color: #00bfff;
+        }
+
+        .domain-btn:hover:not(:disabled) {
+          background: rgba(0, 191, 255, 0.25);
+        }
+
+        .details-btn {
+          background: rgba(255, 107, 157, 0.15);
+          border-color: rgba(255, 107, 157, 0.3);
+          color: #ff6b9d;
+        }
+
+        .details-btn:hover:not(:disabled) {
+          background: rgba(255, 107, 157, 0.25);
+        }
+
+        .results-footer {
+          margin-top: 40px;
+          padding-top: 24px;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-note {
+          font-size: 0.95rem;
+          color: rgba(255, 255, 255, 0.6);
+          margin-bottom: 24px;
+          text-align: center;
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+          line-height: 1.6;
+        }
+
+        .footer-actions {
+          display: flex;
+          gap: 16px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .download-saved-btn {
+          padding: 14px 28px;
+          background: linear-gradient(135deg, #00ff88, #00bfff);
+          border: none;
+          border-radius: 12px;
+          color: white;
+          font-weight: 600;
+          font-size: 1rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          transition: all 0.3s ease;
+        }
+
+        .download-saved-btn:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 10px 30px rgba(0, 255, 136, 0.4);
+        }
+
+        /* Hero CTA */
         .hero-cta {
           display: flex;
           gap: 16px;
-          margin-bottom: 50px;
           flex-wrap: wrap;
+          animation: fadeInUp 1s ease 1s both;
         }
 
         .cta-primary, .cta-secondary {
@@ -590,19 +2831,20 @@ const GraphicsDesign = () => {
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 10px;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .cta-primary {
-          background: linear-gradient(135deg, #5865f2, #7289da);
+          background: linear-gradient(135deg, #0063f4, #00bfff);
           color: white;
-          box-shadow: 0 10px 30px rgba(88, 101, 242, 0.4);
+          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
         }
 
         .cta-primary:hover {
           transform: translateY(-3px);
-          box-shadow: 0 15px 40px rgba(88, 101, 242, 0.6);
+          box-shadow: 0 15px 40px rgba(0, 99, 244, 0.6);
         }
 
         .cta-secondary {
@@ -618,107 +2860,86 @@ const GraphicsDesign = () => {
           transform: translateY(-3px);
         }
 
-        .hero-stats {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 24px;
-        }
-
-        .stat-box {
-          text-align: center;
-        }
-
-        .stat-value {
-          font-size: 2.5rem;
-          font-weight: 900;
-          background: linear-gradient(135deg, #5865f2, #7289da);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          margin-bottom: 8px;
-        }
-
-        .stat-label {
-          font-size: 0.95rem;
-          color: rgba(255, 255, 255, 0.6);
-          font-weight: 600;
-        }
-
+        /* Hero Visual */
         .hero-visual {
           position: relative;
           height: 600px;
           perspective: 1500px;
+          animation: fadeInUp 1s ease 0.6s both;
         }
 
-        .design-showcase {
+        .brand-showcase {
           position: absolute;
           inset: 0;
           display: flex;
           align-items: center;
           justify-content: center;
+          transform-style: preserve-3d;
         }
 
         .showcase-img {
           position: absolute;
-          width: 350px;
-          height: 350px;
+          width: 320px;
+          height: 320px;
           object-fit: cover;
           border-radius: 24px;
           box-shadow: 
             0 50px 100px rgba(0, 0, 0, 0.6),
             0 0 0 1px rgba(255, 255, 255, 0.1),
-            0 0 60px rgba(88, 101, 242, 0.2);
+            0 0 60px rgba(0, 191, 255, 0.3);
           transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
           transform-style: preserve-3d;
+          backface-visibility: hidden;
         }
 
         .img-1 {
           left: 50%;
           top: 50%;
-          transform: translate(-50%, -50%) rotate(-12deg) translateZ(50px);
+          transform: translate(-50%, -50%) rotateY(-15deg) rotateX(5deg) translateZ(80px);
           z-index: 3;
-          animation: img1Float 6s ease-in-out infinite;
+          animation: float1 8s ease-in-out infinite;
         }
 
         .img-2 {
           left: 50%;
           top: 50%;
-          transform: translate(-25%, -50%) rotate(8deg) translateZ(0px);
+          transform: translate(-30%, -50%) rotateY(10deg) rotateX(-3deg) translateZ(40px);
           z-index: 2;
-          animation: img2Float 7s ease-in-out infinite;
+          animation: float2 9s ease-in-out infinite;
         }
 
         .img-3 {
           left: 50%;
           top: 50%;
-          transform: translate(-75%, -50%) rotate(-3deg) translateZ(-50px);
+          transform: translate(-70%, -50%) rotateY(-5deg) rotateX(8deg) translateZ(20px);
           z-index: 1;
-          animation: img3Float 8s ease-in-out infinite;
+          animation: float3 10s ease-in-out infinite;
         }
 
-        @keyframes img1Float {
-          0%, 100% { transform: translate(-50%, -50%) rotate(-12deg) translateZ(50px) translateY(0); }
-          50% { transform: translate(-50%, -50%) rotate(-12deg) translateZ(50px) translateY(-20px); }
+        @keyframes float1 {
+          0%, 100% { transform: translate(-50%, -50%) rotateY(-15deg) rotateX(5deg) translateZ(80px) translateY(0); }
+          50% { transform: translate(-50%, -50%) rotateY(-15deg) rotateX(5deg) translateZ(80px) translateY(-30px); }
         }
 
-        @keyframes img2Float {
-          0%, 100% { transform: translate(-25%, -50%) rotate(8deg) translateZ(0px) translateY(0); }
-          50% { transform: translate(-25%, -50%) rotate(8deg) translateZ(0px) translateY(-25px); }
+        @keyframes float2 {
+          0%, 100% { transform: translate(-30%, -50%) rotateY(10deg) rotateX(-3deg) translateZ(40px) translateY(0); }
+          50% { transform: translate(-30%, -50%) rotateY(10deg) rotateX(-3deg) translateZ(40px) translateY(-20px); }
         }
 
-        @keyframes img3Float {
-          0%, 100% { transform: translate(-75%, -50%) rotate(-3deg) translateZ(-50px) translateY(0); }
-          50% { transform: translate(-75%, -50%) rotate(-3deg) translateZ(-50px) translateY(-15px); }
+        @keyframes float3 {
+          0%, 100% { transform: translate(-70%, -50%) rotateY(-5deg) rotateX(8deg) translateZ(20px) translateY(0); }
+          50% { transform: translate(-70%, -50%) rotateY(-5deg) rotateX(8deg) translateZ(20px) translateY(-25px); }
         }
 
         .showcase-img:hover {
-          transform: translate(-50%, -50%) rotate(0deg) scale(1.1) translateZ(150px) !important;
+          transform: translate(-50%, -50%) rotateY(0deg) rotateX(0deg) scale(1.1) translateZ(150px) !important;
           z-index: 10 !important;
           box-shadow: 
-            0 70px 140px rgba(88, 101, 242, 0.5),
-            0 0 0 2px rgba(88, 101, 242, 0.4),
-            0 0 80px rgba(88, 101, 242, 0.4);
+            0 70px 140px rgba(0, 191, 255, 0.5),
+            0 0 0 2px rgba(0, 191, 255, 0.4),
+            0 0 100px rgba(0, 191, 255, 0.4);
           animation: none !important;
-          filter: brightness(1.1);
+          filter: brightness(1.2);
         }
 
         .floating-icons {
@@ -729,189 +2950,329 @@ const GraphicsDesign = () => {
 
         .float-icon {
           position: absolute;
-          width: 50px;
-          height: 50px;
+          width: 60px;
+          height: 60px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(88, 101, 242, 0.15);
-          border: 1px solid rgba(88, 101, 242, 0.3);
-          border-radius: 12px;
-          color: #5865f2;
-          font-size: 24px;
+          background: rgba(0, 191, 255, 0.15);
+          border: 1px solid rgba(0, 191, 255, 0.3);
+          border-radius: 16px;
+          color: #00bfff;
+          font-size: 28px;
           backdrop-filter: blur(10px);
           animation: floatIcon 3s ease-in-out infinite;
         }
 
-        .icon-1 {
+        .icon-0, .icon-4 {
           top: 10%;
           right: 5%;
           animation-delay: 0s;
         }
 
-        .icon-2 {
+        .icon-1, .icon-5 {
           top: 50%;
           right: 0%;
           animation-delay: 0.5s;
         }
 
-        .icon-3 {
+        .icon-2, .icon-6 {
           bottom: 20%;
           right: 8%;
           animation-delay: 1s;
         }
 
-        .icon-4 {
+        .icon-3, .icon-7 {
           top: 30%;
           left: 5%;
           animation-delay: 1.5s;
         }
 
         @keyframes floatIcon {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-25px) rotate(5deg); }
         }
 
-        .services-section {
-          padding: 100px 0;
-        }
-
+        /* Section Header */
         .section-header {
           text-align: center;
           margin-bottom: 80px;
+          animation: fadeInUp 1s ease both;
         }
 
         .section-title {
           font-size: clamp(32px, 5vw, 56px);
           font-weight: 800;
           margin-bottom: 16px;
+          line-height: 1.2;
         }
 
         .highlight {
-          color: #5865f2;
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
         }
 
         .section-desc {
           font-size: 1.2rem;
           color: rgba(255, 255, 255, 0.65);
+          max-width: 600px;
+          margin: 0 auto;
+          line-height: 1.6;
         }
 
-        .services-layout {
+        /* Process Steps */
+        .naming-process {
+          padding: 100px 0;
+          background: rgba(255, 255, 255, 0.01);
+        }
+
+        .process-steps {
           display: grid;
-          grid-template-columns: 300px 1fr;
-          gap: 60px;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 32px;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+
+        .process-step {
+          text-align: center;
+          padding: 40px 24px;
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 24px;
-          padding: 40px;
+          position: relative;
+          transition: all 0.4s ease;
           backdrop-filter: blur(10px);
+          transform-style: preserve-3d;
         }
 
-        .services-nav {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
+        .process-step:hover {
+          transform: translateY(-10px) rotateX(5deg);
+          background: rgba(0, 191, 255, 0.08);
+          border-color: rgba(0, 191, 255, 0.4);
+          box-shadow: 0 20px 40px rgba(0, 191, 255, 0.15);
         }
 
-        .service-nav-item {
+        .step-number {
+          position: absolute;
+          top: -20px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 40px;
+          height: 40px;
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          border-radius: 50%;
           display: flex;
           align-items: center;
-          gap: 16px;
-          padding: 20px;
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          border-radius: 16px;
-          color: rgba(255, 255, 255, 0.7);
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          text-align: left;
+          justify-content: center;
+          font-weight: 900;
+          font-size: 1.2rem;
+          color: white;
+          box-shadow: 0 8px 20px rgba(0, 99, 244, 0.3);
         }
 
-        .nav-icon {
-          font-size: 24px;
-          color: #5865f2;
+        .step-icon {
+          font-size: 48px;
+          color: #00bfff;
+          margin-bottom: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
-        .service-nav-item:hover {
-          background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(88, 101, 242, 0.3);
-          transform: translateX(5px);
-        }
-
-        .service-nav-item.active {
-          background: rgba(88, 101, 242, 0.15);
-          border-color: #5865f2;
+        .step-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin-bottom: 12px;
           color: white;
         }
 
-        .service-display {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .service-icon-large {
-          font-size: 64px;
-          color: #5865f2;
-        }
-
-        .service-title-large {
-          font-size: 2.5rem;
-          font-weight: 800;
-        }
-
-        .service-desc-large {
-          font-size: 1.2rem;
-          line-height: 1.8;
+        .step-desc {
+          font-size: 1.05rem;
+          line-height: 1.6;
           color: rgba(255, 255, 255, 0.7);
         }
 
-        .service-features-list {
+        /* Services Section */
+        .services-section {
+          padding: 100px 0;
+        }
+
+        .services-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 32px;
+        }
+
+        .service-card {
+          padding: 40px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 24px;
+          transition: all 0.4s ease;
+          backdrop-filter: blur(10px);
+          text-align: center;
           display: flex;
           flex-direction: column;
-          gap: 16px;
-          margin: 20px 0;
+          align-items: center;
+          transform-style: preserve-3d;
         }
 
-        .feature-item {
+        .service-card:hover {
+          transform: translateY(-10px) rotateX(5deg);
+          background: rgba(0, 191, 255, 0.08);
+          border-color: rgba(0, 191, 255, 0.4);
+          box-shadow: 0 20px 50px rgba(0, 191, 255, 0.2);
+        }
+
+        .service-icon-wrapper {
+          width: 80px;
+          height: 80px;
           display: flex;
           align-items: center;
-          gap: 12px;
+          justify-content: center;
+          background: rgba(0, 191, 255, 0.15);
+          border-radius: 20px;
+          margin-bottom: 32px;
+          font-size: 36px;
+          color: #00bfff;
+          transition: all 0.3s ease;
+        }
+
+        .service-card:hover .service-icon-wrapper {
+          transform: scale(1.1) rotate(5deg);
+          background: linear-gradient(135deg, rgba(0, 191, 255, 0.3), rgba(0, 255, 136, 0.2));
+        }
+
+        .service-title {
+          font-size: 1.8rem;
+          font-weight: 800;
+          margin-bottom: 20px;
+          color: white;
+          text-align: center;
+          line-height: 1.3;
+        }
+
+        .service-description {
           font-size: 1.1rem;
-          color: rgba(255, 255, 255, 0.85);
+          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.7);
+          margin-bottom: 32px;
+          text-align: center;
+          max-width: 400px;
         }
 
-        .feature-check {
-          color: #5865f2;
-          font-size: 20px;
+       .service-features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 40px;
+  max-width: 520px;
+  margin-inline: auto;
+  align-items: center;
+
+}
+
+
+        .service-feature svg {
+          color: #00bfff;
           flex-shrink: 0;
+          font-size: 18px;
         }
 
-        .service-learn-more {
-          align-self: flex-start;
-          padding: 14px 32px;
-          background: rgba(88, 101, 242, 0.15);
-          border: 1px solid #5865f2;
-          border-radius: 10px;
+        .service-btn {
+          padding: 16px 36px;
+          background: rgba(0, 191, 255, 0.15);
+          border: 1px solid #00bfff;
+          border-radius: 12px;
           color: white;
           font-weight: 700;
+          font-size: 1rem;
           cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 8px;
+          justify-content: center;
+          gap: 10px;
+          transition: all 0.3s ease;
+          align-self: center;
+          margin-top: auto;
+        }
+
+        .service-btn:hover {
+          background: #00bfff;
+          transform: translateY(-3px);
+          box-shadow: 0 10px 30px rgba(0, 191, 255, 0.4);
+        }
+
+        /* Features Section */
+        .features-section {
+          padding: 100px 0;
+          background: rgba(255, 255, 255, 0.01);
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 32px;
+        }
+
+        .feature-card {
+          padding: 40px;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 20px;
+          transition: all 0.4s ease;
+          backdrop-filter: blur(10px);
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transform-style: preserve-3d;
+        }
+
+        .feature-card:hover {
+          transform: translateY(-10px) rotateX(5deg);
+          background: rgba(0, 255, 136, 0.08);
+          border-color: rgba(0, 255, 136, 0.4);
+          box-shadow: 0 20px 50px rgba(0, 255, 136, 0.2);
+        }
+
+        .feature-icon-wrapper {
+          width: 64px;
+          height: 64px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0, 255, 136, 0.15);
+          border-radius: 16px;
+          margin-bottom: 24px;
+          font-size: 32px;
+          color: #00ff88;
           transition: all 0.3s ease;
         }
 
-        .service-learn-more:hover {
-          background: #5865f2;
-          transform: translateX(5px);
+        .feature-card:hover .feature-icon-wrapper {
+          transform: scale(1.1) rotate(5deg);
         }
 
+        .feature-title {
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin-bottom: 12px;
+          color: white;
+        }
+
+        .feature-desc {
+          font-size: 1.05rem;
+          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Portfolio Section */
         .portfolio-section {
           padding: 100px 0;
-          background: rgba(255, 255, 255, 0.01);
         }
 
         .portfolio-filters {
@@ -933,19 +3294,20 @@ const GraphicsDesign = () => {
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 8px;
           transition: all 0.3s ease;
         }
 
         .filter-btn:hover {
           background: rgba(255, 255, 255, 0.05);
-          border-color: rgba(88, 101, 242, 0.3);
+          border-color: rgba(0, 191, 255, 0.3);
           transform: translateY(-2px);
         }
 
         .filter-btn.active {
-          background: rgba(88, 101, 242, 0.2);
-          border-color: #5865f2;
+          background: rgba(0, 191, 255, 0.2);
+          border-color: #00bfff;
           color: white;
         }
 
@@ -959,10 +3321,11 @@ const GraphicsDesign = () => {
           border-radius: 20px;
           overflow: hidden;
           transition: transform 0.3s ease;
+          transform-style: preserve-3d;
         }
 
         .portfolio-item:hover {
-          transform: translateY(-8px);
+          transform: translateY(-8px) rotateX(5deg);
         }
 
         .portfolio-image-wrapper {
@@ -988,7 +3351,7 @@ const GraphicsDesign = () => {
         .portfolio-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(10, 10, 15, 0.95), transparent);
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent);
           display: flex;
           flex-direction: column;
           justify-content: flex-end;
@@ -999,6 +3362,18 @@ const GraphicsDesign = () => {
 
         .portfolio-item:hover .portfolio-overlay {
           opacity: 1;
+        }
+
+        .portfolio-category {
+          display: inline-block;
+          padding: 6px 16px;
+          background: rgba(0, 191, 255, 0.8);
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 12px;
+          align-self: flex-start;
         }
 
         .portfolio-title {
@@ -1017,7 +3392,7 @@ const GraphicsDesign = () => {
         .view-btn {
           align-self: flex-start;
           padding: 12px 24px;
-          background: #5865f2;
+          background: #00bfff;
           border: none;
           border-radius: 8px;
           color: white;
@@ -1025,71 +3400,17 @@ const GraphicsDesign = () => {
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 8px;
           transition: all 0.3s ease;
         }
 
         .view-btn:hover {
-          background: #7289da;
+          background: #00ff88;
           transform: translateX(5px);
         }
 
-        .features-section {
-          padding: 100px 0;
-        }
-
-        .features-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 32px;
-        }
-
-        .feature-card {
-          padding: 40px;
-          background: rgba(255, 255, 255, 0.02);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          border-radius: 20px;
-          transition: all 0.4s ease;
-          backdrop-filter: blur(10px);
-        }
-
-        .feature-card:hover {
-          transform: translateY(-10px);
-          background: rgba(88, 101, 242, 0.08);
-          border-color: rgba(88, 101, 242, 0.4);
-          box-shadow: 0 20px 50px rgba(88, 101, 242, 0.3);
-        }
-
-        .feature-icon-wrapper {
-          width: 64px;
-          height: 64px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(88, 101, 242, 0.15);
-          border-radius: 16px;
-          margin-bottom: 24px;
-          font-size: 32px;
-          color: #5865f2;
-          transition: all 0.3s ease;
-        }
-
-        .feature-card:hover .feature-icon-wrapper {
-          transform: scale(1.1) rotate(5deg);
-        }
-
-        .feature-title {
-          font-size: 1.5rem;
-          font-weight: 700;
-          margin-bottom: 12px;
-        }
-
-        .feature-desc {
-          font-size: 1.05rem;
-          line-height: 1.7;
-          color: rgba(255, 255, 255, 0.7);
-        }
-
+        /* Final CTA */
         .final-cta {
           padding: 100px 0 120px;
         }
@@ -1098,37 +3419,39 @@ const GraphicsDesign = () => {
           max-width: 1000px;
           margin: 0 auto;
           padding: 80px 60px;
-          background: linear-gradient(135deg, rgba(88, 101, 242, 0.15), rgba(139, 92, 246, 0.1));
-          border: 1px solid rgba(88, 101, 242, 0.3);
+          background: linear-gradient(135deg, rgba(0, 99, 244, 0.15), rgba(0, 255, 136, 0.1));
+          border: 1px solid rgba(0, 99, 244, 0.3);
           border-radius: 32px;
           text-align: center;
           position: relative;
           overflow: hidden;
           backdrop-filter: blur(20px);
+          transform-style: preserve-3d;
         }
 
         .cta-card::before {
           content: '';
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at 50% 50%, rgba(88, 101, 242, 0.2), transparent 70%);
+          background: radial-gradient(circle at 50% 50%, rgba(0, 99, 244, 0.2), transparent 70%);
           opacity: 0.5;
         }
 
         .cta-icon {
           font-size: 64px;
-          color: #5865f2;
+          color: #00bfff;
           margin: 0 auto 32px;
-          animation: spin 10s linear infinite;
+          animation: pulse 2s ease-in-out infinite;
           position: relative;
           z-index: 1;
-          display: block;
-          width: fit-content;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          50% { transform: scale(1.1) rotate(5deg); }
         }
 
         .cta-title {
@@ -1137,6 +3460,7 @@ const GraphicsDesign = () => {
           margin-bottom: 20px;
           position: relative;
           z-index: 1;
+          line-height: 1.2;
         }
 
         .cta-text {
@@ -1160,7 +3484,7 @@ const GraphicsDesign = () => {
           z-index: 1;
         }
 
-        .cta-btn-primary, .cta-btn-secondary, .cta-btn-tertiary {
+        .cta-btn-primary, .cta-btn-secondary {
           padding: 18px 36px;
           border-radius: 12px;
           font-size: 1.05rem;
@@ -1169,225 +3493,1063 @@ const GraphicsDesign = () => {
           cursor: pointer;
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 10px;
           transition: all 0.3s ease;
         }
 
         .cta-btn-primary {
-          background: linear-gradient(135deg, #5865f2, #7289da);
+          background: linear-gradient(135deg, #0063f4, #00bfff);
           color: white;
-          box-shadow: 0 10px 30px rgba(88, 101, 242, 0.4);
+          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
         }
 
         .cta-btn-primary:hover {
           transform: translateY(-3px);
-          box-shadow: 0 15px 40px rgba(88, 101, 242, 0.6);
+          box-shadow: 0 15px 40px rgba(0, 99, 244, 0.6);
         }
 
         .cta-btn-secondary {
-          background: rgba(114, 137, 218, 0.2);
+          background: rgba(0, 191, 255, 0.2);
           color: white;
-          border: 2px solid #7289da;
+          border: 2px solid #00bfff;
         }
 
         .cta-btn-secondary:hover {
-          background: #7289da;
+          background: #00bfff;
           transform: translateY(-3px);
         }
 
-        .cta-btn-tertiary {
-          background: rgba(139, 92, 246, 0.2);
+        /* Popup Overlay */
+        .popup-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(8px);
+          z-index: 1000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+          animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        .popup-container {
+          background: rgba(10, 10, 10, 0.95);
+          border: 1px solid rgba(0, 191, 255, 0.3);
+          border-radius: 24px;
+          width: 100%;
+          max-width: 600px;
+          max-height: 90vh;
+          overflow-y: auto;
+          backdrop-filter: blur(20px);
+          animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          transform-style: preserve-3d;
+          perspective: 1000px;
+        }
+
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(50px) rotateX(10deg);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0) rotateX(0deg);
+          }
+        }
+
+        .popup-header {
+          padding: 24px 32px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(0, 191, 255, 0.05);
+        }
+
+        .popup-header h3 {
+          font-size: 1.5rem;
+          font-weight: 700;
           color: white;
-          border: 2px solid #8b5cf6;
+          margin: 0;
         }
 
-        .cta-btn-tertiary:hover {
-          background: #8b5cf6;
+        .popup-close {
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          color: white;
+          font-size: 20px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .popup-close:hover {
+          background: rgba(255, 107, 157, 0.2);
+          border-color: rgba(255, 107, 157, 0.4);
+          color: #ff6b9d;
+          transform: rotate(90deg);
+        }
+
+        .popup-content {
+          padding: 32px;
+        }
+
+        /* Name Search Popup */
+        .name-search-popup {
+          max-width: 600px;
+        }
+
+        .search-box {
+          position: relative;
+          margin-bottom: 24px;
+        }
+
+        .search-box svg {
+          position: absolute;
+          left: 20px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: rgba(255, 255, 255, 0.5);
+          font-size: 20px;
+        }
+
+        .search-box input {
+          width: 100%;
+          padding: 18px 24px 18px 56px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(0, 191, 255, 0.3);
+          border-radius: 12px;
+          color: white;
+          font-size: 1rem;
+          font-family: inherit;
+        }
+
+        .search-box input:focus {
+          outline: none;
+          border-color: #00bfff;
+          box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.2);
+        }
+
+        .search-results {
+          margin-bottom: 32px;
+        }
+
+        .search-results h4 {
+          font-size: 1.2rem;
+          color: white;
+          margin-bottom: 20px;
+        }
+
+        .search-results-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          max-height: 400px;
+          overflow-y: auto;
+          padding-right: 8px;
+        }
+
+        .search-result-card {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
+          padding: 20px;
+          transition: all 0.3s ease;
+        }
+
+        .search-result-card:hover {
+          background: rgba(0, 191, 255, 0.05);
+          border-color: rgba(0, 191, 255, 0.3);
+          transform: translateX(5px);
+        }
+
+        .search-result-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 12px;
+        }
+
+        .search-result-name {
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: white;
+          margin: 0;
+        }
+
+        .search-result-meta {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+        }
+
+        .search-result-category {
+          font-size: 0.7rem;
+          padding: 4px 10px;
+          border-radius: 12px;
+          color: white;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        .search-result-status {
+          font-size: 0.75rem;
+          padding: 4px 10px;
+          border-radius: 12px;
+          font-weight: 600;
+        }
+
+        .search-result-status.available {
+          background: rgba(0, 255, 136, 0.2);
+          color: #00ff88;
+        }
+
+        .search-result-status.taken {
+          background: rgba(255, 107, 157, 0.2);
+          color: #ff6b9d;
+        }
+
+        .search-result-explanation {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.7);
+          line-height: 1.6;
+          margin-bottom: 12px;
+        }
+
+        .search-result-score {
+          margin-bottom: 16px;
+        }
+
+        .score-badge {
+          display: inline-block;
+          padding: 6px 12px;
+          background: rgba(0, 99, 244, 0.2);
+          border: 1px solid rgba(0, 99, 244, 0.3);
+          border-radius: 8px;
+          color: #0063f4;
+          font-size: 0.85rem;
+          font-weight: 600;
+        }
+
+        .search-result-actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .search-action-btn {
+          flex: 1;
+          padding: 10px 16px;
+          background: rgba(0, 191, 255, 0.15);
+          border: 1px solid rgba(0, 191, 255, 0.3);
+          border-radius: 8px;
+          color: #00bfff;
+          font-size: 0.9rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          transition: all 0.3s ease;
+        }
+
+        .search-action-btn:hover {
+          background: rgba(0, 191, 255, 0.25);
+          transform: translateY(-2px);
+        }
+
+        .search-action-btn.secondary {
+          background: rgba(0, 255, 136, 0.15);
+          border-color: rgba(0, 255, 136, 0.3);
+          color: #00ff88;
+        }
+
+        .search-action-btn.secondary:hover {
+          background: rgba(0, 255, 136, 0.25);
+        }
+
+        .search-loading {
+          text-align: center;
+          padding: 40px;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-loading .spinner {
+          margin: 0 auto 16px;
+        }
+
+        .search-empty {
+          text-align: center;
+          padding: 40px;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .popup-actions {
+          display: flex;
+          gap: 12px;
+        }
+
+        .popup-btn {
+          flex: 1;
+          padding: 16px 24px;
+          border-radius: 12px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          border: none;
+          transition: all 0.3s ease;
+        }
+
+        .popup-btn.primary {
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          color: white;
+        }
+
+        .popup-btn.primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
+        }
+
+        .popup-btn.secondary {
+          background: rgba(255, 255, 255, 0.05);
+          color: white;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .popup-btn.secondary:hover {
+          background: rgba(255, 255, 255, 0.1);
+          transform: translateY(-2px);
+        }
+
+        /* Name Details Popup */
+        .name-details-popup {
+          max-width: 700px;
+        }
+
+        .name-details-content {
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+        }
+
+        .name-details-header {
+          text-align: center;
+        }
+
+        .name-display-large h2 {
+          font-size: 3rem;
+          font-weight: 800;
+          margin-bottom: 16px;
+          color: white;
+          line-height: 1.2;
+        }
+
+        .name-meta-large {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+          margin-top: 16px;
+        }
+
+        .category-badge-large {
+          padding: 8px 20px;
+          border-radius: 20px;
+          color: white;
+          font-weight: 700;
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .score-badge-large {
+          padding: 8px 20px;
+          background: rgba(0, 99, 244, 0.2);
+          border: 1px solid rgba(0, 99, 244, 0.3);
+          border-radius: 20px;
+          color: #0063f4;
+          font-weight: 700;
+          font-size: 0.9rem;
+        }
+
+        .domain-status-large {
+          padding: 8px 20px;
+          border-radius: 20px;
+          font-weight: 700;
+          font-size: 0.9rem;
+        }
+
+        .domain-status-large.available {
+          background: rgba(0, 255, 136, 0.2);
+          color: #00ff88;
+          border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .domain-status-large.taken {
+          background: rgba(255, 107, 157, 0.2);
+          color: #ff6b9d;
+          border: 1px solid rgba(255, 107, 157, 0.3);
+        }
+
+        .details-sections {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+        }
+
+        .details-section h4 {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 12px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .details-section h4::before {
+          content: '';
+          width: 4px;
+          height: 20px;
+          background: #00bfff;
+          border-radius: 2px;
+        }
+
+        .details-section p {
+          color: rgba(255, 255, 255, 0.8);
+          line-height: 1.7;
+          font-size: 1.05rem;
+        }
+
+        .details-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 20px;
+          background: rgba(255, 255, 255, 0.03);
+          padding: 24px;
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .detail-item {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .detail-label {
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.6);
+          font-weight: 600;
+        }
+
+        .detail-value {
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: white;
+        }
+
+        .detail-value.risk-low {
+          color: #00ff88;
+        }
+
+        .detail-value.risk-medium {
+          color: #ffd700;
+        }
+
+        .detail-value.risk-high {
+          color: #ff6b9d;
+        }
+
+        .name-actions-large {
+          display: flex;
+          gap: 16px;
+          justify-content: center;
+          flex-wrap: wrap;
+          margin-top: 32px;
+        }
+
+        .action-btn {
+          padding: 16px 32px;
+          border-radius: 12px;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          border: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          transition: all 0.3s ease;
+        }
+
+        .action-btn.primary {
+          background: linear-gradient(135deg, #0063f4, #00bfff);
+          color: white;
+        }
+
+        .action-btn.primary:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 10px 30px rgba(0, 99, 244, 0.4);
+        }
+
+        .action-btn.secondary {
+          background: rgba(0, 255, 136, 0.2);
+          color: #00ff88;
+          border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .action-btn.secondary:hover {
+          background: rgba(0, 255, 136, 0.3);
           transform: translateY(-3px);
         }
 
-        @media (max-width: 1024px) {
+        .action-btn.tertiary {
+          background: rgba(255, 107, 157, 0.2);
+          color: #ff6b9d;
+          border: 1px solid rgba(255, 107, 157, 0.3);
+        }
+
+        .action-btn.tertiary:hover {
+          background: rgba(255, 107, 157, 0.3);
+          transform: translateY(-3px);
+        }
+
+        /* Service Details Popup */
+        .service-details-popup {
+          max-width: 700px;
+        }
+
+        .service-icon-large {
+          font-size: 64px;
+          color: #00bfff;
+          margin-bottom: 24px;
+          display: flex;
+          justify-content: center;
+        }
+
+        .service-description-large {
+          font-size: 1.1rem;
+          line-height: 1.8;
+          color: rgba(255, 255, 255, 0.8);
+          margin-bottom: 32px;
+          text-align: center;
+        }
+
+        .details-section {
+          margin-bottom: 32px;
+        }
+
+        .details-section h4 {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .details-section h4::before {
+          content: '';
+          width: 4px;
+          height: 20px;
+          background: #00bfff;
+          border-radius: 2px;
+        }
+
+        .details-section ul {
+          list-style: none;
+          padding-left: 0;
+        }
+
+        .details-section li {
+          padding: 10px 0;
+          color: rgba(255, 255, 255, 0.7);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .details-section li:before {
+          content: '✓';
+          color: #00ff88;
+          font-weight: bold;
+        }
+
+        .details-meta {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 20px;
+          background: rgba(0, 191, 255, 0.05);
+          padding: 24px;
+          border-radius: 16px;
+          margin-bottom: 32px;
+        }
+
+        .meta-item {
+          text-align: center;
+        }
+
+        .meta-label {
+          display: block;
+          font-size: 0.9rem;
+          color: rgba(255, 255, 255, 0.6);
+          margin-bottom: 8px;
+        }
+
+        .meta-value {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: white;
+        }
+
+        .meta-value.highlight {
+          color: #00bfff;
+        }
+
+        /* Domain Registrar Popup */
+        .domain-registrar-popup {
+          max-width: 600px;
+        }
+
+        .domain-name {
+          color: #00bfff;
+          font-weight: 800;
+        }
+
+        .domain-status-display {
+          text-align: center;
+          margin-bottom: 32px;
+          padding: 24px;
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 16px;
+        }
+
+        .status-badge {
+          display: inline-block;
+          padding: 10px 24px;
+          border-radius: 20px;
+          font-weight: 700;
+          font-size: 1.1rem;
+          margin-bottom: 16px;
+        }
+
+        .status-badge.available {
+          background: rgba(0, 255, 136, 0.2);
+          color: #00ff88;
+          border: 2px solid rgba(0, 255, 136, 0.4);
+        }
+
+        .status-badge.taken {
+          background: rgba(255, 107, 157, 0.2);
+          color: #ff6b9d;
+          border: 2px solid rgba(255, 107, 157, 0.4);
+        }
+
+        .status-note {
+          color: rgba(255, 255, 255, 0.7);
+          line-height: 1.6;
+        }
+
+        .registrars-list {
+          margin-bottom: 32px;
+        }
+
+        .registrars-list h4 {
+          font-size: 1.2rem;
+          color: white;
+          margin-bottom: 20px;
+          text-align: center;
+        }
+
+        .registrar-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 20px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
+          margin-bottom: 12px;
+          transition: all 0.3s ease;
+        }
+
+        .registrar-card:hover {
+          background: rgba(0, 191, 255, 0.05);
+          border-color: rgba(0, 191, 255, 0.3);
+          transform: translateX(5px);
+        }
+
+        .registrar-icon {
+          font-size: 32px;
+          color: #00bfff;
+        }
+
+        .registrar-info {
+          flex: 1;
+        }
+
+        .registrar-info h5 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: white;
+          margin-bottom: 6px;
+        }
+
+        .registrar-meta {
+          display: flex;
+          gap: 16px;
+        }
+
+        .price {
+          color: #00ff88;
+          font-weight: 600;
+        }
+
+        .rating {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 0.9rem;
+        }
+
+        .registrar-btn {
+          padding: 10px 20px;
+          background: rgba(0, 191, 255, 0.15);
+          border: 1px solid #00bfff;
+          border-radius: 10px;
+          color: #00bfff;
+          font-weight: 600;
+          font-size: 0.9rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+
+        .registrar-btn:hover {
+          background: #00bfff;
+          color: white;
+          transform: translateY(-2px);
+        }
+
+        .domain-actions {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+        }
+
+        /* Saved Names Popup */
+        .saved-names-popup {
+          max-width: 600px;
+        }
+
+        .saved-names-list {
+          max-height: 400px;
+          overflow-y: auto;
+          margin-bottom: 32px;
+        }
+
+        .saved-name-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 20px;
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
+          margin-bottom: 12px;
+        }
+
+        .saved-name-main {
+          flex: 1;
+        }
+
+        .saved-name-main h4 {
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 8px;
+        }
+
+        .saved-meta {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+
+        .saved-category {
+          font-size: 0.75rem;
+          padding: 4px 12px;
+          border-radius: 12px;
+          color: white;
+          font-weight: 600;
+          text-transform: uppercase;
+        }
+
+        .saved-date, .saved-score {
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.6);
+        }
+
+        .saved-status {
+          font-size: 0.75rem;
+          padding: 4px 10px;
+          border-radius: 8px;
+          font-weight: 600;
+        }
+
+        .saved-status.available {
+          background: rgba(0, 255, 136, 0.2);
+          color: #00ff88;
+        }
+
+        .saved-status.taken {
+          background: rgba(255, 107, 157, 0.2);
+          color: #ff6b9d;
+        }
+
+        .saved-actions {
+          display: flex;
+          gap: 8px;
+        }
+
+        .saved-action-btn {
+          padding: 8px 16px;
+          background: rgba(0, 191, 255, 0.1);
+          border: 1px solid rgba(0, 191, 255, 0.2);
+          border-radius: 8px;
+          color: #00bfff;
+          font-size: 0.85rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.3s ease;
+        }
+
+        .saved-action-btn:hover {
+          background: rgba(0, 191, 255, 0.2);
+          transform: translateY(-2px);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+          width: 24px;
+          height: 24px;
+          border: 3px solid rgba(255, 255, 255, 0.3);
+          border-top-color: #00bfff;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
           .hero-grid {
-            grid-template-columns: 1fr;
             gap: 60px;
           }
-
-          .hero-visual {
-            height: 500px;
+          
+          .services-grid {
+            grid-template-columns: repeat(2, 1fr);
           }
-
-          .showcase-img {
-            width: 300px;
-            height: 300px;
+          
+          .process-steps {
+            grid-template-columns: repeat(2, 1fr);
           }
+        }
 
-          .services-layout {
+        @media (max-width: 992px) {
+          .hero-grid {
             grid-template-columns: 1fr;
-            gap: 40px;
+            text-align: center;
           }
-
-          .services-nav {
-            flex-direction: row;
-            overflow-x: auto;
-            padding-bottom: 10px;
+          
+          .hero-content {
+            max-width: 100%;
           }
-
-          .service-nav-item {
-            min-width: 200px;
+          
+          .hero-visual {
+            height: 400px;
           }
-
-          .portfolio-grid {
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          
+          .services-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .features-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          
+          .names-grid {
+            grid-template-columns: repeat(2, 1fr);
           }
         }
 
         @media (max-width: 768px) {
+          .container {
+            padding: 0 20px;
+          }
+          
           .hero-title {
             font-size: 36px;
           }
-
+          
           .hero-description {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
           }
-
-          .hero-cta {
+          
+          .naming-input-group {
             flex-direction: column;
-            align-items: stretch;
           }
-
-          .cta-primary, .cta-secondary {
+          
+          .naming-button {
+            width: 100%;
+          }
+          
+          .results-header {
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+          }
+          
+          .header-left, .header-right {
+            width: 100%;
             justify-content: center;
           }
-
-          .hero-stats {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+          
+          .names-grid {
+            grid-template-columns: 1fr;
           }
-
-          .stat-value {
-            font-size: 2rem;
+          
+          .process-steps {
+            grid-template-columns: 1fr;
+            gap: 24px;
           }
-
-          .hero-visual {
-            height: 400px;
+          
+          .features-grid {
+            grid-template-columns: 1fr;
           }
-
+          
+          .portfolio-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .section-title {
+            font-size: 28px;
+          }
+          
+          .cta-actions {
+            flex-direction: column;
+          }
+          
+          .footer-actions {
+            flex-direction: column;
+          }
+          
+          .name-actions {
+            grid-template-columns: repeat(2, 1fr);
+          }
+          
           .showcase-img {
             width: 250px;
             height: 250px;
           }
-
-          .img-1 {
-            transform: translate(-50%, -50%) rotate(0deg);
+          
+          .popup-container {
+            margin: 20px;
           }
-
-          .img-2 {
-            transform: translate(-20%, -50%) rotate(5deg);
+          
+          .name-display-large h2 {
+            font-size: 2rem;
           }
-
-          .img-3 {
-            transform: translate(-80%, -50%) rotate(-5deg);
-          }
-
-          .services-layout {
-            padding: 24px;
-          }
-
-          .services-nav {
+          
+          .name-meta-large {
             flex-direction: column;
+            align-items: center;
           }
-
-          .service-nav-item {
-            min-width: auto;
-          }
-
-          .service-title-large {
-            font-size: 1.8rem;
-          }
-
-          .portfolio-filters {
-            gap: 12px;
-          }
-
-          .filter-btn {
-            padding: 12px 20px;
-            font-size: 0.95rem;
-          }
-
-          .portfolio-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .features-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .cta-card {
-            padding: 60px 32px;
-          }
-
-          .cta-actions {
+          
+          .name-actions-large {
             flex-direction: column;
-            align-items: stretch;
-          }
-
-          .cta-btn-primary, .cta-btn-secondary, .cta-btn-tertiary {
-            justify-content: center;
-          }
-
-          .floating-icons {
-            display: none;
           }
         }
 
         @media (max-width: 480px) {
-          .container {
-            padding: 0 16px;
-          }
-
           .hero-badge {
             font-size: 0.85rem;
             padding: 10px 20px;
           }
-
-          .hero-stats {
-            grid-template-columns: 1fr;
+          
+          .naming-tool {
+            padding: 24px;
           }
-
-          .section-title {
-            font-size: 28px;
+          
+          .service-card, .feature-card, .process-step {
+            padding: 24px;
           }
-
-          .section-desc {
-            font-size: 1rem;
+          
+          .cta-card {
+            padding: 40px 24px;
           }
-
-          .feature-card {
-            padding: 28px;
+          
+          .cta-btn-primary, .cta-btn-secondary {
+            width: 100%;
+            justify-content: center;
           }
-
-          .feature-icon-wrapper {
-            width: 56px;
-            height: 56px;
-            font-size: 28px;
+          
+          .name-header {
+            flex-direction: column;
+            gap: 16px;
           }
-
-          .cta-icon {
-            font-size: 48px;
+          
+          .name-score {
+            margin-left: 0;
           }
-
-          .design-showcase {
+          
+          .showcase-img {
+            width: 200px;
+            height: 200px;
+          }
+          
+          .brand-showcase {
             transform: scale(0.8);
           }
+        }
 
-          .showcase-img {
-            width: 220px;
-            height: 220px;
-          }
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background: rgba(0, 191, 255, 0.5);
+          border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 191, 255, 0.7);
         }
       `}</style>
     </div>
   );
 };
 
-export default GraphicsDesign;
+export default BrandingDesignPage;

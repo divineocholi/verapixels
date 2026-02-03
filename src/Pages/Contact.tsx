@@ -76,7 +76,7 @@ const Contact = () => {
 
   const contactInfo = [
     { icon: <FiMail />, title: 'Email Us', value: 'info@verapixels.com', link: 'mailto:info@verapixels.com', color: '#007AFF', delay: '0s' },
-    { icon: <FiPhone />, title: 'Call Us', value: '+234 707 1333 709 ', link: 'tel:+2347071333709', color: '#FF6B9D', delay: '0.2s' },
+    { icon: <FiPhone />, title: 'Call Us', value: '+234 816 084 7613 ', link: 'tel:+2348160847613', color: '#FF6B9D', delay: '0.2s' },
     { icon: <FiMapPin />, title: 'Visit Us', value: 'Lagos, Nigeria', link: '#map', color: '#3DDC84', delay: '0.4s' }
   ];
 
@@ -256,9 +256,14 @@ const Contact = () => {
             <div className="map-icon">
               <FiMapPin />
             </div>
-            <h3>Visit Our Office</h3>
-            <p>123 Tech Boulevard<br/>Victoria Island<br/>Lagos, Nigeria</p>
-            <button className="map-btn">Get Directions</button>
+            <h3>Our Location</h3>
+           <p>
+          Remote-First Company<br />
+          Based in Lagos, Nigeria
+           </p>
+
+            <button className="map-btn">Our Base Location</button>
+
           </div>
           <div className="map-container">
             <iframe
@@ -1080,6 +1085,7 @@ const Contact = () => {
         /* Responsive */
         @media (max-width: 768px) {
           .contact-page { padding: 80px 0 40px; }
+          .hero-badge {margin-top: 40px; }
           .hero { margin-bottom: 60px; }
           .hero h1 { font-size: 40px; }
           .hero p { font-size: 1.1rem; }

@@ -7,6 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import path from "path";
 import { fileURLToPath } from "url";
+import { sendAdminNotification, sendUserConfirmation, sendAdminChatNotification } from './emailService.js';
 
 // Load environment variables
 dotenv.config();
@@ -830,6 +831,146 @@ app.get('/api/blogs/categories/all', (req, res) => {
       success: false,
       error: 'Failed to fetch categories'
     });
+  }
+});
+
+
+// ========== CONSULTATION BOOKING ROUTE ==========
+app.post('/api/consultations/book', async (req, res) => {
+  try {
+    const formData = req.body;
+    console.log('📅 Consultation booking request received:', formData);
+
+    // Validate required fields
+    const requiredFields = ['name', 'email', 'phone', 'contact_method', 'booking_date', 'booking_time'];
+    for (const field of requiredFields) {
+      if (!formData[field]) {
+        return res.status(400).json({
+          success: false,
+          error: `Missing required field: ${field}`
+        });
+      }
+    }
+
+    // Generate consultation ID
+    const consultationId = `consult_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // 1. Store consultation in database (you need to create a consultations table)
+    const { data, error } = await supabaseAdmin
+      .from('consultations')
+      .insert({
+        consultation_id: consultationId,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        contact_method: formData.contact_method,
+        booking_date: formData.booking_date,
+        booking_time: formData.booking_time,
+        business_time: formData.business_time || null,
+        user_timezone: formData.user_timezone || null,
+        message: formData.message || null,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Database error:', error);
+      throw new Error('Failed to save consultation');
+    }
+
+    console.log('✅ Consultation saved to database:', consultationId);
+
+    // 2. Send emails using the new service (REMOVE OLD EMAILJS FETCH CALLS)
+    try {
+      // Send admin notification
+      await sendAdminNotification({
+        userName: formData.name,
+        userEmail: formData.email,
+        userPhone: formData.phone,
+        contactMethod: formData.contact_method,
+        bookingDate: formData.booking_date,
+        bookingTime: formData.booking_time,
+        businessTime: formData.business_time,
+        userTimezone: formData.user_timezone,
+        message: formData.message,
+        consultationId: consultationId
+      });
+
+      console.log('✅ Admin notification email sent');
+
+      // Send user confirmation
+      await sendUserConfirmation({
+        userName: formData.name,
+        userEmail: formData.email,
+        contactMethod: formData.contact_method,
+        bookingDate: formData.booking_date,
+        bookingTime: formData.booking_time,
+        businessTime: formData.business_time,
+        userTimezone: formData.user_timezone,
+        consultationId: consultationId
+      });
+
+      console.log('✅ User confirmation email sent');
+    } catch (emailError) {
+      console.error('❌ Email sending error:', emailError);
+      // Don't fail the whole request if emails fail
+      // Log the error but continue with success response
+    }
+
+    // 3. Return success response
+    res.json({
+      success: true,
+      consultationId: consultationId,
+      message: 'Consultation booked successfully! You will receive a confirmation email shortly.',
+      data: data
+    });
+
+  } catch (error) {
+    console.error('❌ Consultation booking error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to book consultation. Please try again.'
+    });
+  }
+});
+
+// ========== CHAT ALERT EMAIL ROUTE ==========
+app.post('/api/send-admin-chat-alert', async (req, res) => {
+  try {
+    const { conversationId, reason, messagePreview } = req.body;
+    await sendAdminChatNotification({ conversationId, reason, messagePreview });
+    res.json({ success: true, message: 'Admin alert sent' });
+  } catch (error) {
+    console.error('❌ /api/send-admin-chat-alert error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// In your server file (ensure this is before your routes)
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
+
+// Add this to your server file (before starting the server)
+app.post('/api/test-email', async (req, res) => {
+  try {
+    const testInfo = await transporter.sendMail({
+      from: `Verapixels Test <${process.env.ZOHO_USER}>`,
+      to: 'your-test-email@example.com',
+      subject: 'Test Email from Verapixels',
+      html: '<h1>Test Email</h1><p>This is a test email from your server.</p>',
+    });
+
+    console.log('Test email sent:', testInfo.messageId);
+    res.json({ success: true, messageId: testInfo.messageId });
+  } catch (error) {
+    console.error('Test email failed:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

@@ -727,121 +727,77 @@ const ConsultationBooking = () => {
     return convertTimeToTimezone(userTime, formData.preferredDate, userTimezone, BUSINESS_TIMEZONE);
   };
   
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setSubmitStatus(null);
+ // In your frontend ConsultationBooking component, update the handleSubmit function:
 
-    try {
-      const { data: existingBookings, error: checkError } = await supabase
-        .from('consultations')
-        .select('*')
-        .eq('booking_date', formData.preferredDate)
-        .eq('booking_time', formData.preferredTime)
-        .in('status', ['confirmed', 'pending']);
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsSubmitting(true);
+  setSubmitStatus(null);
 
-      if (checkError) throw checkError;
+  try {
+    // Check for existing bookings (optional)
+    const { data: existingBookings, error: checkError } = await supabase
+      .from('consultations')
+      .select('*')
+      .eq('booking_date', formData.preferredDate)
+      .eq('booking_time', formData.preferredTime)
+      .in('status', ['confirmed', 'pending']);
 
-      if (existingBookings && existingBookings.length > 0) {
-        alert('Sorry, this time slot was just booked. Please select another time.');
-        await checkAvailability(formData.preferredDate);
-        setIsSubmitting(false);
-        return;
-      }
+    if (checkError) throw checkError;
 
-      const businessTime = getBusinessTime(formData.preferredTime);
-      const consultationId = `cons_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    if (existingBookings && existingBookings.length > 0) {
+      alert('Sorry, this time slot was just booked. Please select another time.');
+      await checkAvailability(formData.preferredDate);
+      setIsSubmitting(false);
+      return;
+    }
 
-      // FIXED: User bookings use same structure as admin bookings
-      const { data, error } = await supabase
-        .from('consultations')
-        .insert([{
-          consultation_id: consultationId,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          contact_method: contactMethods.find(m => m.id === formData.contactMethod)?.label || formData.contactMethod,
-          booking_date: formData.preferredDate,
-          booking_time: formData.preferredTime,
-          user_timezone: userTimezone,
-          business_time: businessTime,
-          message: formData.message || 'No additional message provided',
-          status: 'pending', // Same as admin bookings
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          admin_reply_sent: false, // Added
-          assigned_admin_id: null // Added
-        }])
-        .select();
-
-      if (error) throw error;
-
-      console.log('Booking created in Supabase:', data);
-
-      const serviceId = 'service_w8wwd8e';
-      const publicKey = 'NUKm-dvMLR7ftwvbF';
-      const adminTemplateId = 'template_503vbvj';
-      const userTemplateId = 'template_6zgl8ml';
-
-      const baseParams = {
-        from_name: formData.name,
-        from_email: formData.email,
-        user_name: formData.name,
-        user_email: formData.email,
+    const businessTime = getBusinessTime(formData.preferredTime);
+    
+    // Call your backend API instead of EmailJS
+    const response = await fetch('http://localhost:5001/api/consultations/book', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: formData.name,
         email: formData.email,
-        to_email: formData.email,
         phone: formData.phone,
-        contact_method: contactMethods.find(m => m.id === formData.contactMethod)?.label,
-        preferred_date: formData.preferredDate,
-        preferred_time: formData.preferredTime,
+        contact_method: contactMethods.find(m => m.id === formData.contactMethod)?.label || formData.contactMethod,
+        booking_date: formData.preferredDate,
+        booking_time: formData.preferredTime,
         business_time: businessTime,
         user_timezone: userTimezone,
-        business_timezone: BUSINESS_TIMEZONE,
-        message: formData.message || 'No additional message provided',
-        timezone: userTimezone,
-        consultation_id: consultationId
-      };
+        message: formData.message || 'No additional message provided'
+      }),
+    });
 
-      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          service_id: serviceId,
-          template_id: adminTemplateId,
-          user_id: publicKey,
-          template_params: { ...baseParams, reply_to: formData.email }
-        })
-      });
+    const result = await response.json();
 
-      await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          service_id: serviceId,
-          template_id: userTemplateId,
-          user_id: publicKey,
-          template_params: baseParams
-        })
-      });
-
-      setSubmitStatus('success');
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        contactMethod: 'video',
-        preferredDate: '',
-        preferredTime: '',
-        message: ''
-      });
-      setBookedSlots([]);
-    } catch (error) {
-      console.error('Booking Error:', error);
-      setSubmitStatus('error');
-    } finally {
-      setIsSubmitting(false);
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || 'Failed to book consultation');
     }
-  };
+
+    setSubmitStatus('success');
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      contactMethod: 'video',
+      preferredDate: '',
+      preferredTime: '',
+      message: ''
+    });
+    setBookedSlots([]);
+
+  } catch (error) {
+    console.error('Booking Error:', error);
+    setSubmitStatus('error');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -1235,6 +1191,7 @@ const ConsultationBooking = () => {
         }
 
         .hero-badge {
+          margin-top: 50px;
           display: inline-flex;
           align-items: center;
           gap: 10px;
