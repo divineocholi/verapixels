@@ -1,19 +1,30 @@
+// emailService.js - UPDATED VERSION
 import { Resend } from 'resend';
+import dotenv from 'dotenv';
+
+// Load environment variables FIRST
+dotenv.config();
+
+// Debug: Check if environment variables are loaded
+console.log('Resend API Key exists:', !!process.env.RESEND_API_KEY);
+console.log('FROM_EMAIL:', process.env.FROM_EMAIL);
+
+// Initialize Resend with error handling
+let resend;
+try {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error('RESEND_API_KEY is missing from environment variables');
+  }
+  resend = new Resend(process.env.RESEND_API_KEY);
+  console.log('✅ Resend initialized successfully');
+} catch (error) {
+  console.error('❌ Failed to initialize Resend:', error.message);
+  console.error('Please check your RESEND_API_KEY in .env file');
+  process.exit(1); // Exit if Resend can't be initialized
+}
 
 // ============================================================
-// RESEND API SETUP — works on Render (no port restrictions)
-// Add RESEND_API_KEY to your .env file
-// ============================================================
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-// Your verified sender email
-const FROM_EMAIL = process.env.FROM_EMAIL || 'info@verapixels.com';
-
-console.log('📧 Resend email service initialized');
-console.log('📧 Sending from:', FROM_EMAIL);
-
-// ============================================================
-// BASE LAYOUT WRAPPER
+// BASE LAYOUT WRAPPER (Keep your existing template)
 // ============================================================
 const baseTemplate = (headerGradient, headerContent, bodyContent) => `
 <!DOCTYPE html>
@@ -37,6 +48,8 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
     overflow: hidden;
     border: 1px solid #334155;
   ">
+
+    <!-- ===== HEADER (gradient banner at top) ===== -->
     <div style="
       background: ${headerGradient};
       padding: 36px 32px;
@@ -44,12 +57,16 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
     ">
       ${headerContent}
     </div>
+
+    <!-- ===== BODY (main content area) ===== -->
     <div style="
       padding: 36px 32px;
       background: #1e293b;
     ">
       ${bodyContent}
     </div>
+
+    <!-- ===== FOOTER (same on every email) ===== -->
     <div style="
       padding: 24px 32px;
       background: #0f172a;
@@ -63,13 +80,14 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
         If you have questions, reply to this email or call <strong style="color: #94a3b8;">+234 707 1333 709</strong>
       </p>
     </div>
+
   </div>
 </body>
 </html>
 `;
 
 // ============================================================
-// REUSABLE COMPONENTS
+// REUSABLE SMALL PIECES (Keep your existing functions)
 // ============================================================
 const tableRow = (label, value) => `
   <tr style="border-bottom: 1px solid #334155;">
@@ -91,28 +109,37 @@ const infoBox = (bgColor, borderColor, textColor, content) => `
 `;
 
 // ============================================================
-// CORE SEND FUNCTION (Resend version)
+// CORE SEND FUNCTION (Using Resend)
 // ============================================================
 export const sendEmail = async ({ to, subject, html, replyTo }) => {
   try {
+    console.log('📧 Attempting to send email to:', to);
+    console.log('📧 Subject:', subject);
+    console.log('📧 Using FROM_EMAIL:', process.env.FROM_EMAIL || 'info@verapixels.com');
+
     const { data, error } = await resend.emails.send({
-      from: `Verapixels <${FROM_EMAIL}>`,
-      to: [to],
+      from: `Verapixels <${process.env.FROM_EMAIL || 'info@verapixels.com'}>`,
+      to: Array.isArray(to) ? to : [to],
       subject,
       html,
-      reply_to: replyTo || FROM_EMAIL
+      reply_to: replyTo
     });
 
     if (error) {
-      console.error('❌ Resend email failed:', error);
+      console.error('❌ Resend API error:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('📧 Email sent via Resend:', { to, subject, id: data.id });
+    console.log('✅ Email sent successfully!');
+    console.log('📧 Message ID:', data.id);
+    console.log('📧 To:', to);
+    console.log('📧 Subject:', subject);
+    
     return { success: true, messageId: data.id };
 
   } catch (error) {
-    console.error('❌ Resend error:', error);
+    console.error('❌ Email sending failed:', error.message);
+    console.error('❌ Full error:', error);
     return { success: false, error: error.message };
   }
 };
@@ -161,7 +188,7 @@ export const sendAdminNotification = async ({
   );
 
   return await sendEmail({
-    to: FROM_EMAIL,
+    to: process.env.FROM_EMAIL || 'info@verapixels.com',
     subject,
     html,
     replyTo: userEmail
@@ -188,6 +215,7 @@ export const sendUserConfirmation = async ({
       Your free consultation has been scheduled. Here are your details:
     </p>
 
+    <!-- The booking summary box -->
     <div style="
       background: rgba(14, 165, 233, 0.08);
       border: 1px solid rgba(14, 165, 233, 0.25);
@@ -221,7 +249,7 @@ export const sendUserConfirmation = async ({
     to: userEmail,
     subject,
     html,
-    replyTo: FROM_EMAIL
+    replyTo: process.env.FROM_EMAIL || 'info@verapixels.com'
   });
 };
 
@@ -262,7 +290,7 @@ export const sendAdminChatNotification = async ({
   );
 
   return await sendEmail({
-    to: FROM_EMAIL,
+    to: process.env.FROM_EMAIL || 'info@verapixels.com',
     subject,
     html
   });
