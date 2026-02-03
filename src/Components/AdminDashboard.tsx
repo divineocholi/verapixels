@@ -5469,46 +5469,49 @@ const fetchConversations = async () => {
     }
   };
 
-  const sendUserConfirmationEmail = async (bookingData: Consultation) => {
-    try {
-      if (!bookingData.email || !bookingData.email.includes('@')) {
-        console.warn('❌ Invalid email address:', bookingData.email);
-        return;
-      }
+ const sendUserConfirmationEmail = async (bookingData: Consultation) => {
+  try {
+    if (!bookingData.email || !bookingData.email.includes('@')) {
+      console.warn('❌ Invalid email address:', bookingData.email);
+      return;
+    }
 
-      const params = {
-        from_name: 'Verapixels Team',
-        from_email: 'info@verapixels.com',
-        user_name: bookingData.name,
-        user_email: bookingData.email,
-        to_email: bookingData.email,
+    console.log('📧 Sending confirmation email to:', bookingData.email);
+    
+    // Call your backend API instead of EmailJS
+    const response = await fetch(`${SOCKET_URL}/api/consultations/send-confirmation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userName: bookingData.name,
+        userEmail: bookingData.email,
         phone: bookingData.phone,
         contact_method: bookingData.contact_method,
-        preferred_date: bookingData.booking_date,
-        preferred_time: bookingData.booking_time,
-        business_time: bookingData.business_time,
+        booking_date: bookingData.booking_date,
+        booking_time: bookingData.booking_time,
+        business_time: bookingData.business_time || '',
         user_timezone: bookingData.user_timezone,
-        business_timezone: BUSINESS_TIMEZONE,
         message: bookingData.message || 'No additional message provided',
         consultation_id: bookingData.consultation_id
-      };
+      })
+    });
 
-      console.log('📧 Sending confirmation email to:', bookingData.email);
-      
-      const result = await emailjs.send(
-        EMAILJS_CONFIG.serviceId,
-        EMAILJS_CONFIG.userTemplateId,
-        params,
-        EMAILJS_CONFIG.publicKey
-      );
-      
-      console.log('✅ Confirmation email sent:', result);
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('✅ Confirmation email sent via backend:', result);
       return result;
-    } catch (error) {
-      console.error('❌ Error sending confirmation email:', error);
+    } else {
+      console.error('❌ Error from backend email service:', result.error);
       return null;
     }
-  };
+  } catch (error) {
+    console.error('❌ Error sending confirmation email:', error);
+    return null;
+  }
+};
 
   const handleUpdateSettings = async (settings: any) => {
     if (!adminData) return;

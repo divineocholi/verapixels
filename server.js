@@ -1434,6 +1434,85 @@ app.use((req, res, next) => {
   res.sendFile(path.join(buildPath, 'index.html'));
 });
 
+// Add this route to your server file
+app.post('/api/consultations/send-confirmation', async (req, res) => {
+  try {
+    const {
+      userName, userEmail, phone, contact_method,
+      booking_date, booking_time, business_time, user_timezone,
+      message, consultation_id
+    } = req.body;
+
+    console.log('📧 Sending confirmation email for consultation:', consultation_id);
+
+    // Send user confirmation using your email service
+    const result = await sendUserConfirmation({
+      userName,
+      userEmail,
+      contactMethod: contact_method,
+      bookingDate: booking_date,
+      bookingTime: booking_time,
+      businessTime: business_time,
+      userTimezone: user_timezone,
+      consultationId: consultation_id
+    });
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Email sent successfully',
+        messageId: result.messageId
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error || 'Failed to send email'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error in send-confirmation endpoint:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to send email'
+    });
+  }
+});
+
+// Optional: Add endpoint for admin notifications too
+app.post('/api/notifications/send-admin-alert', async (req, res) => {
+  try {
+    const {
+      conversationId, reason, messagePreview
+    } = req.body;
+
+    const result = await sendAdminChatNotification({
+      conversationId,
+      reason,
+      messagePreview
+    });
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Admin alert sent successfully'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: result.error || 'Failed to send admin alert'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Error in send-admin-alert endpoint:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to send admin alert'
+    });
+  }
+});
+
 // ========== SOCKET.IO SETUP ==========
 const io = new Server(server, {
   cors: {
@@ -1629,12 +1708,31 @@ io.on("connection", (socket) => {
       io.to(data.conversationId).emit('status_updated', data);
     });
     
-    // ========== TRANSFER TO ADMIN ==========
-    socket.on('transfer_to_admin', (data) => {
-      console.log('🔀 Transfer to admin requested:', data);
-      
-      const roomId = data.conversationId;
-      
+    socket.on('transfer_to_admin', async (data) => {
+  console.log('🔀 Transfer to admin requested:', data);
+  
+  const roomId = data.conversationId;
+  
+  try {
+    // Call your backend API instead of direct email sending
+    const response = await fetch(`${process.env.CLIENT_URL}/api/notifications/send-admin-alert`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        conversationId: roomId,
+        reason: data.reason || 'User requested assistance',
+        messagePreview: data.messagePreview || 'User needs admin assistance'
+      })
+    });
+    
+    const result = await response.json();
+    console.log('🔔 Admin alert sent via backend:', result.success);
+  } catch (error) {
+    console.error('❌ Failed to send admin alert:', error);
+  }
+  
       // Create notification for all admins
       const notification = {
         notification_id: data.notificationId || `notif_${Date.now()}`,
