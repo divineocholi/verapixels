@@ -757,8 +757,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     const businessTime = getBusinessTime(formData.preferredTime);
     
     // Call your backend API instead of EmailJS
-      const response = await fetch(`${API_URL}/api/consultations/book`, {
-      method: 'POST',
+    const response = await fetch('https://verapixels-server.onrender.com/api/consultations/book', {
+    method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
