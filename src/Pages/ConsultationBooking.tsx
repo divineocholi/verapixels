@@ -18,6 +18,8 @@ import {
 import { SiGooglemeet, SiZoom, SiWhatsapp } from 'react-icons/si';
 import { supabase } from '../Components/supabase';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
 const BUSINESS_TIMEZONE = 'Africa/Lagos';
 const BUSINESS_HOURS = {
   start: 9,
@@ -755,7 +757,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     const businessTime = getBusinessTime(formData.preferredTime);
     
     // Call your backend API instead of EmailJS
-    const response = await fetch('http://localhost:5001/api/consultations/book', {
+      const response = await fetch(`${API_URL}/api/consultations/book`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
