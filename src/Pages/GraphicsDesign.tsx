@@ -8,7 +8,7 @@ import {
   FiShoppingBag, FiX, FiDownload, FiExternalLink, FiInfo,
   FiSave, FiCalendar, FiMapPin, FiClock, FiUser,
   FiShield, FiBarChart, FiThumbsUp, FiTool, FiCheck,
-  FiHeart, FiGrid, FiPackage, FiEye
+  FiHeart, FiGrid, FiPackage, FiEye, FiBookmark  // Add this
 } from "react-icons/fi";
 import { 
   GiLightBulb, GiPerspectiveDiceSixFacesRandom, GiCheckMark,
