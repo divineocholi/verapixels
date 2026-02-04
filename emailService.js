@@ -1,15 +1,16 @@
-// emailService.js - UPDATED VERSION
+// emailService.js - FIXED VERSION FOR RESEND
 import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
-// Load environment variables FIRST
+// Load environment variables
 dotenv.config();
 
-// Debug: Check if environment variables are loaded
-console.log('Resend API Key exists:', !!process.env.RESEND_API_KEY);
-console.log('FROM_EMAIL:', process.env.FROM_EMAIL);
+// Debug logging
+console.log('🔧 Email Service Initialization:');
+console.log('   RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
+console.log('   FROM_EMAIL:', process.env.FROM_EMAIL);
 
-// Initialize Resend with error handling
+// Initialize Resend
 let resend;
 try {
   if (!process.env.RESEND_API_KEY) {
@@ -19,12 +20,11 @@ try {
   console.log('✅ Resend initialized successfully');
 } catch (error) {
   console.error('❌ Failed to initialize Resend:', error.message);
-  console.error('Please check your RESEND_API_KEY in .env file');
-  process.exit(1); // Exit if Resend can't be initialized
+  process.exit(1);
 }
 
 // ============================================================
-// BASE LAYOUT WRAPPER (Keep your existing template)
+// BASE LAYOUT WRAPPER
 // ============================================================
 const baseTemplate = (headerGradient, headerContent, bodyContent) => `
 <!DOCTYPE html>
@@ -48,8 +48,7 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
     overflow: hidden;
     border: 1px solid #334155;
   ">
-
-    <!-- ===== HEADER (gradient banner at top) ===== -->
+    <!-- HEADER -->
     <div style="
       background: ${headerGradient};
       padding: 36px 32px;
@@ -58,7 +57,7 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
       ${headerContent}
     </div>
 
-    <!-- ===== BODY (main content area) ===== -->
+    <!-- BODY -->
     <div style="
       padding: 36px 32px;
       background: #1e293b;
@@ -66,7 +65,7 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
       ${bodyContent}
     </div>
 
-    <!-- ===== FOOTER (same on every email) ===== -->
+    <!-- FOOTER -->
     <div style="
       padding: 24px 32px;
       background: #0f172a;
@@ -80,14 +79,13 @@ const baseTemplate = (headerGradient, headerContent, bodyContent) => `
         If you have questions, reply to this email or call <strong style="color: #94a3b8;">+234 707 1333 709</strong>
       </p>
     </div>
-
   </div>
 </body>
 </html>
 `;
 
 // ============================================================
-// REUSABLE SMALL PIECES (Keep your existing functions)
+// HELPER FUNCTIONS
 // ============================================================
 const tableRow = (label, value) => `
   <tr style="border-bottom: 1px solid #334155;">
@@ -109,17 +107,22 @@ const infoBox = (bgColor, borderColor, textColor, content) => `
 `;
 
 // ============================================================
-// CORE SEND FUNCTION (Using Resend)
+// CORE SEND FUNCTION (FIXED)
 // ============================================================
 export const sendEmail = async ({ to, subject, html, replyTo }) => {
   try {
-    console.log('📧 Attempting to send email to:', to);
-    console.log('📧 Subject:', subject);
-    console.log('📧 Using FROM_EMAIL:', process.env.FROM_EMAIL || 'info@verapixels.com');
+    console.log('📧 Attempting to send email:');
+    console.log('   To:', to);
+    console.log('   Subject:', subject);
+    console.log('   From:', process.env.FROM_EMAIL || 'info@verapixels.com');
+    console.log('   Reply-To:', replyTo);
+
+    // Ensure 'to' is an array
+    const recipients = Array.isArray(to) ? to : [to];
 
     const { data, error } = await resend.emails.send({
       from: `Verapixels <${process.env.FROM_EMAIL || 'info@verapixels.com'}>`,
-      to: Array.isArray(to) ? to : [to],
+      to: recipients,
       subject,
       html,
       reply_to: replyTo
@@ -131,15 +134,14 @@ export const sendEmail = async ({ to, subject, html, replyTo }) => {
     }
 
     console.log('✅ Email sent successfully!');
-    console.log('📧 Message ID:', data.id);
-    console.log('📧 To:', to);
-    console.log('📧 Subject:', subject);
+    console.log('   Message ID:', data.id);
+    console.log('   Sent to:', recipients.join(', '));
     
     return { success: true, messageId: data.id };
 
   } catch (error) {
     console.error('❌ Email sending failed:', error.message);
-    console.error('❌ Full error:', error);
+    console.error('   Full error:', error);
     return { success: false, error: error.message };
   }
 };
@@ -187,8 +189,10 @@ export const sendAdminNotification = async ({
     body
   );
 
+  console.log('📧 Sending admin notification...');
+  
   return await sendEmail({
-    to: process.env.FROM_EMAIL || 'info@verapixels.com',
+    to: process.env.FROM_EMAIL || 'info@verapixels.com', // Admin email
     subject,
     html,
     replyTo: userEmail
@@ -215,7 +219,6 @@ export const sendUserConfirmation = async ({
       Your free consultation has been scheduled. Here are your details:
     </p>
 
-    <!-- The booking summary box -->
     <div style="
       background: rgba(14, 165, 233, 0.08);
       border: 1px solid rgba(14, 165, 233, 0.25);
@@ -245,8 +248,10 @@ export const sendUserConfirmation = async ({
     body
   );
 
+  console.log('📧 Sending user confirmation...');
+  
   return await sendEmail({
-    to: userEmail,
+    to: userEmail, // User email
     subject,
     html,
     replyTo: process.env.FROM_EMAIL || 'info@verapixels.com'
@@ -289,8 +294,10 @@ export const sendAdminChatNotification = async ({
     body
   );
 
+  console.log('📧 Sending admin chat alert...');
+  
   return await sendEmail({
-    to: process.env.FROM_EMAIL || 'info@verapixels.com',
+    to: process.env.FROM_EMAIL || 'info@verapixels.com', // Admin email
     subject,
     html
   });

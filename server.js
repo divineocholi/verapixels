@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import path from "path";
 import { fileURLToPath } from "url";
-import { sendAdminNotification, sendUserConfirmation, sendAdminChatNotification } from './emailService.js';
+import { sendEmail, sendAdminNotification, sendUserConfirmation, sendAdminChatNotification } from './emailService.js';
 
 // Load environment variables
 dotenv.config();
@@ -835,7 +835,7 @@ app.get('/api/blogs/categories/all', (req, res) => {
 });
 
 
-// ========== CONSULTATION BOOKING ROUTE ==========
+// In your /api/consultations/book endpoint
 app.post('/api/consultations/book', async (req, res) => {
   try {
     const formData = req.body;
@@ -855,7 +855,7 @@ app.post('/api/consultations/book', async (req, res) => {
     // Generate consultation ID
     const consultationId = `consult_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // 1. Store consultation in database (you need to create a consultations table)
+    // 1. Store consultation in database
     const { data, error } = await supabaseAdmin
       .from('consultations')
       .insert({
@@ -882,10 +882,11 @@ app.post('/api/consultations/book', async (req, res) => {
 
     console.log('✅ Consultation saved to database:', consultationId);
 
-    // 2. Send emails using the new service (REMOVE OLD EMAILJS FETCH CALLS)
+    // 2. Send BOTH emails
     try {
-      // Send admin notification
-      await sendAdminNotification({
+      // SEND TO ADMIN FIRST
+      console.log('📧 Sending admin notification...');
+      const adminResult = await sendAdminNotification({
         userName: formData.name,
         userEmail: formData.email,
         userPhone: formData.phone,
@@ -898,10 +899,15 @@ app.post('/api/consultations/book', async (req, res) => {
         consultationId: consultationId
       });
 
-      console.log('✅ Admin notification email sent');
+      if (adminResult.success) {
+        console.log('✅ Admin notification email sent:', adminResult.messageId);
+      } else {
+        console.error('❌ Admin notification failed:', adminResult.error);
+      }
 
-      // Send user confirmation
-      await sendUserConfirmation({
+      // SEND TO USER
+      console.log('📧 Sending user confirmation...');
+      const userResult = await sendUserConfirmation({
         userName: formData.name,
         userEmail: formData.email,
         contactMethod: formData.contact_method,
@@ -912,18 +918,22 @@ app.post('/api/consultations/book', async (req, res) => {
         consultationId: consultationId
       });
 
-      console.log('✅ User confirmation email sent');
+      if (userResult.success) {
+        console.log('✅ User confirmation email sent:', userResult.messageId);
+      } else {
+        console.error('❌ User confirmation failed:', userResult.error);
+      }
+
     } catch (emailError) {
       console.error('❌ Email sending error:', emailError);
-      // Don't fail the whole request if emails fail
-      // Log the error but continue with success response
+      // DON'T FAIL - emails are not critical
     }
 
-    // 3. Return success response
+    // 3. Return success
     res.json({
       success: true,
       consultationId: consultationId,
-      message: 'Consultation booked successfully! You will receive a confirmation email shortly.',
+      message: 'Consultation booked successfully!',
       data: data
     });
 
@@ -931,7 +941,7 @@ app.post('/api/consultations/book', async (req, res) => {
     console.error('❌ Consultation booking error:', error);
     res.status(500).json({
       success: false,
-      error: error.message || 'Failed to book consultation. Please try again.'
+      error: error.message || 'Failed to book consultation'
     });
   }
 });
@@ -956,20 +966,26 @@ app.use(
   })
 );
 
-// Add this to your server file (before starting the server)
+// ✅ CORRECT CODE (using sendEmail from emailService.js)
 app.post('/api/test-email', async (req, res) => {
   try {
-    const testInfo = await transporter.sendMail({
-      from: `Verapixels Test <${process.env.ZOHO_USER}>`,
-      to: 'your-test-email@example.com',
+    const { email } = req.body;
+    
+    const result = await sendEmail({
+      to: email || 'info@verapixels.com',
       subject: 'Test Email from Verapixels',
-      html: '<h1>Test Email</h1><p>This is a test email from your server.</p>',
+      html: '<h1>Test Email</h1><p>This is a test email from your server.</p>'
     });
 
-    console.log('Test email sent:', testInfo.messageId);
-    res.json({ success: true, messageId: testInfo.messageId });
+    if (result.success) {
+      console.log('✅ Test email sent:', result.messageId);
+      res.json({ success: true, messageId: result.messageId });
+    } else {
+      console.error('❌ Test email failed:', result.error);
+      res.status(500).json({ success: false, error: result.error });
+    }
   } catch (error) {
-    console.error('Test email failed:', error);
+    console.error('❌ Test email error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -1016,6 +1032,34 @@ app.post('/api/consultations/send-confirmation', async (req, res) => {
       success: false,
       error: error.message || 'Failed to send confirmation email'
     });
+  }
+});
+
+// Add this test endpoint to your server.js
+app.post('/api/test-admin-email', async (req, res) => {
+  try {
+    console.log('🧪 Testing admin email...');
+    
+    const result = await sendAdminNotification({
+      userName: 'Test User',
+      userEmail: 'test@example.com',
+      userPhone: '+1234567890',
+      contactMethod: 'Video Call',
+      bookingDate: '2025-02-10',
+      bookingTime: '10:00 AM',
+      businessTime: '11:00 AM',
+      userTimezone: 'America/New_York',
+      message: 'This is a test booking',
+      consultationId: 'TEST_123'
+    });
+
+    res.json({
+      success: result.success,
+      message: result.success ? 'Admin email sent!' : 'Failed to send',
+      details: result
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 // ========== ADMIN API ROUTES ==========
@@ -2011,6 +2055,70 @@ io.on("connection", (socket) => {
   });
 });
 
+// ========== EMAIL TEST ENDPOINTS ==========
+
+app.post('/api/test-user-confirmation', async (req, res) => {
+  try {
+    console.log('🧪 Testing USER confirmation email...');
+    
+    const result = await sendUserConfirmation({
+      userName: req.body.userName,
+      userEmail: req.body.userEmail,
+      contactMethod: req.body.contactMethod,
+      bookingDate: req.body.bookingDate,
+      bookingTime: req.body.bookingTime,
+      businessTime: req.body.businessTime,
+      userTimezone: req.body.userTimezone,
+      consultationId: req.body.consultationId
+    });
+
+    res.json({
+      success: result.success,
+      message: result.success ? '✅ User confirmation sent!' : '❌ Failed',
+      messageId: result.messageId,
+      error: result.error
+    });
+  } catch (error) {
+    console.error('❌ Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/test-admin-notification', async (req, res) => {
+  try {
+    console.log('🧪 Testing ADMIN notification email...');
+    console.log('📧 Sending to: info@verapixels.com');
+    
+    const result = await sendAdminNotification({
+      userName: req.body.userName,
+      userEmail: req.body.userEmail,
+      userPhone: req.body.userPhone,
+      contactMethod: req.body.contactMethod,
+      bookingDate: req.body.bookingDate,
+      bookingTime: req.body.bookingTime,
+      businessTime: req.body.businessTime,
+      userTimezone: req.body.userTimezone,
+      message: req.body.message,
+      consultationId: req.body.consultationId
+    });
+
+    console.log('📊 Result:', result);
+
+    res.json({
+      success: result.success,
+      message: result.success ? '✅ Admin notification sent to info@verapixels.com!' : '❌ Failed to send',
+      messageId: result.messageId,
+      error: result.error,
+      sentTo: 'info@verapixels.com'
+    });
+  } catch (error) {
+    console.error('❌ Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ========== END TEST ENDPOINTS ==========
+
 server.listen(PORT, () => {
   console.log(`🚀 Chat & Blog server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -2029,4 +2137,4 @@ server.listen(PORT, () => {
   console.log(`✅ Server ready for connections!`);
 });
 
-export { app, server, io };
+export { app, server, io,  sendEmail, sendAdminNotification, sendUserConfirmation, sendAdminChatNotification};
