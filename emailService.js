@@ -106,7 +106,7 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
                   <td align="center">
                     <img src="${LOGO_URL}" alt="Verapixels" width="80" height="80" style="display: block; width: 80px; height: 80px; margin: 0 auto 20px; border-radius: 8px; background-color: #ffffff; padding: 12px;">
                     <h1 class="mobile-heading" style="margin: 0 0 8px; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Verapixels</h1>
-                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 16px; font-weight: 500;">Digital Excellence Studio</p>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 16px; font-weight: 500;">Building Digital Identity</p>
                   </td>
                 </tr>
               </table>
@@ -165,7 +165,6 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
                         </td>
                       </tr>
                     </table>
-                    <p style="margin: 20px 0 0; color: ${COLORS.textLight}; font-size: 15px;">WhatsApp: +234 816 084 7613</p>
                   </td>
                 </tr>
               </table>
@@ -187,7 +186,7 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
                 </tr>
                 <tr>
                   <td style="padding-top: 20px; border-top: 1px solid ${COLORS.border}; text-align: center;">
-                    <p class="footer-text" style="margin: 0 0 12px; color: ${COLORS.textLight}; font-size: 14px;">© ${new Date().getFullYear()} Verapixels Digital Studio. All rights reserved.</p>
+                    <p class="footer-text" style="margin: 0 0 12px; color: ${COLORS.textLight}; font-size: 14px;">© ${new Date().getFullYear()} Verapixels Building Digital Identity. All rights reserved.</p>
                     <p class="footer-text" style="margin: 0; color: ${COLORS.textLight}; font-size: 13px;">
                       <a href="#" style="color: ${COLORS.primary}; text-decoration: none;">Privacy Policy</a> • 
                       <a href="#" style="color: ${COLORS.primary}; text-decoration: none;">Terms</a> • 
