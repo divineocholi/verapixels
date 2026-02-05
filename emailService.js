@@ -1,4 +1,4 @@
-// emailService.js - PROFESSIONAL EMAIL SERVICE
+// emailService.js - PROFESSIONAL EMAIL SERVICE (MOBILE OPTIMIZED)
 import { Resend } from 'resend';
 import dotenv from 'dotenv';
 
@@ -43,7 +43,7 @@ try {
 }
 
 // ============================================================
-// PROFESSIONAL BASE TEMPLATE
+// PROFESSIONAL BASE TEMPLATE (MOBILE RESPONSIVE)
 // ============================================================
 const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
 <!DOCTYPE html>
@@ -59,6 +59,36 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
     div, td {padding: 0;}
   </style>
   <![endif]-->
+  <style>
+    /* ✅ MOBILE RESPONSIVE STYLES */
+    @media only screen and (max-width: 600px) {
+      .container {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .mobile-padding {
+        padding: 20px !important;
+      }
+      .mobile-text {
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+      }
+      .mobile-heading {
+        font-size: 24px !important;
+      }
+      .mobile-subheading {
+        font-size: 18px !important;
+      }
+      .social-icon {
+        width: 44px !important;
+        height: 44px !important;
+        margin: 0 6px !important;
+      }
+      .footer-text {
+        font-size: 14px !important;
+      }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8fafc;">
@@ -66,17 +96,17 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
       <td align="center" style="padding: 40px 20px;">
         
         <!-- MAIN CONTAINER -->
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="container" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);">
           
           <!-- HEADER -->
           <tr>
-            <td style="background-color: ${COLORS.primary}; padding: 40px; text-align: center;">
+            <td style="background-color: ${COLORS.primary}; padding: 40px; text-align: center;" class="mobile-padding">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td align="center">
                     <img src="${LOGO_URL}" alt="Verapixels" width="80" height="80" style="display: block; width: 80px; height: 80px; margin: 0 auto 20px; border-radius: 8px; background-color: #ffffff; padding: 12px;">
-                    <h1 style="margin: 0 0 8px; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Verapixels</h1>
-                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 14px; font-weight: 500;">Digital Excellence Studio</p>
+                    <h1 class="mobile-heading" style="margin: 0 0 8px; color: #ffffff; font-size: 28px; font-weight: 700; letter-spacing: -0.5px;">Verapixels</h1>
+                    <p style="margin: 0; color: rgba(255, 255, 255, 0.9); font-size: 16px; font-weight: 500;">Digital Excellence Studio</p>
                   </td>
                 </tr>
               </table>
@@ -88,7 +118,7 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
           
           <!-- BODY CONTENT -->
           <tr>
-            <td style="padding: 40px; color: ${COLORS.text}; line-height: 1.6;">
+            <td style="padding: 40px; color: ${COLORS.text}; line-height: 1.6;" class="mobile-padding mobile-text">
               ${bodyContent}
             </td>
           </tr>
@@ -96,41 +126,46 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
           <!-- SOCIAL MEDIA (OPTIONAL) -->
           ${showSocial ? `
           <tr>
-            <td style="padding: 0 40px 40px; border-top: 1px solid ${COLORS.border};">
+            <td style="padding: 0 40px 40px; border-top: 1px solid ${COLORS.border};" class="mobile-padding">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td style="padding: 30px 0 20px; text-align: center;">
-                    <p style="margin: 0 0 20px; color: ${COLORS.text}; font-size: 14px; font-weight: 600;">Connect With Us</p>
+                    <p style="margin: 0 0 20px; color: ${COLORS.text}; font-size: 16px; font-weight: 600;">Connect With Us</p>
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
                       <tr>
+                        <!-- Instagram -->
                         <td style="padding: 0 8px;">
-                          <a href="https://www.instagram.com/verapixels_?igsh=MXZtajE2Y2Jxc3BiOA==" target="_blank" style="display: inline-block; width: 40px; height: 40px; background-color: #E4405F; border-radius: 6px; text-align: center; line-height: 40px; text-decoration: none;">
-                            <span style="color: #ffffff; font-size: 18px;">📷</span>
+                          <a href="https://www.instagram.com/verapixels_?igsh=MXZtajE2Y2Jxc3BiOA==" target="_blank" style="display: inline-block; text-decoration: none;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" class="social-icon" style="width: 40px; height: 40px; border-radius: 8px;" />
                           </a>
                         </td>
+                        <!-- TikTok -->
                         <td style="padding: 0 8px;">
-                          <a href="https://www.tiktok.com/@verapixels_?_r=1&_t=ZS-93eYCe4Wq4A" target="_blank" style="display: inline-block; width: 40px; height: 40px; background-color: #000000; border-radius: 6px; text-align: center; line-height: 40px; text-decoration: none;">
-                            <span style="color: #ffffff; font-size: 18px;">🎵</span>
+                          <a href="https://www.tiktok.com/@verapixels_?_r=1&_t=ZS-93eYCe4Wq4A" target="_blank" style="display: inline-block; text-decoration: none;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" class="social-icon" style="width: 40px; height: 40px; border-radius: 8px;" />
                           </a>
                         </td>
+                        <!-- X (Twitter) -->
                         <td style="padding: 0 8px;">
-                          <a href="https://x.com/verapixels" target="_blank" style="display: inline-block; width: 40px; height: 40px; background-color: #000000; border-radius: 6px; text-align: center; line-height: 40px; text-decoration: none;">
-                            <span style="color: #ffffff; font-size: 18px;">𝕏</span>
+                          <a href="https://x.com/verapixels" target="_blank" style="display: inline-block; text-decoration: none;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/5968/5968830.png" alt="X" class="social-icon" style="width: 40px; height: 40px; border-radius: 8px;" />
                           </a>
                         </td>
+                        <!-- LinkedIn -->
                         <td style="padding: 0 8px;">
-                          <a href="https://www.linkedin.com/company/verapixels" target="_blank" style="display: inline-block; width: 40px; height: 40px; background-color: #0077b5; border-radius: 6px; text-align: center; line-height: 40px; text-decoration: none;">
-                            <span style="color: #ffffff; font-size: 18px;">in</span>
+                          <a href="https://www.linkedin.com/company/verapixels" target="_blank" style="display: inline-block; text-decoration: none;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/3536/3536505.png" alt="LinkedIn" class="social-icon" style="width: 40px; height: 40px; border-radius: 8px;" />
                           </a>
                         </td>
+                        <!-- WhatsApp -->
                         <td style="padding: 0 8px;">
-                          <a href="https://wa.me/2347071333709" target="_blank" style="display: inline-block; width: 40px; height: 40px; background-color: #25D366; border-radius: 6px; text-align: center; line-height: 40px; text-decoration: none;">
-                            <span style="color: #ffffff; font-size: 18px;">💬</span>
+                          <a href="https://wa.me/2347071333709" target="_blank" style="display: inline-block; text-decoration: none;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="WhatsApp" class="social-icon" style="width: 40px; height: 40px; border-radius: 8px;" />
                           </a>
                         </td>
                       </tr>
                     </table>
-                    <p style="margin: 20px 0 0; color: ${COLORS.textLight}; font-size: 13px;">WhatsApp: +234 816 084 7613</p>
+                    <p style="margin: 20px 0 0; color: ${COLORS.textLight}; font-size: 15px;">WhatsApp: +234 816 084 7613</p>
                   </td>
                 </tr>
               </table>
@@ -140,20 +175,20 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
           
           <!-- FOOTER -->
           <tr>
-            <td style="background-color: ${COLORS.subtle}; padding: 40px; border-top: 1px solid ${COLORS.border};">
+            <td style="background-color: ${COLORS.subtle}; padding: 40px; border-top: 1px solid ${COLORS.border};" class="mobile-padding">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                 <tr>
                   <td style="padding-bottom: 20px;">
-                    <p style="margin: 0 0 15px; color: ${COLORS.text}; font-size: 14px; font-weight: 600;">Contact Support</p>
-                    <p style="margin: 0 0 8px; color: ${COLORS.textLight}; font-size: 13px;">📞 +234 816 084 7613</p>
-                    <p style="margin: 0 0 8px; color: ${COLORS.textLight}; font-size: 13px;">✉️ <a href="mailto:${REPLY_TO_EMAIL}" style="color: ${COLORS.primary}; text-decoration: none;">${REPLY_TO_EMAIL}</a></p>
-                    <p style="margin: 0; color: ${COLORS.textLight}; font-size: 13px;">📍 Lagos, Nigeria</p>
+                    <p style="margin: 0 0 15px; color: ${COLORS.text}; font-size: 16px; font-weight: 600;">Contact Support</p>
+                    <p class="footer-text" style="margin: 0 0 8px; color: ${COLORS.textLight}; font-size: 15px;">📞 +234 816 084 7613</p>
+                    <p class="footer-text" style="margin: 0 0 8px; color: ${COLORS.textLight}; font-size: 15px;">✉️ <a href="mailto:${REPLY_TO_EMAIL}" style="color: ${COLORS.primary}; text-decoration: none;">${REPLY_TO_EMAIL}</a></p>
+                    <p class="footer-text" style="margin: 0; color: ${COLORS.textLight}; font-size: 15px;">📍 Lagos, Nigeria</p>
                   </td>
                 </tr>
                 <tr>
                   <td style="padding-top: 20px; border-top: 1px solid ${COLORS.border}; text-align: center;">
-                    <p style="margin: 0 0 12px; color: ${COLORS.textLight}; font-size: 12px;">© ${new Date().getFullYear()} Verapixels Digital Studio. All rights reserved.</p>
-                    <p style="margin: 0; color: ${COLORS.textLight}; font-size: 11px;">
+                    <p class="footer-text" style="margin: 0 0 12px; color: ${COLORS.textLight}; font-size: 14px;">© ${new Date().getFullYear()} Verapixels Digital Studio. All rights reserved.</p>
+                    <p class="footer-text" style="margin: 0; color: ${COLORS.textLight}; font-size: 13px;">
                       <a href="#" style="color: ${COLORS.primary}; text-decoration: none;">Privacy Policy</a> • 
                       <a href="#" style="color: ${COLORS.primary}; text-decoration: none;">Terms</a> • 
                       <a href="#" style="color: ${COLORS.primary}; text-decoration: none;">Unsubscribe</a>
@@ -173,14 +208,14 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
 `;
 
 // ============================================================
-// HELPER COMPONENTS
+// HELPER COMPONENTS (MOBILE RESPONSIVE)
 // ============================================================
 const infoCard = (title, content, bgColor = '#f8fafc') => `
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
   <tr>
     <td style="background-color: ${bgColor}; border: 1px solid ${COLORS.border}; border-radius: 6px; padding: 20px;">
-      <h3 style="margin: 0 0 12px; color: ${COLORS.text}; font-size: 16px; font-weight: 600;">${title}</h3>
-      <div style="color: ${COLORS.textLight}; font-size: 14px; line-height: 1.6;">${content}</div>
+      <h3 class="mobile-subheading" style="margin: 0 0 12px; color: ${COLORS.text}; font-size: 18px; font-weight: 600;">${title}</h3>
+      <div class="mobile-text" style="color: ${COLORS.textLight}; font-size: 15px; line-height: 1.6;">${content}</div>
     </td>
   </tr>
 </table>
@@ -191,8 +226,8 @@ const detailRow = (label, value) => `
   <td style="padding: 12px 0; border-bottom: 1px solid ${COLORS.border};">
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
       <tr>
-        <td style="width: 140px; color: ${COLORS.textLight}; font-size: 14px; font-weight: 500; vertical-align: top;">${label}</td>
-        <td style="color: ${COLORS.text}; font-size: 14px; font-weight: 600; vertical-align: top;">${value}</td>
+        <td style="width: 140px; color: ${COLORS.textLight}; font-size: 15px; font-weight: 500; vertical-align: top;">${label}</td>
+        <td class="mobile-text" style="color: ${COLORS.text}; font-size: 15px; font-weight: 600; vertical-align: top;">${value}</td>
       </tr>
     </table>
   </td>
@@ -203,7 +238,7 @@ const button = (text, href, emoji = '') => `
 <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 30px auto;">
   <tr>
     <td style="background-color: ${COLORS.primary}; border-radius: 6px; text-align: center;">
-      <a href="${href}" style="display: inline-block; padding: 14px 32px; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600;">${emoji ? emoji + ' ' : ''}${text}</a>
+      <a href="${href}" class="mobile-text" style="display: inline-block; padding: 16px 32px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600;">${emoji ? emoji + ' ' : ''}${text}</a>
     </td>
   </tr>
 </table>
@@ -255,12 +290,12 @@ export const sendAdminNotification = async ({
 
   const headerContent = `
   <tr>
-    <td style="background-color: #ffffff; padding: 30px 40px; border-bottom: 1px solid ${COLORS.border};">
+    <td style="background-color: #ffffff; padding: 30px 40px; border-bottom: 1px solid ${COLORS.border};" class="mobile-padding">
       <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
         <tr>
           <td>
-            <h2 style="margin: 0 0 8px; color: ${COLORS.text}; font-size: 22px; font-weight: 700;">New Consultation Booking</h2>
-            <p style="margin: 0; color: ${COLORS.textLight}; font-size: 14px;">ID: ${consultationId}</p>
+            <h2 class="mobile-heading" style="margin: 0 0 8px; color: ${COLORS.text}; font-size: 24px; font-weight: 700;">New Consultation Booking</h2>
+            <p style="margin: 0; color: ${COLORS.textLight}; font-size: 15px;">ID: ${consultationId}</p>
           </td>
         </tr>
       </table>
@@ -269,16 +304,16 @@ export const sendAdminNotification = async ({
   `;
 
   const bodyContent = `
-    <h3 style="margin: 0 0 20px; color: ${COLORS.text}; font-size: 18px; font-weight: 600;">Client Information</h3>
+    <h3 class="mobile-subheading" style="margin: 0 0 20px; color: ${COLORS.text}; font-size: 20px; font-weight: 600;">Client Information</h3>
     
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
       ${detailRow('Name', userName)}
       ${detailRow('Email', `<a href="mailto:${userEmail}" style="color: ${COLORS.primary}; text-decoration: none;">${userEmail}</a>`)}
-      ${detailRow('Phone', `<a href="tel:${userPhone}" style="color: ${COLORS.primary}; text-decoration: none;">${userPhone}</a> <a href="https://wa.me/${userPhone.replace(/\D/g, '')}" style="display: inline-block; margin-left: 8px; padding: 4px 8px; background-color: #25D366; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 12px;">WhatsApp</a>`)}
+      ${detailRow('Phone', `<a href="tel:${userPhone}" style="color: ${COLORS.primary}; text-decoration: none;">${userPhone}</a> <a href="https://wa.me/${userPhone.replace(/\D/g, '')}" style="display: inline-block; margin-left: 8px; padding: 6px 10px; background-color: #25D366; color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 13px;">WhatsApp</a>`)}
       ${detailRow('Contact Method', contactMethod)}
       ${detailRow('Date', bookingDate)}
       ${detailRow('Client Time', `${bookingTime} (${userTimezone})`)}
-      ${detailRow('Lagos Time', `<strong style="color: ${COLORS.primary}; font-size: 16px;">${businessTime}</strong>`)}
+      ${detailRow('Lagos Time', `<strong style="color: ${COLORS.primary}; font-size: 17px;">${businessTime}</strong>`)}
       ${message ? detailRow('Message', `<div style="background-color: ${COLORS.subtle}; padding: 12px; border-radius: 4px; margin-top: 8px;">${message}</div>`) : ''}
     </table>
 
@@ -318,12 +353,12 @@ export const sendUserConfirmation = async ({
 
   const headerContent = `
   <tr>
-    <td style="background-color: #ffffff; padding: 30px 40px; border-bottom: 1px solid ${COLORS.border};">
+    <td style="background-color: #ffffff; padding: 30px 40px; border-bottom: 1px solid ${COLORS.border};" class="mobile-padding">
       <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
         <tr>
           <td>
-            <h2 style="margin: 0 0 8px; color: ${COLORS.text}; font-size: 22px; font-weight: 700;">Booking Confirmed!</h2>
-            <p style="margin: 0; color: ${COLORS.textLight}; font-size: 14px;">Hello ${userName}, we're looking forward to speaking with you.</p>
+            <h2 class="mobile-heading" style="margin: 0 0 8px; color: ${COLORS.text}; font-size: 24px; font-weight: 700;">Booking Confirmed!</h2>
+            <p style="margin: 0; color: ${COLORS.textLight}; font-size: 15px;">Hello ${userName}, we're looking forward to speaking with you.</p>
           </td>
         </tr>
       </table>
@@ -332,7 +367,7 @@ export const sendUserConfirmation = async ({
   `;
 
   const bodyContent = `
-    <p style="margin: 0 0 30px; color: ${COLORS.textLight}; font-size: 15px; line-height: 1.6;">
+    <p class="mobile-text" style="margin: 0 0 30px; color: ${COLORS.textLight}; font-size: 16px; line-height: 1.6;">
       Thank you for choosing Verapixels! Your free consultation has been scheduled. We're excited to help you achieve your digital goals.
     </p>
 
@@ -348,7 +383,7 @@ export const sendUserConfirmation = async ({
 
     ${infoCard('How to Prepare', `
       <p style="margin: 0 0 10px; color: ${COLORS.text};">To make the most of our consultation:</p>
-      <ul style="margin: 0; padding-left: 20px; color: ${COLORS.textLight}; font-size: 14px;">
+      <ul style="margin: 0; padding-left: 20px; color: ${COLORS.textLight}; font-size: 15px;">
         <li>Define your project goals and requirements</li>
         <li>Prepare any questions you have about our services</li>
         <li>Have examples or references ready if applicable</li>
@@ -359,7 +394,7 @@ export const sendUserConfirmation = async ({
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 30px 0;">
       <tr>
         <td style="text-align: center;">
-          <p style="margin: 0 0 15px; color: ${COLORS.text}; font-size: 14px; font-weight: 600;">Need to reschedule?</p>
+          <p style="margin: 0 0 15px; color: ${COLORS.text}; font-size: 16px; font-weight: 600;">Need to reschedule?</p>
           ${button('Contact Us', `mailto:${REPLY_TO_EMAIL}?subject=Reschedule%20Consultation`, '📅')}
         </td>
       </tr>
@@ -368,7 +403,7 @@ export const sendUserConfirmation = async ({
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 30px 0;">
       <tr>
         <td style="background-color: #fffbeb; border-left: 4px solid #fbbf24; padding: 16px; border-radius: 4px;">
-          <p style="margin: 0; color: #78350f; font-size: 14px; font-weight: 500;">
+          <p class="mobile-text" style="margin: 0; color: #78350f; font-size: 15px; font-weight: 500;">
             ⚠️ Important: Please be available at your scheduled time. We'll contact you via ${contactMethod}.
           </p>
         </td>
@@ -397,12 +432,12 @@ export const sendAdminChatNotification = async ({
 
   const headerContent = `
   <tr>
-    <td style="background-color: #fef2f2; padding: 30px 40px; border-bottom: 3px solid #dc2626;">
+    <td style="background-color: #fef2f2; padding: 30px 40px; border-bottom: 3px solid #dc2626;" class="mobile-padding">
       <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
         <tr>
           <td>
-            <h2 style="margin: 0 0 8px; color: #dc2626; font-size: 22px; font-weight: 700;">🚨 Admin Intervention Required</h2>
-            <p style="margin: 0; color: #991b1b; font-size: 14px; font-weight: 500;">User waiting in live chat - Immediate attention needed</p>
+            <h2 class="mobile-heading" style="margin: 0 0 8px; color: #dc2626; font-size: 24px; font-weight: 700;">🚨 Admin Intervention Required</h2>
+            <p style="margin: 0; color: #991b1b; font-size: 15px; font-weight: 500;">User waiting in live chat - Immediate attention needed</p>
           </td>
         </tr>
       </table>
@@ -414,7 +449,7 @@ export const sendAdminChatNotification = async ({
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 30px;">
       <tr>
         <td style="background-color: #fef2f2; border: 2px solid #fecaca; border-radius: 6px; padding: 20px;">
-          <h3 style="margin: 0 0 15px; color: #dc2626; font-size: 18px; font-weight: 600;">Urgent Chat Request</h3>
+          <h3 class="mobile-subheading" style="margin: 0 0 15px; color: #dc2626; font-size: 20px; font-weight: 600;">Urgent Chat Request</h3>
           
           <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
             ${detailRow('Chat ID', conversationId)}
@@ -434,13 +469,13 @@ export const sendAdminChatNotification = async ({
 
     ${infoCard('Immediate Action Required', `
       <p style="margin: 0 0 12px; color: #dc2626; font-weight: 600;">⚡ This user needs immediate assistance.</p>
-      <p style="margin: 0; color: ${COLORS.textLight}; font-size: 14px;">Expected response time: Less than 5 minutes</p>
+      <p style="margin: 0; color: ${COLORS.textLight}; font-size: 15px;">Expected response time: Less than 5 minutes</p>
     `, '#fef2f2')}
 
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 30px auto;">
       <tr>
         <td style="background-color: #dc2626; border-radius: 6px; text-align: center;">
-          <a href="#" style="display: inline-block; padding: 16px 40px; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600;">🔗 Join Chat Now</a>
+          <a href="#" class="mobile-text" style="display: inline-block; padding: 16px 40px; color: #ffffff; text-decoration: none; font-size: 17px; font-weight: 600;">🔗 Join Chat Now</a>
         </td>
       </tr>
     </table>

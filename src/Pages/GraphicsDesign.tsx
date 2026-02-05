@@ -8,12 +8,12 @@ import {
   FiShoppingBag, FiX, FiDownload, FiExternalLink, FiInfo,
   FiSave, FiCalendar, FiMapPin, FiClock, FiUser,
   FiShield, FiBarChart, FiThumbsUp, FiTool, FiCheck,
-  FiHeart, FiGrid, FiPackage, FiEye, FiBookmark  // Add this
+  FiHeart, FiGrid, FiPackage, FiEye
 } from "react-icons/fi";
 import { 
   GiLightBulb, GiPerspectiveDiceSixFacesRandom, GiCheckMark,
   GiGrowth, GiTeamIdea, GiTrophy, GiPencilRuler,
-  GiColorPalette, GiThreeLeaves, GiCrystalBall
+  GiPalette, GiThreeLeaves, GiCrystalBall
 } from "react-icons/gi";
 import { 
   SiGodaddy, SiNamecheap, SiHostinger, SiCloudflare,
@@ -1471,7 +1471,7 @@ const BrandIdentityPage: React.FC = () => {
             <div className="popup-content">
               {savedNames.length === 0 ? (
                 <div className="empty-saved">
-                  <FiBookmark className="empty-icon" />
+                  <FiSave className="empty-icon" /> {/* Changed from FiBookmark to FiSave */}
                   <p>No saved names yet. Generate some names to save them here!</p>
                   <button 
                     className="generate-from-saved"
@@ -2609,9 +2609,16 @@ const BrandIdentityPage: React.FC = () => {
           cursor: not-allowed;
         }
 
+        .quick-suggestions {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          margin-top: 2rem;
+        }
+
         .quick-suggestions p {
           color: rgba(255, 255, 255, 0.6);
-          margin-bottom: 1rem;
+          margin-bottom: 0.5rem;
         }
 
         .suggestion-chips {
