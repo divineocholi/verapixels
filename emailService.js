@@ -7,6 +7,11 @@ dotenv.config();
 // ==================== CONFIGURATION ====================
 const LOGO_URL = process.env.LOGO_URL || 'https://res.cloudinary.com/dpqntm1tb/image/upload/v1770247783/offical_main_glzsmp.jpg';
 
+// ✅ Email addresses - Send from noreply, reply to info
+const NOREPLY_EMAIL = process.env.NOREPLY_EMAIL || 'noreply@verapixels.com';
+const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'info@verapixels.com';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'info@verapixels.com';
+
 // Brand colors - Professional & Mature
 const COLORS = {
   primary: '#2563eb',      // Professional blue
@@ -20,7 +25,9 @@ const COLORS = {
 
 console.log('🔧 Email Service Initialization:');
 console.log('   RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
-console.log('   FROM_EMAIL:', process.env.FROM_EMAIL);
+console.log('   NOREPLY_EMAIL:', NOREPLY_EMAIL);
+console.log('   REPLY_TO_EMAIL:', REPLY_TO_EMAIL);
+console.log('   ADMIN_EMAIL:', ADMIN_EMAIL);
 console.log('   LOGO_URL:', LOGO_URL);
 
 let resend;
@@ -139,7 +146,7 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
                   <td style="padding-bottom: 20px;">
                     <p style="margin: 0 0 15px; color: ${COLORS.text}; font-size: 14px; font-weight: 600;">Contact Support</p>
                     <p style="margin: 0 0 8px; color: ${COLORS.textLight}; font-size: 13px;">📞 +234 816 084 7613</p>
-                    <p style="margin: 0 0 8px; color: ${COLORS.textLight}; font-size: 13px;">✉️ info@verapixels.com</p>
+                    <p style="margin: 0 0 8px; color: ${COLORS.textLight}; font-size: 13px;">✉️ <a href="mailto:${REPLY_TO_EMAIL}" style="color: ${COLORS.primary}; text-decoration: none;">${REPLY_TO_EMAIL}</a></p>
                     <p style="margin: 0; color: ${COLORS.textLight}; font-size: 13px;">📍 Lagos, Nigeria</p>
                   </td>
                 </tr>
@@ -203,19 +210,21 @@ const button = (text, href, emoji = '') => `
 `;
 
 // ============================================================
-// CORE SEND FUNCTION
+// CORE SEND FUNCTION - ✅ UPDATED TO USE NOREPLY
 // ============================================================
 export const sendEmail = async ({ to, subject, html, replyTo }) => {
   try {
     console.log('📧 Sending email to:', to);
 
     const recipients = Array.isArray(to) ? to : [to];
+    
+    // ✅ Send from noreply@verapixels.com with reply-to info@verapixels.com
     const { data, error } = await resend.emails.send({
-      from: `Verapixels <${process.env.FROM_EMAIL || 'info@verapixels.com'}>`,
+      from: `Verapixels <${NOREPLY_EMAIL}>`, // ✅ FROM: noreply@verapixels.com
       to: recipients,
       subject,
       html,
-      reply_to: replyTo
+      reply_to: replyTo || REPLY_TO_EMAIL // ✅ REPLY-TO: info@verapixels.com
     });
 
     if (error) {
@@ -223,7 +232,9 @@ export const sendEmail = async ({ to, subject, html, replyTo }) => {
       return { success: false, error: error.message };
     }
 
-    console.log('✅ Email sent:', data.id);
+    console.log('✅ Email sent from:', NOREPLY_EMAIL);
+    console.log('✅ Reply-to set as:', replyTo || REPLY_TO_EMAIL);
+    console.log('✅ Email ID:', data.id);
     return { success: true, messageId: data.id };
 
   } catch (error) {
@@ -286,8 +297,9 @@ export const sendAdminNotification = async ({
 
   const html = baseTemplate(headerContent, bodyContent, false);
   
+  // ✅ Send to admin, with reply-to set to client's email
   return await sendEmail({
-    to: process.env.FROM_EMAIL || 'info@verapixels.com',
+    to: ADMIN_EMAIL,
     subject,
     html,
     replyTo: userEmail
@@ -348,7 +360,7 @@ export const sendUserConfirmation = async ({
       <tr>
         <td style="text-align: center;">
           <p style="margin: 0 0 15px; color: ${COLORS.text}; font-size: 14px; font-weight: 600;">Need to reschedule?</p>
-          ${button('Contact Us', 'mailto:info@verapixels.com?subject=Reschedule%20Consultation', '📅')}
+          ${button('Contact Us', `mailto:${REPLY_TO_EMAIL}?subject=Reschedule%20Consultation`, '📅')}
         </td>
       </tr>
     </table>
@@ -366,11 +378,12 @@ export const sendUserConfirmation = async ({
 
   const html = baseTemplate(headerContent, bodyContent, true);
   
+  // ✅ Send to user from noreply, reply-to info@verapixels.com
   return await sendEmail({
     to: userEmail,
     subject,
     html,
-    replyTo: process.env.FROM_EMAIL || 'info@verapixels.com'
+    replyTo: REPLY_TO_EMAIL
   });
 };
 
@@ -435,10 +448,12 @@ export const sendAdminChatNotification = async ({
 
   const html = baseTemplate(headerContent, bodyContent, false);
   
+  // ✅ Send to admin from noreply
   return await sendEmail({
-    to: process.env.FROM_EMAIL || 'info@verapixels.com',
+    to: ADMIN_EMAIL,
     subject,
-    html
+    html,
+    replyTo: userEmail || REPLY_TO_EMAIL
   });
 };
 
@@ -450,7 +465,7 @@ export const sendTestEmail = async (testEmail) => {
   
   return await sendUserConfirmation({
     userName: "Test User",
-    userEmail: testEmail || process.env.FROM_EMAIL || 'info@verapixels.com',
+    userEmail: testEmail || REPLY_TO_EMAIL,
     contactMethod: "Video Call",
     bookingDate: new Date().toLocaleDateString('en-US', { 
       weekday: 'long', 
