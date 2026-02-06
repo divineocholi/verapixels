@@ -27,9 +27,12 @@ const NewsletterAdmin = () => {
     fetchStats();
   }, []);
 
+  // API URL - automatically uses correct endpoint based on environment
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+
   const fetchSubscribers = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/newsletter/subscribers');
+      const response = await fetch(`${API_URL}/api/newsletter/subscribers`);
       const data = await response.json();
       if (data.success) {
         setSubscribers(data.subscribers);
@@ -41,7 +44,7 @@ const NewsletterAdmin = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/newsletter/stats');
+      const response = await fetch(`${API_URL}/api/newsletter/stats`);
       const data = await response.json();
       if (data.success) {
         setStats(data.stats);
@@ -53,7 +56,7 @@ const NewsletterAdmin = () => {
 
   const loadExample = async () => {
     try {
-      const response = await fetch('http://localhost:5001/api/newsletter/example');
+      const response = await fetch(`${API_URL}/api/newsletter/example`);
       const data = await response.json();
       if (data.success) {
         setNewsletterData(data.example);
@@ -68,7 +71,7 @@ const NewsletterAdmin = () => {
     setSendStatus(null);
     
     try {
-      const response = await fetch('http://localhost:5001/api/newsletter/test', {
+      const response = await fetch(`${API_URL}/api/newsletter/test`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -103,7 +106,7 @@ const NewsletterAdmin = () => {
     setSendStatus(null);
 
     try {
-      const response = await fetch('http://localhost:5001/api/newsletter/send', {
+      const response = await fetch(`${API_URL}/api/newsletter/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newsletterData)
