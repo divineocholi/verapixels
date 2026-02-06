@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Sparkles, Rocket, Target, Shield, ArrowRight, Zap, TrendingUp, Award } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles, Rocket, Target, Shield, Zap, TrendingUp, Award } from 'lucide-react';
 
 const TechSolutionBanner = () => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const observerRef = useRef<IntersectionObserver | null>(null);
 
@@ -64,6 +66,10 @@ const TechSolutionBanner = () => {
     { icon: "🏆", number: "100%", label: "Client Satisfaction" }
   ];
 
+  const handleStartProject = () => {
+    navigate('/consultationbooking');
+  };
+
   return (
     <div className="banner-root">
       {/* Background Elements */}
@@ -98,7 +104,7 @@ const TechSolutionBanner = () => {
             to building powerful digital solutions, we handle it all with expertise and care.
           </p>
 
-          {/* Feature Cards */}
+          {/* Feature Cards - No Arrows */}
           <div className="banner-features">
             {features.map((feature, index) => {
               const IconComponent = feature.icon;
@@ -121,23 +127,27 @@ const TechSolutionBanner = () => {
                     <h3>{feature.title}</h3>
                     <p>{feature.subtitle}</p>
                   </div>
-                  <div className="feature-arrow">
-                    <ArrowRight size={20} />
-                  </div>
+                  {/* Arrow removed - Feature doesn't link anywhere */}
                 </div>
               );
             })}
           </div>
 
-          {/* CTA Button */}
+          {/* CTA Button - Now Linked to Consultation Booking */}
           <div 
             className={`banner-cta-wrapper ${isVisible['cta'] ? 'reveal-zoom' : ''}`}
             data-animate-id="cta"
           >
-            <button className="banner-cta-button">
+            <button 
+              className="banner-cta-button"
+              onClick={handleStartProject}
+            >
               <span>Start Your Project</span>
               <div className="cta-icon">
-                <ArrowRight size={20} />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
               </div>
               <div className="cta-shimmer"></div>
             </button>
@@ -312,7 +322,7 @@ const TechSolutionBanner = () => {
           margin-bottom: 50px;
         }
 
-        /* Feature Cards */
+        /* Feature Cards - Without Arrows */
         .banner-features {
           display: flex;
           flex-direction: column;
@@ -329,7 +339,7 @@ const TechSolutionBanner = () => {
           border-radius: 16px;
           padding: 24px;
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          cursor: pointer;
+          cursor: default; /* Changed from pointer since no link */
           position: relative;
           overflow: hidden;
         }
@@ -408,21 +418,9 @@ const TechSolutionBanner = () => {
           line-height: 1.5;
         }
 
-        .feature-arrow {
-          color: rgba(255, 255, 255, 0.3);
-          opacity: 0;
-          transform: translateX(-10px);
-          transition: all 0.3s ease;
-          z-index: 1;
-        }
+        /* No feature-arrow styles since we removed it */
 
-        .feature-card:hover .feature-arrow {
-          opacity: 1;
-          transform: translateX(0);
-          color: var(--feature-color);
-        }
-
-        /* CTA Section */
+        /* CTA Section - Updated for navigation */
         .banner-cta-wrapper {
           text-align: left;
         }
@@ -448,6 +446,7 @@ const TechSolutionBanner = () => {
         .banner-cta-button:hover {
           transform: translateY(-3px);
           box-shadow: 0 20px 60px rgba(106, 0, 255, 0.5);
+          background: linear-gradient(135deg, #5a00e0 0%, #00b8e6 100%);
         }
 
         .cta-icon {
@@ -456,6 +455,10 @@ const TechSolutionBanner = () => {
 
         .banner-cta-button:hover .cta-icon {
           transform: translateX(5px);
+        }
+
+        .cta-icon svg {
+          stroke: currentColor;
         }
 
         .cta-shimmer {
@@ -823,6 +826,10 @@ const TechSolutionBanner = () => {
             padding: 10px 18px;
           }
 
+          .banner-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+          }
+
           .banner-description {
             font-size: 1rem;
           }
@@ -847,6 +854,49 @@ const TechSolutionBanner = () => {
           .banner-cta-button {
             width: 100%;
             justify-content: center;
+          }
+
+          /* Adjust floating stats for mobile */
+          .floating-stat {
+            position: static !important;
+            width: 100%;
+            margin-bottom: 15px;
+          }
+
+          .stat-1, .stat-2, .stat-3 {
+            animation: none !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .banner-title {
+            font-size: 2rem;
+          }
+          
+          .banner-badge {
+            flex-wrap: wrap;
+            justify-content: center;
+            text-align: center;
+            gap: 8px;
+          }
+
+          .feature-card {
+            flex-direction: column;
+            text-align: center;
+            gap: 15px;
+          }
+
+          .feature-text h3 {
+            font-size: 1rem;
+          }
+
+          .feature-text p {
+            font-size: 0.85rem;
+          }
+
+          .banner-cta-button {
+            padding: 18px 30px;
+            font-size: 1rem;
           }
         }
       `}</style>

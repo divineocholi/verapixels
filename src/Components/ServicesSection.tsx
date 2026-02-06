@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Zap, 
   Cpu, 
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react';
 
 const ServicesSection = () => {
+  const navigate = useNavigate();
   const [titleInView, setTitleInView] = useState(false);
   const [statsInView, setStatsInView] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
@@ -43,32 +45,37 @@ const ServicesSection = () => {
       icon: Sparkles, 
       title: 'Brand Identity', 
       subtitle: 'Business Naming & Logo Design',
-      gradient: 'linear-gradient(135deg, #6a00ff 0%, #a855f7 100%)'
+      gradient: 'linear-gradient(135deg, #6a00ff 0%, #a855f7 100%)',
+      path: '/graphicsdesign'
     },
     { 
       icon: Cpu, 
       title: 'Web Development', 
       subtitle: 'Custom Websites & Applications', 
       featured: true,
-      gradient: 'linear-gradient(135deg, #00d4ff 0%, #06d6a0 100%)'
+      gradient: 'linear-gradient(135deg, #00d4ff 0%, #06d6a0 100%)',
+      path: '/webdevelopment'
     },
     { 
       icon: Target, 
       title: 'UI/UX Design', 
       subtitle: 'Beautiful User Experiences',
-      gradient: 'linear-gradient(135deg, #3ddc84 0%, #06d6a0 100%)'
+      gradient: 'linear-gradient(135deg, #3ddc84 0%, #06d6a0 100%)',
+      path: '/uiuxdesign'
     },
     { 
       icon: Zap, 
       title: 'Mobile Apps', 
       subtitle: 'iOS & Android Development',
-      gradient: 'linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%)'
+      gradient: 'linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%)',
+      path: '/mobileappdevelopment'
     },
     { 
       icon: Settings, 
       title: 'Maintenance', 
       subtitle: 'Ongoing Support & Updates',
-      gradient: 'linear-gradient(135deg, #ffb74d 0%, #ff8a65 100%)'
+      gradient: 'linear-gradient(135deg, #ffb74d 0%, #ff8a65 100%)',
+      path: '/howweworkandfunction'
     }
   ];
 
@@ -76,46 +83,134 @@ const ServicesSection = () => {
     {
       id: 1,
       industry: 'FinTech',
-      client: 'PayFlow Pro',
-      image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=80',
+      client: 'TechFlow Dashboard',
+      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
       challenge: 'Legacy system slowing transaction processing by 40%',
       solution: 'Built custom API infrastructure with real-time fraud detection',
       results: '300% faster processing • 99.9% uptime • $50M+ annual transactions',
-      color: '#6a00ff',
-      gradient: 'linear-gradient(135deg, #6a00ff 0%, #a855f7 100%)'
+      color: '#0063f4',
+      gradient: 'linear-gradient(135deg, #0063f4 0%, #00bfff 100%)',
+      details: {
+        title: "TechFlow Dashboard",
+        category: "Website",
+        year: "2025",
+        duration: "4 months",
+        description: "A comprehensive SaaS platform designed to revolutionize how teams manage their workflows and analytics.",
+        challenge: "TechFlow needed a modern, scalable dashboard that could handle real-time data from multiple sources while maintaining exceptional performance.",
+        solution: "We built a cutting-edge React-based dashboard with real-time WebSocket connections, micro-frontend architecture, and advanced data visualization.",
+        approach: [
+          "Conducted comprehensive user research with 50+ stakeholders",
+          "Created interactive prototypes and tested with target users",
+          "Implemented modular component architecture for scalability",
+          "Optimized performance with code splitting and lazy loading",
+          "Integrated advanced analytics and reporting features"
+        ],
+        results: [
+          { metric: "User Growth", value: "+250%", description: "Increase in active users within 6 months" },
+          { metric: "Performance", value: "95/100", description: "Lighthouse performance score" },
+          { metric: "Satisfaction", value: "4.9/5", description: "Average user rating" },
+          { metric: "Load Time", value: "-70%", description: "Reduction in page load time" }
+        ]
+      }
     },
     {
       id: 2,
       industry: 'Healthcare',
-      client: 'MediCare Hub',
-      image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80',
+      client: 'Nexus Brand Identity',
+      image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&q=80',
       challenge: 'HIPAA compliance issues with patient data management',
       solution: 'Secure cloud migration with encrypted data storage',
       results: '90% faster data access • 100% compliance • 50K+ patient records',
-      color: '#00d4ff',
-      gradient: 'linear-gradient(135deg, #00d4ff 0%, #06d6a0 100%)'
+      color: '#00ff88',
+      gradient: 'linear-gradient(135deg, #00ff88 0%, #06d6a0 100%)',
+      details: {
+        title: "Nexus Brand Identity",
+        category: "Logo Design",
+        year: "2025",
+        duration: "2 months",
+        description: "Complete brand identity system for a tech startup entering the AI automation space.",
+        challenge: "Nexus Corp needed a distinctive brand identity that would stand out in the crowded tech market.",
+        solution: "We created a modern, memorable brand identity featuring a dynamic logo that represents connectivity and innovation.",
+        approach: [
+          "Market research and competitor analysis",
+          "Brand strategy and positioning workshops",
+          "Concept exploration with 15+ initial directions",
+          "Iterative refinement based on stakeholder feedback",
+          "Comprehensive brand guidelines documentation"
+        ],
+        results: [
+          { metric: "Recognition", value: "+320%", description: "Increase in brand awareness" },
+          { metric: "Impact", value: "A+", description: "Top tier memorability rating" },
+          { metric: "Consistency", value: "100%", description: "Guidelines adherence" },
+          { metric: "Rollout", value: "8 weeks", description: "Concept to completion" }
+        ]
+      }
     },
     {
       id: 3,
       industry: 'E-commerce',
-      client: 'StyleHub Fashion',
+      client: 'FinanceHub Portal',
       image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
       challenge: 'Poor mobile conversion rates (15% below industry average)',
       solution: 'Progressive Web App with AR try-on features',
       results: '300% mobile revenue increase • 40% higher conversion • 5-star rating',
-      color: '#ff6b9d',
-      gradient: 'linear-gradient(135deg, #ff6b9d 0%, #ff8fab 100%)'
+      color: '#ffd700',
+      gradient: 'linear-gradient(135deg, #ffd700 0%, #ff8a65 100%)',
+      details: {
+        title: "FinanceHub Portal",
+        category: "Website",
+        year: "2024",
+        duration: "5 months",
+        description: "Comprehensive financial management platform for modern businesses and entrepreneurs.",
+        challenge: "FinanceHub needed a secure, intuitive platform to help businesses manage finances, track expenses, and generate reports.",
+        solution: "We developed a modern web portal with bank-grade security, real-time synchronization, automated reporting, and intuitive data visualization.",
+        approach: [
+          "Security-first architecture with encrypted data",
+          "User-centered design with usability testing",
+          "Integration with banking APIs",
+          "Automated workflows for financial tasks",
+          "Advanced reporting with custom templates"
+        ],
+        results: [
+          { metric: "Users", value: "50K+", description: "Monthly active users" },
+          { metric: "Uptime", value: "99.9%", description: "System reliability" },
+          { metric: "Speed", value: "-85%", description: "Processing time reduction" },
+          { metric: "Savings", value: "$2M+", description: "Annual client savings" }
+        ]
+      }
     },
     {
       id: 4,
       industry: 'Manufacturing',
-      client: 'AutoParts Pro',
+      client: 'Design System Pro',
       image: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&q=80',
       challenge: 'Inefficient inventory management causing 25% stockouts',
       solution: 'IoT-powered smart inventory system with predictive analytics',
       results: '99% inventory accuracy • 60% reduction in stockouts • $2M savings',
-      color: '#3ddc84',
-      gradient: 'linear-gradient(135deg, #3ddc84 0%, #06d6a0 100%)'
+      color: '#9d4edd',
+      gradient: 'linear-gradient(135deg, #9d4edd 0%, #ff006e 100%)',
+      details: {
+        title: "Design System Pro",
+        category: "UI/UX Design",
+        year: "2025",
+        duration: "6 months",
+        description: "Enterprise-grade design system serving multiple products and platforms.",
+        challenge: "DesignCo had 12 different products with inconsistent design patterns, causing confusion and inefficiency.",
+        solution: "We created a comprehensive design system with 200+ reusable components, detailed documentation, design tokens, and accessibility guidelines.",
+        approach: [
+          "Audit of existing products",
+          "Collaborative design workshops",
+          "Component library with atomic design",
+          "Comprehensive documentation",
+          "WCAG AA accessibility testing"
+        ],
+        results: [
+          { metric: "Components", value: "200+", description: "Reusable components" },
+          { metric: "Adoption", value: "95%", description: "Team usage rate" },
+          { metric: "Speed", value: "+60%", description: "Development efficiency" },
+          { metric: "Consistency", value: "98%", description: "UI consistency score" }
+        ]
+      }
     }
   ];
 
@@ -218,6 +313,17 @@ const ServicesSection = () => {
     setHoveredCard(id);
   };
 
+  const handleServiceClick = (path: string) => {
+    navigate(path);
+  };
+
+  const handleCaseStudyClick = (caseStudy: any) => {
+    // Store case study data to localStorage or state management
+    // Then navigate to case studies page with the ID
+    localStorage.setItem('selectedCaseStudy', JSON.stringify(caseStudy));
+    navigate('/casestudies', { state: { caseStudyId: caseStudy.id } });
+  };
+
   return (
     <div className="services-root">
       {/* Services Grid Section */}
@@ -248,16 +354,17 @@ const ServicesSection = () => {
                   } as React.CSSProperties}
                   onMouseEnter={() => setHoveredCard(i)}
                   onMouseLeave={() => setHoveredCard(null)}
+                  onClick={() => handleServiceClick(service.path)}
                 >
                   <div className="card-inner">
-                    <div className="card-icon-wrapper">
-                      <div className="icon-backdrop" style={{ background: service.gradient }}></div>
-                      <IconComponent size={32} strokeWidth={1.5} className="card-icon" />
+                    <div className="card-icon-wrapper-centered">
+                      <div className="icon-backdrop-centered" style={{ background: service.gradient }}></div>
+                      <IconComponent size={32} strokeWidth={1.5} className="card-icon-centered" />
                     </div>
                     
-                    <div className="card-content">
-                      <h3 className="card-title">{service.title}</h3>
-                      <p className="card-subtitle">{service.subtitle}</p>
+                    <div className="card-content-centered">
+                      <h3 className="card-title-centered">{service.title}</h3>
+                      <p className="card-subtitle-centered">{service.subtitle}</p>
                     </div>
 
                     <div className="card-hover-content">
@@ -347,7 +454,7 @@ const ServicesSection = () => {
                 style={{ animationDelay: `${index * 0.15}s` }}
                 onMouseEnter={() => handleCaseHover(caseStudy.id)}
                 onMouseLeave={() => handleCaseHover(null)}
-                onClick={() => setActiveCaseStudy(caseStudy.id)}
+                onClick={() => handleCaseStudyClick(caseStudy)}
               >
                 {/* Card Background Layers */}
                 <div className="card-bg-layer"></div>
@@ -357,7 +464,7 @@ const ServicesSection = () => {
                 ></div>
                 <div className="card-image-layer">
                   <img src={caseStudy.image} alt={caseStudy.client} />
-                  <div className="image-overlay"></div>
+                  <div className="image-overlay-light"></div>
                 </div>
 
                 {/* Card Content */}
@@ -373,26 +480,7 @@ const ServicesSection = () => {
                     </div>
                   </div>
 
-                  {/* Middle Section - Animated on Hover */}
-                  <div className="card-middle">
-                    <div className="challenge-box">
-                      <div className="box-header">
-                        <Target size={16} />
-                        <span>Challenge</span>
-                      </div>
-                      <p className="box-content">{caseStudy.challenge}</p>
-                    </div>
-
-                    <div className="solution-box">
-                      <div className="box-header">
-                        <BarChart3 size={16} />
-                        <span>Solution</span>
-                      </div>
-                      <p className="box-content">{caseStudy.solution}</p>
-                    </div>
-                  </div>
-
-                  {/* Bottom Section - Animated on Hover */}
+                  {/* Bottom Section - Show only results on hover */}
                   <div className="card-bottom">
                     <div className="results-box">
                       <div className="box-header">
@@ -413,7 +501,7 @@ const ServicesSection = () => {
                       className="case-study-cta"
                       onClick={(e) => {
                         e.stopPropagation();
-                        alert(`Viewing ${caseStudy.client} case study`);
+                        handleCaseStudyClick(caseStudy);
                       }}
                     >
                       <span>View Case Study</span>
@@ -421,8 +509,8 @@ const ServicesSection = () => {
                     </button>
                   </div>
 
-                  {/* Hover Overlay */}
-                  <div className="card-hover-overlay"></div>
+                  {/* Hover Overlay - LIGHTER */}
+                  <div className="card-hover-overlay-light"></div>
                 </div>
 
                 {/* Card Border Animation */}
@@ -433,7 +521,10 @@ const ServicesSection = () => {
 
           {/* View All Button */}
           <div className="view-all-wrapper">
-            <button className="view-all-cta">
+            <button 
+              className="view-all-cta"
+              onClick={() => navigate('/casestudies')}
+            >
               <span>Explore All Success Stories</span>
               <div className="cta-icon">
                 <ChevronRight size={24} />
@@ -544,7 +635,7 @@ const ServicesSection = () => {
           }
         }
 
-        /* Redesigned Services Grid */
+        /* Redesigned Services Grid with Centered Icons */
         .services-grid-new {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -564,6 +655,10 @@ const ServicesSection = () => {
           transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           opacity: 0;
           transform: translateY(30px);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
         }
 
         .service-card-new.animate-in {
@@ -596,62 +691,78 @@ const ServicesSection = () => {
         .card-inner {
           position: relative;
           z-index: 2;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
-        .card-icon-wrapper {
+        /* Centered Icon Styling */
+        .card-icon-wrapper-centered {
           position: relative;
-          width: 60px;
-          height: 60px;
-          margin-bottom: 30px;
+          width: 80px;
+          height: 80px;
+          margin-bottom: 25px;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .icon-backdrop {
+        .icon-backdrop-centered {
           position: absolute;
           inset: 0;
-          border-radius: 16px;
+          border-radius: 20px;
           opacity: 0.1;
           transition: opacity 0.3s ease, transform 0.3s ease;
         }
 
-        .service-card-new:hover .icon-backdrop {
+        .service-card-new:hover .icon-backdrop-centered {
           opacity: 0.2;
           transform: scale(1.1);
         }
 
-        .card-icon {
+        .card-icon-centered {
           position: relative;
           z-index: 1;
           transition: transform 0.3s ease;
         }
 
-        .service-card-new:hover .card-icon {
-          transform: scale(1.1);
+        .service-card-new:hover .card-icon-centered {
+          transform: scale(1.1) rotate(5deg);
         }
 
-        .card-content {
+        /* Centered Content Styling */
+        .card-content-centered {
           margin-bottom: 20px;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
-        .card-title {
-          font-size: 1.4rem;
+        .card-title-centered {
+          font-size: 1.5rem;
           font-weight: 700;
-          margin-bottom: 8px;
+          margin-bottom: 10px;
           color: #fff;
+          text-align: center;
         }
 
-        .card-subtitle {
+        .card-subtitle-centered {
           color: rgba(255, 255, 255, 0.6);
           font-size: 0.95rem;
           line-height: 1.5;
+          text-align: center;
+          max-width: 200px;
         }
 
         .card-hover-content {
           opacity: 0;
           transform: translateY(10px);
           transition: all 0.3s ease;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
         .service-card-new:hover .card-hover-content {
@@ -671,6 +782,7 @@ const ServicesSection = () => {
           font-size: 0.85rem;
           color: rgba(255, 255, 255, 0.7);
           font-weight: 500;
+          text-align: center;
         }
 
         .card-glow-effect {
@@ -970,6 +1082,7 @@ const ServicesSection = () => {
         .case-study-card:hover,
         .case-study-card.active {
           transform: scale(1.02);
+          box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
         }
 
         /* Card Background Layers */
@@ -992,7 +1105,7 @@ const ServicesSection = () => {
 
         .case-study-card:hover .card-color-layer,
         .case-study-card.active .card-color-layer {
-          opacity: 0.1;
+          opacity: 0.15;
         }
 
         .card-image-layer {
@@ -1013,14 +1126,15 @@ const ServicesSection = () => {
           transform: scale(1.05);
         }
 
-        .image-overlay {
+        .image-overlay-light {
           position: absolute;
           inset: 0;
           background: linear-gradient(
             to bottom,
-            rgba(10, 10, 15, 0.4) 0%,
-            rgba(10, 10, 15, 0.8) 50%,
-            rgba(10, 10, 15, 0.95) 100%
+            rgba(10, 10, 15, 0.2) 0%,
+            rgba(10, 10, 15, 0.4) 30%,
+            rgba(10, 10, 15, 0.6) 60%,
+            rgba(10, 10, 15, 0.8) 100%
           );
         }
 
@@ -1076,70 +1190,11 @@ const ServicesSection = () => {
           text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
         }
 
-        /* Middle Section */
-        .card-middle {
-          position: absolute;
-          top: 40px;
-          left: 40px;
-          right: 40px;
-          opacity: 0;
-          transform: translateY(20px);
-          transition: all 0.4s ease 0.1s;
-          pointer-events: none;
-        }
-
-        .case-study-card:hover .card-middle,
-        .case-study-card.active .card-middle {
-          opacity: 1;
-          transform: translateY(0);
-          pointer-events: all;
-        }
-
-        .challenge-box,
-        .solution-box {
-          background: rgba(0, 0, 0, 0.6);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 16px;
-          padding: 20px;
-          margin-bottom: 20px;
-          transition: transform 0.3s ease;
-        }
-
-        .case-study-card:hover .challenge-box,
-        .case-study-card.active .challenge-box {
-          transform: translateX(-10px);
-        }
-
-        .case-study-card:hover .solution-box,
-        .case-study-card.active .solution-box {
-          transform: translateX(10px);
-        }
-
-        .box-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          color: #00d4ff;
-          font-size: 0.8rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 1px;
-          margin-bottom: 12px;
-        }
-
-        .box-content {
-          color: rgba(255, 255, 255, 0.9);
-          font-size: 0.95rem;
-          line-height: 1.5;
-          margin: 0;
-        }
-
-        /* Bottom Section */
+        /* Bottom Section - Show only results on hover */
         .card-bottom {
           opacity: 0;
           transform: translateY(20px);
-          transition: all 0.4s ease 0.2s;
+          transition: all 0.4s ease 0.1s;
           pointer-events: none;
         }
 
@@ -1151,12 +1206,13 @@ const ServicesSection = () => {
         }
 
         .results-box {
-          background: rgba(0, 0, 0, 0.6);
+          background: rgba(0, 0, 0, 0.7);
           backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          border: 1px solid rgba(255, 255, 255, 0.15);
           border-radius: 16px;
           padding: 20px;
           margin-bottom: 20px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .results-list {
@@ -1169,7 +1225,7 @@ const ServicesSection = () => {
           display: flex;
           align-items: center;
           gap: 10px;
-          color: rgba(255, 255, 255, 0.9);
+          color: rgba(255, 255, 255, 0.95);
           font-size: 0.9rem;
         }
 
@@ -1186,7 +1242,7 @@ const ServicesSection = () => {
           gap: 10px;
           width: 100%;
           padding: 16px;
-          background: linear-gradient(135deg, #6a00ff 0%, #00d4ff 100%);
+          background: linear-gradient(135deg, rgba(106, 0, 255, 0.8), rgba(0, 212, 255, 0.8));
           border: none;
           border-radius: 12px;
           color: white;
@@ -1194,32 +1250,36 @@ const ServicesSection = () => {
           font-size: 0.95rem;
           cursor: pointer;
           transition: all 0.3s ease;
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .case-study-cta:hover {
           transform: translateY(-2px);
-          box-shadow: 0 10px 30px rgba(106, 0, 255, 0.3);
+          box-shadow: 0 10px 30px rgba(106, 0, 255, 0.4);
+          background: linear-gradient(135deg, rgba(106, 0, 255, 0.9), rgba(0, 212, 255, 0.9));
         }
 
-        /* Hover Overlay */
-        .card-hover-overlay {
+        /* Hover Overlay - LIGHTER */
+        .card-hover-overlay-light {
           position: absolute;
           inset: 0;
           background: linear-gradient(
             to bottom,
             transparent 0%,
-            rgba(0, 0, 0, 0.2) 30%,
-            rgba(0, 0, 0, 0.6) 70%,
-            rgba(0, 0, 0, 0.9) 100%
+            rgba(0, 0, 0, 0.1) 20%,
+            rgba(0, 0, 0, 0.3) 50%,
+            rgba(0, 0, 0, 0.5) 80%,
+            rgba(0, 0, 0, 0.7) 100%
           );
           opacity: 0;
           transition: opacity 0.4s ease;
           pointer-events: none;
         }
 
-        .case-study-card:hover .card-hover-overlay,
-        .case-study-card.active .card-hover-overlay {
-          opacity: 1;
+        .case-study-card:hover .card-hover-overlay-light,
+        .case-study-card.active .card-hover-overlay-light {
+          opacity: 0.7;
         }
 
         /* Border Animation */
@@ -1228,7 +1288,7 @@ const ServicesSection = () => {
           inset: 0;
           border-radius: 24px;
           padding: 2px;
-          background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+          background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
           -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
           -webkit-mask-composite: xor;
           mask-composite: exclude;

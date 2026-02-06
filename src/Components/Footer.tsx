@@ -336,9 +336,9 @@ const Footer = () => {
       <div className="footer-bottom">
         <div className="container">
           <div className="footer-bottom-content">
-            <p className="copyright">
-             <p>© 2025–{new Date().getFullYear()} Verapixels. All rights reserved.</p>
-            </p>
+          <p className="copyright">
+            © 2025–{new Date().getFullYear()} Verapixels. All rights reserved.
+           </p>
             <p className="made-with">
               Made with <Heart className="heart-icon" size={16} /> by Verapixels Team
             </p>

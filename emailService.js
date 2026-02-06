@@ -45,7 +45,7 @@ try {
 // ============================================================
 // PROFESSIONAL BASE TEMPLATE (MOBILE RESPONSIVE)
 // ============================================================
-const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
+const baseTemplate = (headerContent, bodyContent) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -123,8 +123,7 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
             </td>
           </tr>
           
-          <!-- SOCIAL MEDIA (OPTIONAL) -->
-          ${showSocial ? `
+          <!-- SOCIAL MEDIA (ALWAYS SHOW) -->
           <tr>
             <td style="padding: 0 40px 40px; border-top: 1px solid ${COLORS.border};" class="mobile-padding">
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -170,7 +169,6 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
               </table>
             </td>
           </tr>
-          ` : ''}
           
           <!-- FOOTER -->
           <tr>
@@ -186,12 +184,7 @@ const baseTemplate = (headerContent, bodyContent, showSocial = false) => `
                 </tr>
                 <tr>
                   <td style="padding-top: 20px; border-top: 1px solid ${COLORS.border}; text-align: center;">
-                    <p class="footer-text" style="margin: 0 0 12px; color: ${COLORS.textLight}; font-size: 14px;">© ${new Date().getFullYear()} Verapixels Building Digital Identity. All rights reserved.</p>
-                    <p class="footer-text" style="margin: 0; color: ${COLORS.textLight}; font-size: 13px;">
-                      <a href="#" style="color: ${COLORS.primary}; text-decoration: none;">Privacy Policy</a> • 
-                      <a href="#" style="color: ${COLORS.primary}; text-decoration: none;">Terms</a> • 
-                      <a href="#" style="color: ${COLORS.primary}; text-decoration: none;">Unsubscribe</a>
-                    </p>
+                    <p class="footer-text" style="margin: 0; color: ${COLORS.textLight}; font-size: 14px;">© ${new Date().getFullYear()} Verapixels Building Digital Identity. All rights reserved.</p>
                   </td>
                 </tr>
               </table>
@@ -244,7 +237,7 @@ const button = (text, href, emoji = '') => `
 `;
 
 // ============================================================
-// CORE SEND FUNCTION - ✅ UPDATED TO USE NOREPLY
+// CORE SEND FUNCTION - ✅ FIXED: Shows noreply@verapixels.com
 // ============================================================
 export const sendEmail = async ({ to, subject, html, replyTo }) => {
   try {
@@ -252,9 +245,10 @@ export const sendEmail = async ({ to, subject, html, replyTo }) => {
 
     const recipients = Array.isArray(to) ? to : [to];
     
-    // ✅ Send from noreply@verapixels.com with reply-to info@verapixels.com
+    // ✅ FIX: Send from noreply@verapixels.com WITHOUT friendly name
+    // This ensures email clients show "noreply@verapixels.com" instead of "Verapixels"
     const { data, error } = await resend.emails.send({
-      from: `Verapixels <${NOREPLY_EMAIL}>`, // ✅ FROM: noreply@verapixels.com
+      from: NOREPLY_EMAIL, // ✅ Shows as: noreply@verapixels.com
       to: recipients,
       subject,
       html,
@@ -329,7 +323,7 @@ export const sendAdminNotification = async ({
     ${button('Reply to Client', `mailto:${userEmail}`, '✉️')}
   `;
 
-  const html = baseTemplate(headerContent, bodyContent, false);
+  const html = baseTemplate(headerContent, bodyContent);
   
   // ✅ Send to admin, with reply-to set to client's email
   return await sendEmail({
@@ -410,7 +404,7 @@ export const sendUserConfirmation = async ({
     </table>
   `;
 
-  const html = baseTemplate(headerContent, bodyContent, true);
+  const html = baseTemplate(headerContent, bodyContent);
   
   // ✅ Send to user from noreply, reply-to info@verapixels.com
   return await sendEmail({
@@ -480,7 +474,7 @@ export const sendAdminChatNotification = async ({
     </table>
   `;
 
-  const html = baseTemplate(headerContent, bodyContent, false);
+  const html = baseTemplate(headerContent, bodyContent);
   
   // ✅ Send to admin from noreply
   return await sendEmail({

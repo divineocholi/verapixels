@@ -23,7 +23,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 const BUSINESS_TIMEZONE = 'Africa/Lagos';
 const BUSINESS_HOURS = {
   start: 9,
-  end: 16,
+  end: 21,
   endMinutes: 30
 };
 
