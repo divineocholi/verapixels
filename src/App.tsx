@@ -31,6 +31,7 @@ import SuperadminLogin from './Components/SuperadminLogin'
 import SuperadminDashboard from './Components/SuperadminDashboard'
 import ProtectedRoute from './Components/ProtectedRoute'
 import AdminRegister from './Components/AdminRegister'
+import NewsletterAdmin from './Components/Newsletteradmin '
 
 const App: React.FC = () => {
   return (
@@ -49,9 +50,10 @@ const App: React.FC = () => {
         <Route path="/casestudies" element={<CaseStudies />} />
         <Route path="/consultationbooking" element={<ConsultationBooking />} />
         <Route path="/career" element={<CareersPage />} />
-          <Route path="/mobile-app" element={<MobileAppDevelopment />} />
+        <Route path="/mobile-app" element={<MobileAppDevelopment />} />
         <Route path="/mobile-app-learn-more" element={<MobileAppLearnMore />} />
-        {/* FIXED: Blog routes - lowercase and add detail route */}
+        
+        {/* Blog routes */}
         <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:id" element={<Blog />} />
         
@@ -64,6 +66,16 @@ const App: React.FC = () => {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/chat" element={<AdminDashboard />} />
+        
+        {/* Newsletter Admin - ⭐ NEW */}
+        <Route 
+          path="/admin/newsletter" 
+          element={
+            <ProtectedRoute>
+              <NewsletterAdmin />
+            </ProtectedRoute>
+          } 
+        />
         
         {/* Super Admin System */}
         <Route path="/superadmin/login" element={<SuperadminLogin />} />

@@ -11,6 +11,7 @@ import multer from 'multer';
 import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { sendEmail, sendAdminNotification, sendUserConfirmation, sendAdminChatNotification } from './emailService.js';
+import { sendNewsletter, exampleNewsletterData } from './src/Components/newsletterService.js';
 
 // Load environment variables
 dotenv.config();
@@ -1623,6 +1624,180 @@ app.post('/api/test-admin-notification', async (req, res) => {
   } catch (error) {
     console.error('❌ Error:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+
+// Get all newsletter subscribers from Supabase
+app.get('/api/newsletter/subscribers', async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('newsletter_subscribers')
+      .select('*')
+      .order('subscribedAt', { ascending: false });
+
+    if (error) {
+      console.error('❌ Error fetching subscribers:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch subscribers'
+      });
+    }
+
+    res.json({
+      success: true,
+      subscribers: data,
+      count: data.length
+    });
+
+  } catch (error) {
+    console.error('❌ Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Send newsletter to all subscribers
+app.post('/api/newsletter/send', async (req, res) => {
+  try {
+    const newsletterData = req.body;
+    
+    console.log('📧 Newsletter send request received');
+    console.log('📝 Edition:', newsletterData.edition);
+    console.log('🎯 Title:', newsletterData.heroTitle);
+
+    // Fetch all subscribers from Supabase
+    const { data: subscribers, error } = await supabaseAdmin
+      .from('newsletter_subscribers')
+      .select('email, subscribedAt');
+
+    if (error) {
+      console.error('❌ Error fetching subscribers:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to fetch subscribers'
+      });
+    }
+
+    if (!subscribers || subscribers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No subscribers found'
+      });
+    }
+
+    console.log(`📊 Found ${subscribers.length} subscribers`);
+
+    // Send newsletter
+    const results = await sendNewsletter(newsletterData, subscribers);
+
+    // Log to Supabase (optional - for tracking)
+    const { error: logError } = await supabaseAdmin
+      .from('newsletter_sends')
+      .insert({
+        edition: newsletterData.edition,
+        subject: newsletterData.heroTitle,
+        sent_to: results.total,
+        successful: results.success.length,
+        failed: results.failed.length,
+        sent_at: new Date().toISOString()
+      });
+
+    if (logError) {
+      console.error('⚠️ Warning: Failed to log newsletter send:', logError);
+    }
+
+    res.json({
+      success: true,
+      results: {
+        total: results.total,
+        successful: results.success.length,
+        failed: results.failed.length,
+        successRate: ((results.success.length / results.total) * 100).toFixed(2) + '%'
+      },
+      message: `Newsletter sent to ${results.success.length} of ${results.total} subscribers`
+    });
+
+  } catch (error) {
+    console.error('❌ Error sending newsletter:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Test newsletter (send to admin only)
+app.post('/api/newsletter/test', async (req, res) => {
+  try {
+    const newsletterData = req.body;
+    const testEmail = req.body.testEmail || process.env.ADMIN_EMAIL;
+
+    console.log('🧪 Sending test newsletter to:', testEmail);
+
+    const results = await sendNewsletter(newsletterData, [{ email: testEmail }]);
+
+    res.json({
+      success: results.success.length > 0,
+      message: results.success.length > 0 
+        ? `Test newsletter sent to ${testEmail}` 
+        : 'Failed to send test newsletter',
+      results
+    });
+
+  } catch (error) {
+    console.error('❌ Error sending test newsletter:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get newsletter example template
+app.get('/api/newsletter/example', (req, res) => {
+  res.json({
+    success: true,
+    example: exampleNewsletterData,
+    message: 'Use this structure to create your newsletters'
+  });
+});
+
+// Get newsletter statistics
+app.get('/api/newsletter/stats', async (req, res) => {
+  try {
+    // Get total subscribers
+    const { count: subscribersCount, error: subError } = await supabaseAdmin
+      .from('newsletter_subscribers')
+      .select('*', { count: 'exact', head: true });
+
+    if (subError) throw subError;
+
+    // Get newsletter send history
+    const { data: sendHistory, error: historyError } = await supabaseAdmin
+      .from('newsletter_sends')
+      .select('*')
+      .order('sent_at', { ascending: false })
+      .limit(10);
+
+    if (historyError) throw historyError;
+
+    res.json({
+      success: true,
+      stats: {
+        totalSubscribers: subscribersCount || 0,
+        recentSends: sendHistory || []
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching stats:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 });
 
