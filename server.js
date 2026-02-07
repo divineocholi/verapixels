@@ -1634,7 +1634,7 @@ app.get('/api/newsletter/subscribers', async (req, res) => {
     const { data, error } = await supabaseAdmin
       .from('newsletter_subscribers')
       .select('*')
-      .order('subscribedAt', { ascending: false });
+      .order('subscribed_at', { ascending: false }); // ← Fixed!
 
     if (error) {
       console.error('❌ Error fetching subscribers:', error);
