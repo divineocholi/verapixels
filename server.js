@@ -27,7 +27,7 @@ const server = createServer(app);
 const isDevelopment = process.env.NODE_ENV !== 'production';
 const PORT = process.env.PORT || 5001;
 
-// Dynamic CORS origins
+// Update this section around line 35
 const allowedOrigins = isDevelopment
   ? [
       "http://localhost:5173",
@@ -36,7 +36,7 @@ const allowedOrigins = isDevelopment
       "http://localhost:5177",
     ]
   : process.env.CLIENT_URL 
-    ? process.env.CLIENT_URL.split(',') 
+    ? process.env.CLIENT_URL.split(',').map(url => url.trim()) // ← Add .trim() here
     : [];
 
 console.log('🌍 Environment:', process.env.NODE_ENV || 'development');

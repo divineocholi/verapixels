@@ -28,7 +28,12 @@ const NewsletterAdmin = () => {
   }, []);
 
   // API URL - automatically uses correct endpoint based on environment
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+// ✅ CORRECT - Automatically uses the right URL for each environment
+const API_URL = import.meta.env.VITE_API_URL || (
+  import.meta.env.MODE === 'production' 
+    ? 'https://verapixels-server.onrender.com'
+    : 'http://localhost:5001'
+);
 
   const fetchSubscribers = async () => {
     try {
