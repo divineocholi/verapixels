@@ -1627,6 +1627,182 @@ app.post('/api/test-admin-notification', async (req, res) => {
   }
 });
 
+// ========== NEWSLETTER UNSUBSCRIBE ROUTE ==========
+app.get('/api/newsletter/unsubscribe/:email', async (req, res) => {
+  try {
+    const email = decodeURIComponent(req.params.email);
+    
+    console.log('🚫 Unsubscribe request for:', email);
+
+    // Update subscriber status in database
+    const { data, error } = await supabaseAdmin
+      .from('newsletter_subscribers')
+      .update({ 
+        is_active: false,
+        unsubscribed_at: new Date().toISOString()
+      })
+      .eq('email', email)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Unsubscribe error:', error);
+      return res.status(500).send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Unsubscribe Error - Verapixels</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; text-align: center; padding: 50px; background: #f8fafc; margin: 0; }
+            .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+            h1 { color: #ef4444; margin-bottom: 16px; }
+            p { color: #64748b; line-height: 1.6; }
+            a { color: #667eea; text-decoration: none; font-weight: 600; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <h1>❌ Error</h1>
+            <p>We couldn't process your unsubscribe request.</p>
+            <p>Please contact us at <a href="mailto:info@verapixels.com">info@verapixels.com</a></p>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    console.log('✅ Successfully unsubscribed:', email);
+
+    // Show success page
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Unsubscribed Successfully - Verapixels</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            text-align: center; 
+            padding: 50px 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .container { 
+            max-width: 500px; 
+            width: 100%;
+            margin: 0 auto; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2); 
+          }
+          .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+          }
+          h1 { color: #1e293b; margin: 0 0 16px; font-size: 28px; }
+          p { color: #64748b; line-height: 1.6; margin: 0 0 16px; font-size: 16px; }
+          .email { 
+            background: #f1f5f9; 
+            padding: 12px; 
+            border-radius: 6px; 
+            color: #1e293b; 
+            font-weight: 600; 
+            margin: 24px 0;
+            word-break: break-all;
+          }
+          a { 
+            display: inline-block; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 14px 32px; 
+            text-decoration: none; 
+            border-radius: 8px; 
+            font-weight: 600;
+            margin-top: 24px;
+            transition: all 0.3s ease;
+          }
+          a:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 12px rgba(102,126,234,0.4); 
+          }
+          .contact {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+          }
+          .contact p {
+            font-size: 14px;
+            color: #94a3b8;
+          }
+          .contact a {
+            background: transparent;
+            color: #667eea;
+            padding: 0;
+            margin: 0;
+            display: inline;
+          }
+          .contact a:hover {
+            transform: none;
+            box-shadow: none;
+            text-decoration: underline;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="logo">✉️</div>
+          <h1>✅ You've Been Unsubscribed</h1>
+          <p>We're sorry to see you go! You've been successfully removed from our newsletter mailing list.</p>
+          <div class="email">${email}</div>
+          <p>You will no longer receive newsletters from Verapixels.</p>
+          
+          <a href="https://verapixels.com">Return to Homepage</a>
+          
+          <div class="contact">
+            <p>Changed your mind? Contact us at <a href="mailto:info@verapixels.com">info@verapixels.com</a> to resubscribe.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('❌ Unsubscribe error:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Error - Verapixels</title>
+        <style>
+          body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f8fafc; }
+          .container { max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; }
+          h1 { color: #ef4444; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>❌ Error</h1>
+          <p>An unexpected error occurred. Please try again later or contact us at info@verapixels.com</p>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+});
+
 app.get('/api/newsletter/subscribers', async (req, res) => {
   try {
     console.log('📧 Fetching newsletter subscribers...');

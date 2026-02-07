@@ -1,5 +1,5 @@
 // newsletterService.js - NEWSLETTER MANAGEMENT SYSTEM
-import something from "../../emailService.js";
+import { sendEmail } from "../../emailService.js";
 
 // ==================== REUSABLE NEWSLETTER TEMPLATE ====================
 const newsletterTemplate = ({
@@ -11,7 +11,8 @@ const newsletterTemplate = ({
   sections,
   ctaTitle,
   ctaButton,
-  ctaLink
+  ctaLink,
+  subscriberEmail // For personalized unsubscribe link
 }) => `
 <!DOCTYPE html>
 <html lang="en">
@@ -128,10 +129,14 @@ const newsletterTemplate = ({
                 </tr>
                 <tr>
                   <td style="padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center;">
-                    <p style="margin: 0 0 8px; color: #64748b; font-size: 14px;">📍 Lagos, Nigeria • ✉️ info@verapixels.com</p>
-                    <p style="margin: 0 0 16px; color: #64748b; font-size: 14px;">© ${new Date().getFullYear()} Verapixels. All rights reserved.</p>
+                    <p style="margin: 0 0 8px; color: #64748b; font-size: 14px;">
+                      📍 Lagos, Nigeria<br>
+                      ✉️ <a href="mailto:info@verapixels.com" style="color: #667eea; text-decoration: none;">info@verapixels.com</a><br>
+                      🌐 <a href="https://verapixels.com" style="color: #667eea; text-decoration: none;">www.verapixels.com</a>
+                    </p>
+                    <p style="margin: 16px 0 8px; color: #64748b; font-size: 14px;">© ${new Date().getFullYear()} Verapixels. All rights reserved.</p>
                     <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                      <a href="{{unsubscribe_url}}" style="color: #64748b; text-decoration: underline;">Unsubscribe</a> from this newsletter
+                      <a href="https://verapixels-server.onrender.com/api/newsletter/unsubscribe/${encodeURIComponent(subscriberEmail)}" style="color: #64748b; text-decoration: underline;">Unsubscribe</a> from this newsletter
                     </p>
                   </td>
                 </tr>
@@ -157,8 +162,6 @@ export const sendNewsletter = async (newsletterData, subscribers) => {
     total: subscribers.length
   };
 
-  // Generate the HTML template
-  const html = newsletterTemplate(newsletterData);
   const subject = `${newsletterData.edition} - ${newsletterData.heroTitle}`;
 
   // Send to subscribers in batches (to avoid rate limits)
@@ -171,11 +174,18 @@ export const sendNewsletter = async (newsletterData, subscribers) => {
     
     const batchPromises = batch.map(async (subscriber) => {
       try {
+        // Generate personalized HTML with unsubscribe link
+        const personalizedHtml = newsletterTemplate({
+          ...newsletterData,
+          subscriberEmail: subscriber.email
+        });
+
         const result = await sendEmail({
           to: subscriber.email,
           subject,
-          html,
-          replyTo: 'info@verapixels.com'
+          html: personalizedHtml,
+          from: 'newsletter@verapixels.com', // ✅ Send from newsletter@
+          replyTo: 'info@verapixels.com'     // ✅ Replies go to info@
         });
 
         if (result.success) {
