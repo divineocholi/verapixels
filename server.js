@@ -1627,31 +1627,35 @@ app.post('/api/test-admin-notification', async (req, res) => {
   }
 });
 
-
-// Get all newsletter subscribers from Supabase
 app.get('/api/newsletter/subscribers', async (req, res) => {
   try {
+    console.log('📧 Fetching newsletter subscribers...');
+    
     const { data, error } = await supabaseAdmin
       .from('newsletter_subscribers')
       .select('*')
-      .order('subscribed_at', { ascending: false }); // ← Fixed!
+      .order('created_at', { ascending: false }); // ✅ FIXED
 
     if (error) {
-      console.error('❌ Error fetching subscribers:', error);
+      console.error('❌ Supabase error:', error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to fetch subscribers'
+        error: 'Failed to fetch subscribers',
+        details: error.message,
+        code: error.code
       });
     }
 
+    console.log(`✅ Found ${data?.length || 0} subscribers`);
+
     res.json({
       success: true,
-      subscribers: data,
-      count: data.length
+      subscribers: data || [],
+      count: data?.length || 0
     });
 
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('❌ Server error:', error);
     res.status(500).json({
       success: false,
       error: error.message

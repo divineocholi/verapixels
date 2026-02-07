@@ -389,15 +389,16 @@ const API_URL = import.meta.env.VITE_API_URL || (
         <div className="subscribers-section">
           <h2>Subscribers ({subscribers.length})</h2>
           <div className="subscribers-list">
-            {subscribers.slice(0, 10).map((sub, idx) => (
-              <div key={idx} className="subscriber-item">
-                <Mail size={16} />
-                <span>{sub.email}</span>
-                <span className="date">
-                  {new Date(sub.subscribedAt).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
+           // Find this section (around line 250-260)
+{subscribers.slice(0, 10).map((sub, idx) => (
+  <div key={idx} className="subscriber-item">
+    <Mail size={16} />
+    <span>{sub.email}</span>
+    <span className="date">
+      {new Date(sub.created_at).toLocaleDateString()} {/* ← Changed from sub.subscribedAt */}
+    </span>
+  </div>
+))}
             {subscribers.length > 10 && (
               <p className="more-subscribers">+ {subscribers.length - 10} more subscribers</p>
             )}
