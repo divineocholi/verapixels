@@ -170,7 +170,7 @@ function generateNewsletterHTML(data) {
 }
 
 // Example usage and export
-module.exports = { generateNewsletterHTML };
+export { generateNewsletterHTML };
 
 // For testing
 if (require.main === module) {
