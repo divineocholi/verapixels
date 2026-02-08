@@ -11,7 +11,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import logo from "../assets/verapixels_icon_logo_final.jpg";
-import { Client, Databases, ID, Query } from 'appwrite';
+import { supabase } from './supabase';
+
 
 const Footer = () => {
   const [email, setEmail] = useState('');
@@ -19,62 +20,51 @@ const Footer = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Initialize Appwrite client
-  const client = new Client()
-    .setEndpoint('https://fra.cloud.appwrite.io/v1')
-    .setProject('6933f4610012182c4b1d');
+ const handleNewsletterSubmit = async () => {
+  setError('');
 
-  const databases = new Databases(client);
+  if (!email || !email.includes('@')) {
+    setError('Please enter a valid email address');
+    return;
+  }
 
-  const DATABASE_ID = '6933f49b00278d1abf56';
-  const COLLECTION_ID = '693443360011a536a28f';
+  setIsSubmitting(true);
 
-  const handleNewsletterSubmit = async () => {
-    setError('');
+  try {
+    // Simplified: Just try to insert, let database handle duplicates
+    const { data, error: insertError } = await supabase
+      .from('newsletter_subscribers')
+      .insert([
+        {
+          email: email.toLowerCase(),
+        }
+      ])
+      .select();
 
-    if (!email || !email.includes('@')) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await databases.listDocuments(
-        DATABASE_ID,
-        COLLECTION_ID,
-        [Query.equal('email', email.toLowerCase())]
-      );
-
-      if (response.documents.length > 0) {
+    if (insertError) {
+      // Check if it's a duplicate email error
+      if (insertError.code === '23505') {
         setError('This email is already subscribed to our newsletter');
         setIsSubmitting(false);
         return;
       }
-
-      await databases.createDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        ID.unique(),
-        {
-          email: email.toLowerCase(),
-          subscribedAt: new Date().toISOString(),
-        }
-      );
-
-      setIsSubmitting(false);
-      setIsSubscribed(true);
-      setEmail('');
-      setTimeout(() => setIsSubscribed(false), 5000);
-    } catch (err) {
-      console.error('Error subscribing:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to subscribe. Please try again.';
-      setError(errorMessage);
-      setIsSubmitting(false);
+      throw insertError;
     }
-  };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    console.log('Successfully subscribed:', data);
+    
+    setIsSubmitting(false);
+    setIsSubscribed(true);
+    setEmail('');
+    setTimeout(() => setIsSubscribed(false), 5000);
+  } catch (err) {
+    console.error('Error subscribing:', err);
+    setError(err.message || 'Failed to subscribe. Please try again.');
+    setIsSubmitting(false);
+  }
+};
+
+  const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleNewsletterSubmit();
     }
@@ -116,8 +106,8 @@ const Footer = () => {
     { icon: 'github', url: '#', color: '#333333', name: 'GitHub' }
   ];
 
-  const renderSocialIcon = (icon: string) => {
-    const iconMap: { [key: string]: string } = {
+  const renderSocialIcon = (icon) => {
+    const iconMap = {
       facebook: 'M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z',
       twitter: 'M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z',
       instagram: 'M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37zm1.5-4.87h.01M6.5 6.5h11a5 5 0 015 5v11a5 5 0 01-5 5h-11a5 5 0 01-5-5v-11a5 5 0 015-5z',
@@ -252,21 +242,21 @@ const Footer = () => {
                 </div>
               </div>
 
-              <div className="social-links">
-                {socialLinks.map((social, idx) => (
-                  <a
-                    key={idx}
-                    href={social.url}
-                    className="social-link"
-                    style={{ '--social-color': social.color } as React.CSSProperties}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={social.name}
-                  >
-                    {renderSocialIcon(social.icon)}
-                  </a>
-                ))}
-              </div>
+             <div className="social-links">
+  {socialLinks.map((social, idx) => (
+    <a
+      key={idx}
+      href={social.url}
+      className="social-link"
+      style={{ '--social-color': social.color } as React.CSSProperties}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={social.name}
+    >
+      {renderSocialIcon(social.icon)}
+    </a>
+  ))}
+</div>
             </div>
 
             {/* About Links */}
@@ -336,9 +326,9 @@ const Footer = () => {
       <div className="footer-bottom">
         <div className="container">
           <div className="footer-bottom-content">
-          <p className="copyright">
-            © 2025–{new Date().getFullYear()} Verapixels. All rights reserved.
-           </p>
+            <p className="copyright">
+              © 2025–{new Date().getFullYear()} Verapixels. All rights reserved.
+            </p>
             <p className="made-with">
               Made with <Heart className="heart-icon" size={16} /> by Verapixels Team
             </p>
@@ -431,7 +421,6 @@ const Footer = () => {
           z-index: 1;
         }
 
-        /* Newsletter Section */
         .newsletter-section {
           padding: 100px 0 80px;
         }
@@ -649,7 +638,6 @@ const Footer = () => {
           color: #86efac;
         }
 
-        /* Main Footer */
         .footer-main {
           padding: 80px 0 40px;
         }
