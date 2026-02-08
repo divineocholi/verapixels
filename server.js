@@ -12,7 +12,7 @@ import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { sendEmail, sendAdminNotification, sendUserConfirmation, sendAdminChatNotification } from './emailService.js';
 import { sendNewsletter, exampleNewsletterData } from './src/Components/newsletterService.js';
-
+import { generateNewsletterHTML } from './src/Components/newsletter-template-generator.js';
 // Load environment variables
 dotenv.config();
 
