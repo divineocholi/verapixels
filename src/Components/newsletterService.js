@@ -152,7 +152,7 @@ const newsletterTemplate = ({
 </html>
 `;
 
-// ==================== SEND NEWSLETTER FUNCTION ====================
+// Around line 100 in newsletterService.js - replace the sendNewsletter function
 export const sendNewsletter = async (newsletterData, subscribers) => {
   console.log(`📧 Preparing to send newsletter to ${subscribers.length} subscribers...`);
   
@@ -174,6 +174,8 @@ export const sendNewsletter = async (newsletterData, subscribers) => {
     
     const batchPromises = batch.map(async (subscriber) => {
       try {
+        console.log(`📧 Attempting to send to: ${subscriber.email}`); // ✅ ADD THIS
+        
         // Generate personalized HTML with unsubscribe link
         const personalizedHtml = newsletterTemplate({
           ...newsletterData,
@@ -184,20 +186,20 @@ export const sendNewsletter = async (newsletterData, subscribers) => {
           to: subscriber.email,
           subject,
           html: personalizedHtml,
-          from: 'newsletter@verapixels.com', // ✅ Send from newsletter@
-          replyTo: 'info@verapixels.com'     // ✅ Replies go to info@
+          from: 'newsletter@verapixels.com',
+          replyTo: 'info@verapixels.com'
         });
 
         if (result.success) {
           results.success.push(subscriber.email);
-          console.log(`✅ Sent to: ${subscriber.email}`);
+          console.log(`✅ Successfully sent to: ${subscriber.email}`);
         } else {
           results.failed.push({ email: subscriber.email, error: result.error });
-          console.error(`❌ Failed: ${subscriber.email} - ${result.error}`);
+          console.error(`❌ Failed to send to ${subscriber.email}:`, result.error); // ✅ IMPROVED
         }
       } catch (error) {
         results.failed.push({ email: subscriber.email, error: error.message });
-        console.error(`❌ Error sending to ${subscriber.email}:`, error.message);
+        console.error(`❌ Exception sending to ${subscriber.email}:`, error.message); // ✅ IMPROVED
       }
     });
 
@@ -210,8 +212,8 @@ export const sendNewsletter = async (newsletterData, subscribers) => {
   }
 
   console.log('\n📊 Newsletter Send Summary:');
-  console.log(`✅ Successful: ${results.success.length}`);
-  console.log(`❌ Failed: ${results.failed.length}`);
+  console.log(`✅ Successful: ${results.success.length}`, results.success);
+  console.log(`❌ Failed: ${results.failed.length}`, results.failed); // ✅ SHOW FAILED EMAILS
   console.log(`📈 Success Rate: ${((results.success.length / results.total) * 100).toFixed(2)}%`);
 
   return results;
