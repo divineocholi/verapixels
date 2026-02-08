@@ -235,24 +235,22 @@ const button = (text, href, emoji = '') => `
   </tr>
 </table>
 `;
-
-// ============================================================
-// CORE SEND FUNCTION - ✅ FIXED: Shows noreply@verapixels.com
-// ============================================================
-export const sendEmail = async ({ to, subject, html, replyTo }) => {
+// emailService.js - Line 167
+export const sendEmail = async ({ to, subject, html, replyTo, from }) => {
   try {
     console.log('📧 Sending email to:', to);
 
     const recipients = Array.isArray(to) ? to : [to];
     
-    // ✅ FIX: Send from noreply@verapixels.com WITHOUT friendly name
-    // This ensures email clients show "noreply@verapixels.com" instead of "Verapixels"
+    // ✅ Use newsletter@ if provided, otherwise noreply@
+    const senderEmail = from || NOREPLY_EMAIL;
+    
     const { data, error } = await resend.emails.send({
-      from: NOREPLY_EMAIL, // ✅ Shows as: noreply@verapixels.com
+      from: senderEmail, // ✅ Now uses newsletter@verapixels.com
       to: recipients,
       subject,
       html,
-      reply_to: replyTo || REPLY_TO_EMAIL // ✅ REPLY-TO: info@verapixels.com
+      reply_to: replyTo || REPLY_TO_EMAIL // ✅ Replies go to info@verapixels.com
     });
 
     if (error) {
@@ -260,7 +258,7 @@ export const sendEmail = async ({ to, subject, html, replyTo }) => {
       return { success: false, error: error.message };
     }
 
-    console.log('✅ Email sent from:', NOREPLY_EMAIL);
+    console.log('✅ Email sent from:', senderEmail);
     console.log('✅ Reply-to set as:', replyTo || REPLY_TO_EMAIL);
     console.log('✅ Email ID:', data.id);
     return { success: true, messageId: data.id };

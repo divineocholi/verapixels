@@ -151,8 +151,7 @@ const newsletterTemplate = ({
 </body>
 </html>
 `;
-
-// Around line 100 in newsletterService.js - replace the sendNewsletter function
+// newsletterService.js - Replace the sendNewsletter function
 export const sendNewsletter = async (newsletterData, subscribers) => {
   console.log(`📧 Preparing to send newsletter to ${subscribers.length} subscribers...`);
   
@@ -164,61 +163,52 @@ export const sendNewsletter = async (newsletterData, subscribers) => {
 
   const subject = `${newsletterData.edition} - ${newsletterData.heroTitle}`;
 
-  // Send to subscribers in batches (to avoid rate limits)
-  const BATCH_SIZE = 50;
-  
-  for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
-    const batch = subscribers.slice(i, i + BATCH_SIZE);
+  // ✅ SEND ONE BY ONE with 600ms delay (safer than 500ms)
+  for (let i = 0; i < subscribers.length; i++) {
+    const subscriber = subscribers[i];
     
-    console.log(`📤 Sending batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(subscribers.length / BATCH_SIZE)}`);
-    
-    const batchPromises = batch.map(async (subscriber) => {
-      try {
-        console.log(`📧 Attempting to send to: ${subscriber.email}`); // ✅ ADD THIS
-        
-        // Generate personalized HTML with unsubscribe link
-        const personalizedHtml = newsletterTemplate({
-          ...newsletterData,
-          subscriberEmail: subscriber.email
-        });
+    try {
+      console.log(`📧 [${i + 1}/${subscribers.length}] Sending to: ${subscriber.email}`);
+      
+      const personalizedHtml = newsletterTemplate({
+        ...newsletterData,
+        subscriberEmail: subscriber.email
+      });
 
-        const result = await sendEmail({
-          to: subscriber.email,
-          subject,
-          html: personalizedHtml,
-          from: 'newsletter@verapixels.com',
-          replyTo: 'info@verapixels.com'
-        });
+      const result = await sendEmail({
+        to: subscriber.email,
+        subject,
+        html: personalizedHtml,
+        from: 'newsletter@verapixels.com', // ✅ Will work after emailService fix
+        replyTo: 'info@verapixels.com'
+      });
 
-        if (result.success) {
-          results.success.push(subscriber.email);
-          console.log(`✅ Successfully sent to: ${subscriber.email}`);
-        } else {
-          results.failed.push({ email: subscriber.email, error: result.error });
-          console.error(`❌ Failed to send to ${subscriber.email}:`, result.error); // ✅ IMPROVED
-        }
-      } catch (error) {
-        results.failed.push({ email: subscriber.email, error: error.message });
-        console.error(`❌ Exception sending to ${subscriber.email}:`, error.message); // ✅ IMPROVED
+      if (result.success) {
+        results.success.push(subscriber.email);
+        console.log(`✅ [${i + 1}/${subscribers.length}] Sent to: ${subscriber.email}`);
+      } else {
+        results.failed.push({ email: subscriber.email, error: result.error });
+        console.error(`❌ [${i + 1}/${subscribers.length}] Failed: ${subscriber.email} - ${result.error}`);
       }
-    });
-
-    await Promise.all(batchPromises);
+      
+    } catch (error) {
+      results.failed.push({ email: subscriber.email, error: error.message });
+      console.error(`❌ [${i + 1}/${subscribers.length}] Exception: ${subscriber.email} - ${error.message}`);
+    }
     
-    // Add delay between batches to respect rate limits
-    if (i + BATCH_SIZE < subscribers.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+    // ✅ WAIT 600ms between emails (1.6 emails/second to be safe)
+    if (i < subscribers.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 600));
     }
   }
 
   console.log('\n📊 Newsletter Send Summary:');
   console.log(`✅ Successful: ${results.success.length}`, results.success);
-  console.log(`❌ Failed: ${results.failed.length}`, results.failed); // ✅ SHOW FAILED EMAILS
+  console.log(`❌ Failed: ${results.failed.length}`, results.failed);
   console.log(`📈 Success Rate: ${((results.success.length / results.total) * 100).toFixed(2)}%`);
 
   return results;
 };
-
 // ==================== EXAMPLE NEWSLETTER CONTENT ====================
 export const exampleNewsletterData = {
   edition: "Week 6, 2025",
