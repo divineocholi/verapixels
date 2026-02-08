@@ -1848,27 +1848,29 @@ app.post('/api/newsletter/send', async (req, res) => {
     console.log('📝 Edition:', newsletterData.edition);
     console.log('🎯 Title:', newsletterData.heroTitle);
 
-    // Fetch all subscribers from Supabase
+    // Fetch all ACTIVE subscribers from Supabase
     const { data: subscribers, error } = await supabaseAdmin
       .from('newsletter_subscribers')
-      .select('email, subscribedAt');
+      .select('email, created_at')
+      .eq('is_active', true);  // ✅ Only active subscribers
 
     if (error) {
       console.error('❌ Error fetching subscribers:', error);
       return res.status(500).json({
         success: false,
-        error: 'Failed to fetch subscribers'
+        error: 'Failed to fetch subscribers',
+        details: error.message
       });
     }
 
     if (!subscribers || subscribers.length === 0) {
       return res.status(400).json({
         success: false,
-        error: 'No subscribers found'
+        error: 'No active subscribers found'
       });
     }
 
-    console.log(`📊 Found ${subscribers.length} subscribers`);
+    console.log(`📊 Found ${subscribers.length} active subscribers`);
 
     // Send newsletter
     const results = await sendNewsletter(newsletterData, subscribers);
@@ -1904,7 +1906,7 @@ app.post('/api/newsletter/send', async (req, res) => {
     console.error('❌ Error sending newsletter:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message || 'Failed to send newsletter'
     });
   }
 });
