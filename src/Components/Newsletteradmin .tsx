@@ -389,7 +389,6 @@ const API_URL = import.meta.env.VITE_API_URL || (
         <div className="subscribers-section">
           <h2>Subscribers ({subscribers.length})</h2>
           <div className="subscribers-list">
-           // Find this section (around line 250-260)
 {subscribers.slice(0, 10).map((sub, idx) => (
   <div key={idx} className="subscriber-item">
     <Mail size={16} />
@@ -629,6 +628,8 @@ const API_URL = import.meta.env.VITE_API_URL || (
         }
 
         .subscribers-section {
+                color:#000;
+
           background: white;
           padding: 32px;
           border-radius: 12px;
@@ -636,6 +637,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
         }
 
         .subscribers-list {
+        color:#000;
           display: flex;
           flex-direction: column;
           gap: 12px;
@@ -643,19 +645,30 @@ const API_URL = import.meta.env.VITE_API_URL || (
         }
 
         .subscriber-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 12px;
-          background: #f8fafc;
-          border-radius: 6px;
-        }
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+  color: #1e293b; /* Email text color */
+}
 
-        .subscriber-item .date {
-          margin-left: auto;
-          color: #64748b;
-          font-size: 0.875rem;
-        }
+.subscriber-item svg {
+  color: #667eea; /* Mail icon color */
+  flex-shrink: 0;
+}
+
+.subscriber-item span:first-of-type {
+  color: #1e293b; /* Email text */
+  font-weight: 500;
+}
+
+.subscriber-item .date {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 0.875rem;
+}
 
         .more-subscribers {
           text-align: center;
