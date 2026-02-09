@@ -173,7 +173,7 @@ function generateNewsletterHTML(data) {
 export { generateNewsletterHTML };
 
 // For testing
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const exampleData = {
     edition: 'Week 6, 2025',
     date: 'February 9, 2025',
