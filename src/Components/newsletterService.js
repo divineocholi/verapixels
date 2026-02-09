@@ -5,7 +5,11 @@ import { generateNewsletterHTML } from './newsletter-template-generator.js';
 // ==================== REUSABLE NEWSLETTER TEMPLATE ====================
 // ✅ Use the professional template generator instead of inline HTML
 const newsletterTemplate = (data) => {
-  return generateNewsletterHTML(data);
+  // ✅ FIXED: Pass logo URL to template
+  return generateNewsletterHTML({
+    ...data,
+    logoUrl: process.env.LOGO_URL || 'https://res.cloudinary.com/dpqntm1tb/image/upload/v1770247783/offical_main_glzsmp.jpg'
+  });
 };
 
 // ==================== SEND NEWSLETTER FUNCTION ====================
@@ -36,7 +40,8 @@ export const sendNewsletter = async (newsletterData, subscribers) => {
         to: subscriber.email,
         subject,
         html: personalizedHtml,
-        from: 'newsletter@verapixels.com', 
+        // ✅ FIXED: Sender name is now "Vera from Verapixels"
+        from: 'Vera from Verapixels <newsletter@verapixels.com>',
         replyTo: 'info@verapixels.com'
       });
 

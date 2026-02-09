@@ -12,7 +12,9 @@ function generateNewsletterHTML(data) {
     ctaTitle = '',
     ctaButton = '',
     ctaLink = '',
-    unsubscribeLink = '{{UNSUBSCRIBE_LINK}}'
+    unsubscribeLink = '{{UNSUBSCRIBE_LINK}}',
+    // ✅ FIXED: Logo now included automatically from environment/default
+    logoUrl = 'https://res.cloudinary.com/dpqntm1tb/image/upload/v1770247783/offical_main_glzsmp.jpg'
   } = data;
 
   // Generate sections HTML
@@ -88,26 +90,35 @@ function generateNewsletterHTML(data) {
                 <!-- Main Container -->
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #ffffff; margin: 0 auto;">
                     
-                    <!-- Header -->
+                    <!-- ✅ FIXED: Header with Logo -->
                     <tr>
-                        <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 40px 30px; text-align: center;">
-                            <a href="https://verapixels.com" style="font-size: 24px; font-weight: 700; color: #ffffff; text-decoration: none; letter-spacing: -0.5px;">
-                                VERAPIXELS
-                            </a>
-                            <div style="color: #94a3b8; font-size: 13px; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px;">
-                                ${edition} • ${date}
-                            </div>
+                        <td style="background-color: #2563eb; padding: 40px 30px; text-align: center;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center">
+                                        <!-- ✅ Company Logo -->
+                                        <img src="${logoUrl}" alt="Verapixels Logo" width="80" height="80" style="display: block; width: 80px; height: 80px; margin: 0 auto 20px; border-radius: 8px; background-color: #ffffff; padding: 12px;">
+                                        
+                                        <a href="https://verapixels.com" style="font-size: 24px; font-weight: 700; color: #ffffff; text-decoration: none; letter-spacing: -0.5px;">
+                                            VERAPIXELS
+                                        </a>
+                                        <div style="color: rgba(255, 255, 255, 0.9); font-size: 13px; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px;">
+                                            ${edition} • ${date}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                     
-                    <!-- Hero Section -->
+                    <!-- ✅ FIXED: Hero Section - NO GRADIENT, just solid color -->
                     <tr>
-                        <td style="background: linear-gradient(180deg, #0f172a 0%, #1e3a8a 100%); padding: 50px 30px; text-align: center; color: #ffffff;">
-                            <h1 style="font-size: 32px; font-weight: 800; line-height: 1.2; margin: 0 0 16px 0; letter-spacing: -1px; color: #ffffff;">
+                        <td style="background-color: #ffffff; padding: 50px 30px; text-align: center; color: #0f172a;">
+                            <h1 style="font-size: 32px; font-weight: 800; line-height: 1.2; margin: 0 0 16px 0; letter-spacing: -1px; color: #0f172a;">
                                 ${heroTitle}
                             </h1>
                             ${heroSubtitle ? `
-                              <p style="font-size: 18px; color: #cbd5e1; line-height: 1.5; margin: 0 auto; max-width: 500px;">
+                              <p style="font-size: 18px; color: #64748b; line-height: 1.5; margin: 0 auto; max-width: 500px;">
                                   ${heroSubtitle}
                               </p>
                             ` : ''}
@@ -134,6 +145,53 @@ function generateNewsletterHTML(data) {
                     </tr>
                     ` : ''}
                     
+                    <!-- ✅ FIXED: Social Media Icons (matching consultation template) -->
+                    <tr>
+                        <td style="padding: 40px 30px; background-color: #f8fafc; border-top: 1px solid #e2e8f0;">
+                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                <tr>
+                                    <td style="padding-bottom: 30px; text-align: center;">
+                                        <p style="margin: 0 0 20px; color: #0f172a; font-size: 16px; font-weight: 600;">Connect With Us</p>
+                                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center">
+                                            <tr>
+                                                <!-- Instagram -->
+                                                <td style="padding: 0 8px;">
+                                                    <a href="https://www.instagram.com/verapixels_?igsh=MXZtajE2Y2Jxc3BiOA==" target="_blank" style="display: inline-block; text-decoration: none;">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" style="width: 40px; height: 40px; border-radius: 8px;" />
+                                                    </a>
+                                                </td>
+                                                <!-- LinkedIn -->
+                                                <td style="padding: 0 8px;">
+                                                    <a href="https://www.linkedin.com/company/verapixels" target="_blank" style="display: inline-block; text-decoration: none;">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/3536/3536505.png" alt="LinkedIn" style="width: 40px; height: 40px; border-radius: 8px;" />
+                                                    </a>
+                                                </td>
+                                                <!-- WhatsApp -->
+                                                <td style="padding: 0 8px;">
+                                                    <a href="https://wa.me/2347071333709" target="_blank" style="display: inline-block; text-decoration: none;">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="WhatsApp" style="width: 40px; height: 40px; border-radius: 8px;" />
+                                                    </a>
+                                                </td>
+                                                <!-- TikTok -->
+                                                <td style="padding: 0 8px;">
+                                                    <a href="https://www.tiktok.com/@verapixels_?_r=1&_t=ZS-93eYCe4Wq4A" target="_blank" style="display: inline-block; text-decoration: none;">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="width: 40px; height: 40px; border-radius: 8px;" />
+                                                    </a>
+                                                </td>
+                                                <!-- X (Twitter) -->
+                                                <td style="padding: 0 8px;">
+                                                    <a href="https://x.com/verapixels" target="_blank" style="display: inline-block; text-decoration: none;">
+                                                        <img src="https://cdn-icons-png.flaticon.com/512/5968/5968830.png" alt="X" style="width: 40px; height: 40px; border-radius: 8px;" />
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
                     <!-- Footer -->
                     <tr>
                         <td style="background: #f8fafc; padding: 40px 30px; text-align: center; border-top: 1px solid #e2e8f0;">
@@ -142,12 +200,6 @@ function generateNewsletterHTML(data) {
                                 <a href="https://verapixels.com/blog" style="color: #64748b; text-decoration: none; margin: 0 12px; font-size: 14px;">Blog</a>
                                 <a href="https://verapixels.com/portfolio" style="color: #64748b; text-decoration: none; margin: 0 12px; font-size: 14px;">Portfolio</a>
                                 <a href="https://verapixels.com/contact" style="color: #64748b; text-decoration: none; margin: 0 12px; font-size: 14px;">Contact</a>
-                            </div>
-                            
-                            <div style="margin: 24px 0;">
-                                <a href="https://twitter.com/verapixels" style="display: inline-block; margin: 0 8px; width: 32px; height: 32px; background: #e2e8f0; border-radius: 50%; text-align: center; line-height: 32px; color: #475569; text-decoration: none;">𝕏</a>
-                                <a href="https://linkedin.com/company/verapixels" style="display: inline-block; margin: 0 8px; width: 32px; height: 32px; background: #e2e8f0; border-radius: 50%; text-align: center; line-height: 32px; color: #475569; text-decoration: none;">in</a>
-                                <a href="mailto:info@verapixels.com" style="display: inline-block; margin: 0 8px; width: 32px; height: 32px; background: #e2e8f0; border-radius: 50%; text-align: center; line-height: 32px; color: #475569; text-decoration: none;">✉</a>
                             </div>
                             
                             <p style="font-size: 13px; color: #94a3b8; line-height: 1.6; margin: 0;">
@@ -169,36 +221,5 @@ function generateNewsletterHTML(data) {
 </html>`;
 }
 
-// Example usage and export
+// ✅ FIXED: ES6 export instead of CommonJS
 export { generateNewsletterHTML };
-
-// For testing
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const exampleData = {
-    edition: 'Week 6, 2025',
-    date: 'February 9, 2025',
-    heroTitle: 'The Future of Web Development',
-    heroSubtitle: 'Discover cutting-edge trends reshaping digital experiences',
-    heroImage: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97',
-    sections: [
-      {
-        title: '🚀 This Week\'s Highlights',
-        content: '<p>Exciting developments in the tech world this week. From AI breakthroughs to new framework releases, here\'s what caught our attention.</p>',
-        image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c',
-        link: 'https://verapixels.com/blog/weekly-highlights',
-        linkText: 'Read Full Article'
-      },
-      {
-        title: '💡 Industry Insights',
-        content: '<p><strong>Key trends we\'re watching:</strong></p><ul><li>Progressive Web Apps gaining momentum</li><li>Edge computing revolutionizing performance</li><li>AI-powered development tools</li></ul>',
-        link: 'https://verapixels.com/insights',
-        linkText: 'Learn More'
-      }
-    ],
-    ctaTitle: 'Ready to Transform Your Digital Presence?',
-    ctaButton: 'Book Free Consultation',
-    ctaLink: 'https://verapixels.com/contact'
-  };
-
-  console.log(generateNewsletterHTML(exampleData));
-}
