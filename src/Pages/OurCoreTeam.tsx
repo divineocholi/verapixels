@@ -200,7 +200,7 @@ const OurCoreTeam = () => {
       name: "Ocholi Divine",
       role: "Founder & CEO",
       image: ocholiImage,
-      bio: "Ocholi Divine is the visionary Founder & CEO of Verapixels, leading digital innovation and strategic growth across all projects. With 5+ years in technology leadership, he drives business development, client strategy, and ensures Verapixels delivers cutting-edge digital solutions that exceed client expectations.",
+      bio: "Ocholi Divine is the visionary Founder & CEO of Verapixels, passionate about digital innovation and building impactful solutions. He leads business development, client strategy, and oversees projects to ensure Verapixels delivers high-quality digital experiences that help businesses grow",
       specialties: ["Strategic Leadership", "Business Development", "Digital Innovation", "Client Strategy", "Team Management"],
       social: {
         github: "https://github.com/ocholidivine",

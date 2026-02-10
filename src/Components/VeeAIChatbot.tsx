@@ -2224,6 +2224,11 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
           transform: scale(1.1);
           box-shadow: 0 12px 32px rgba(0, 102, 255, 0.6);
         }
+
+        .vee-globe-btn.active {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
         
         .vee-unread-badge {
           position: absolute;
@@ -2501,21 +2506,21 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         .vee-typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .vee-typing-dot:nth-child(3) { animation-delay: 0.4s; }
         
-        .vee-tz-selector {
-          position: absolute;
-          top: 70px;
-          right: 20px;
-          background: ${isDark ? '#2a2a2a' : '#fff'};
-          border: 1px solid ${isDark ? '#333' : '#e0e0e0'};
-          border-radius: 12px;
-          padding: 16px;
-          width: 280px;
-          max-height: 300px;
-          overflow-y: auto;
-          z-index: 10001;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-          animation: fadeIn 0.3s ease;
-        }
+       .vee-tz-selector {
+  position: absolute;
+  top: 70px;
+  right: 20px;
+  background: ${isDark ? '#2a2a2a' : '#fff'};
+  border: 1px solid ${isDark ? '#333' : '#e0e0e0'};
+  border-radius: 12px;
+  padding: 16px;
+  width: 280px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10001; /* ← Make sure this is higher than chat window */
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.3s ease;
+}
         
         .vee-tz-option {
           padding: 10px 12px;
@@ -2637,13 +2642,13 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
                 >
                   {isDark ? <IconSun size={16} /> : <IconMoon size={16} />}
                 </button>
-                <button 
-                  className="vee-globe-btn" 
-                  onClick={() => setShowTimezoneSelector(!showTimezoneSelector)}
-                  title="Change timezone"
-                >
-                  <IconGlobe size={16} />
-                </button>
+               <button 
+  className={`vee-globe-btn ${showTimezoneSelector ? 'active' : ''}`}
+  onClick={() => setShowTimezoneSelector(!showTimezoneSelector)}
+  title="Change timezone"
+>
+  <IconGlobe size={16} />
+</button>
                 <button className="vee-close-btn" onClick={() => setIsOpen(false)}>
                   <IconX size={18} />
                 </button>
