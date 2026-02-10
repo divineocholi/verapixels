@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Sparkles, Brain, Zap, Shield, Cpu, ArrowRight, Code, MessageSquare, Database } from 'lucide-react';
+import veravideo from "../../public/vera -video.mp4";
 
 const VeraAISection = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const posterVideoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const hideControlsTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -24,16 +28,43 @@ const VeraAISection = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Auto-hide controls after 2 seconds
+  useEffect(() => {
+    if (showControls) {
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+      hideControlsTimeout.current = setTimeout(() => {
+        setShowControls(false);
+      }, 2000);
+    }
+    return () => {
+      if (hideControlsTimeout.current) {
+        clearTimeout(hideControlsTimeout.current);
+      }
+    };
+  }, [showControls]);
+
+  const handleMouseEnter = () => {
+    setShowControls(true);
+  };
+
+  const handleMouseLeave = () => {
+    setShowControls(true); // Trigger the timeout again
+  };
+
   const toggleVideo = () => {
-    if (videoRef.current) {
+    if (videoRef.current && posterVideoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
         setIsPlaying(false);
+        posterVideoRef.current.style.opacity = '1';
       } else {
         videoRef.current.play().catch(err => {
           console.log('Play was prevented:', err);
         });
         setIsPlaying(true);
+        posterVideoRef.current.style.opacity = '0';
       }
     }
   };
@@ -119,30 +150,40 @@ const VeraAISection = () => {
           {/* Video Section */}
           <div className={`vera-video-section ${isInView ? 'vera-animate-in' : ''}`}>
             <div className="vera-video-container">
-              <div className="vera-video-wrapper">
+              <div 
+                className="vera-video-wrapper"
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onClick={toggleVideo}
+              >
+                {/* Poster Video (loops in background) */}
+                <video
+                  ref={posterVideoRef}
+                  className="vera-poster-video"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                >
+                  <source src="https://res.cloudinary.com/dpqntm1tb/video/upload/v1770682624/Blue_Neon_Futuristic_Technology_Video_jnmjob.mp4" type="video/mp4" />
+                </video>
+
+                {/* Main Video (plays when user clicks) */}
                 <video
                   ref={videoRef}
                   className="vera-ai-video"
-                  poster="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&h=600&fit=crop"
-                  onClick={toggleVideo}
+                  style={{ opacity: isPlaying ? 1 : 0 }}
                 >
-                  <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4" />
+                  <source src={veravideo} type="video/mp4" />
                 </video>
 
-                <button className="vera-play-button" onClick={toggleVideo}>
+                <button 
+                  className={`vera-play-button ${showControls ? 'vera-show' : 'vera-hide'}`}
+                  onClick={toggleVideo}
+                >
                   {isPlaying ? <Pause size={36} /> : <Play size={36} />}
                 </button>
 
-                {/* Floating AI Indicators */}
-                <div className="vera-ai-indicator vera-indicator-1">
-                  <Cpu size={20} />
-                  <span>Processing...</span>
-                </div>
-                
-                <div className="vera-ai-indicator vera-indicator-2">
-                  <Brain size={20} />
-                  <span>Learning</span>
-                </div>
               </div>
 
               <div className="vera-video-info">
@@ -404,13 +445,30 @@ const VeraAISection = () => {
           overflow: hidden;
           box-shadow: 0 30px 80px rgba(106, 0, 255, 0.4);
           aspect-ratio: 16/9;
+          cursor: pointer;
         }
 
-        .vera-ai-video {
+        .vera-poster-video {
+          position: absolute;
+          top: 0;
+          left: 0;
           width: 100%;
           height: 100%;
           object-fit: cover;
-          cursor: pointer;
+          z-index: 1;
+          transition: opacity 0.5s ease;
+        }
+
+        .vera-ai-video {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: 2;
+          transition: opacity 0.5s ease;
+          pointer-events: none;
         }
 
         .vera-play-button {
@@ -428,8 +486,21 @@ const VeraAISection = () => {
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.3s ease, opacity 0.5s ease, visibility 0.5s ease;
           box-shadow: 0 10px 40px rgba(106, 0, 255, 0.4);
+          z-index: 3;
+          opacity: 0;
+          visibility: hidden;
+        }
+
+        .vera-play-button.vera-show {
+          opacity: 1;
+          visibility: visible;
+        }
+
+        .vera-play-button.vera-hide {
+          opacity: 0;
+          visibility: hidden;
         }
 
         .vera-play-button:hover {
@@ -450,6 +521,7 @@ const VeraAISection = () => {
           font-size: 0.85rem;
           font-weight: 600;
           animation: veraFloat 3s ease-in-out infinite;
+          z-index: 3;
         }
 
         .vera-indicator-1 {
