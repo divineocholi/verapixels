@@ -70,10 +70,16 @@ const SOCKET_CONFIG = {
 /* --------------------------- Configuration --------------------------- */
 const BUSINESS_TIMEZONE = 'Africa/Lagos';
 const BUSINESS_HOURS = { 
-  start: 9, 
-  end: 16, 
+  start: 8, 
+  end: 20, 
   endMinutes: 30,
-  workingDays: [1, 2, 3, 4, 5]
+  workingDays: [1, 2, 3, 4, 5, 6, 0], // Added Saturday (6) and Sunday (0)
+  
+  // Special hours for specific days
+  specialHours: {
+    0: { start: 14, end: 16, endMinutes: 0 }, // Sunday: 2 PM - 4 PM
+    6: { start: 9, end: 20, endMinutes: 30 }  // Saturday: 10 AM - 2 PM (from your existing setup)
+  }
 };
 
 const CONTACT_METHODS = [
@@ -644,16 +650,31 @@ const convertTimeToTimezone = (time: string, date: string, fromTz: string, toTz:
 };
 
 // Generate time slots based on business hours (30-minute intervals)
-const generateTimeSlots = () => {
+const generateTimeSlots = (date?: string) => {
   const slots: string[] = [];
-  const startHour = BUSINESS_HOURS.start;
-  const endHour = BUSINESS_HOURS.end;
+  
+  // Determine which hours to use
+  let startHour = BUSINESS_HOURS.start;
+  let endHour = BUSINESS_HOURS.end;
+  let endMinutes = BUSINESS_HOURS.endMinutes;
+  
+  // If date is provided, check for special hours
+  if (date) {
+    const dayOfWeek = new Date(date).getDay(); // 0 = Sunday, 6 = Saturday
+    
+    if (BUSINESS_HOURS.specialHours && BUSINESS_HOURS.specialHours[dayOfWeek]) {
+      const special = BUSINESS_HOURS.specialHours[dayOfWeek];
+      startHour = special.start;
+      endHour = special.end;
+      endMinutes = special.endMinutes || 0;
+    }
+  }
   
   for (let hour = startHour; hour <= endHour; hour++) {
     // Add slots for :00 and :30
     for (let minute = 0; minute < 60; minute += 30) {
-      // Skip if it's past 4:00 PM (last slot is 4:00 PM)
-      if (hour === endHour && minute > 0) break;
+      // Skip if it's past the end time
+      if (hour === endHour && minute > endMinutes) break;
       
       const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
       const period = hour >= 12 ? 'PM' : 'AM';
@@ -664,7 +685,7 @@ const generateTimeSlots = () => {
   return slots;
 };
 
-const timeSlots = generateTimeSlots();
+
 
 /* --------------------------- Improved Answer Matching --------------------------- */
 const findBestAnswer = (input: string): any => {
@@ -1419,62 +1440,80 @@ What would you like to do today?`,
             CONTACT_METHODS.map(m => `• ${m.label}`).join('\n');
         }
         break;
-      case 'date':
-        // Parse date input
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        let selectedDate: string;
-        
-        if (userInput.toLowerCase().includes('tomorrow')) {
-          selectedDate = tomorrow.toISOString().split('T')[0];
-        } else if (userInput.toLowerCase().includes('monday') || 
-                  userInput.toLowerCase().includes('tuesday') ||
-                  userInput.toLowerCase().includes('wednesday') ||
-                  userInput.toLowerCase().includes('thursday') ||
-                  userInput.toLowerCase().includes('friday') ||
-                  userInput.toLowerCase().includes('saturday') ||
-                  userInput.toLowerCase().includes('sunday')) {
-          // Find next occurrence of the mentioned day
-          const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-          const targetDay = days.findIndex(d => userInput.toLowerCase().includes(d));
-          
-          const currentDay = today.getDay();
-          let daysToAdd = targetDay - currentDay;
-          if (daysToAdd <= 0) daysToAdd += 7;
-          
-          const targetDate = new Date(today);
-          targetDate.setDate(targetDate.getDate() + daysToAdd);
-          selectedDate = targetDate.toISOString().split('T')[0];
-        } else {
-          // Try to parse as date
-          try {
-            const parsedDate = new Date(userInput);
-            if (!isNaN(parsedDate.getTime())) {
-              selectedDate = parsedDate.toISOString().split('T')[0];
-            } else {
-              selectedDate = userInput; // Let the backend handle validation
-            }
-          } catch {
-            selectedDate = userInput;
-          }
-        }
-        
-        data.date = selectedDate;
-        data.step = 'time';
-        
-        // Check availability for this date
-        const availableSlots = await checkAvailableSlots(selectedDate);
-        if (availableSlots.length === 0) {
-          responseText = `I checked our schedule for ${selectedDate} and unfortunately all slots are booked. Would you like to choose another date?`;
-          data.step = 'date'; // Go back to date selection
-        } else {
-          responseText = `Available times for ${selectedDate} (your timezone: ${userTimezone}):\n\n` +
-            availableSlots.map(slot => `• ${slot}`).join('\n') +
-            "\n\nWhich time works best for you?";
-        }
-        break;
+     case 'date':
+  // Parse date input
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  let selectedDate: string;
+  
+  if (userInput.toLowerCase().includes('tomorrow')) {
+    selectedDate = tomorrow.toISOString().split('T')[0]; // ✅ Correct: "2026-02-11"
+  } else if (userInput.toLowerCase().includes('monday') || 
+            userInput.toLowerCase().includes('tuesday') ||
+            userInput.toLowerCase().includes('wednesday') ||
+            userInput.toLowerCase().includes('thursday') ||
+            userInput.toLowerCase().includes('friday') ||
+            userInput.toLowerCase().includes('saturday') ||
+            userInput.toLowerCase().includes('sunday')) {
+    // Find next occurrence of the mentioned day
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const targetDay = days.findIndex(d => userInput.toLowerCase().includes(d));
+    
+    const currentDay = today.getDay();
+    let daysToAdd = targetDay - currentDay;
+    if (daysToAdd <= 0) daysToAdd += 7;
+    
+    const targetDate = new Date(today);
+    targetDate.setDate(targetDate.getDate() + daysToAdd);
+    selectedDate = targetDate.toISOString().split('T')[0]; // ✅ Correct: "2026-02-17"
+  } else {
+    // Try to parse as date - FIX: Convert to YYYY-MM-DD format
+    try {
+      const parsedDate = new Date(userInput);
+      if (!isNaN(parsedDate.getTime())) {
+        selectedDate = parsedDate.toISOString().split('T')[0]; // ✅ Convert to "2026-10-20"
+      } else {
+        // Invalid date - ask user to rephrase
+        return {
+          text: "I couldn't understand that date. Please try:\n• 'tomorrow'\n• 'next Monday'\n• Or a date like '2026-10-20'",
+          intent: 'booking_invalid_date'
+        };
+      }
+    } catch {
+      return {
+        text: "I couldn't understand that date. Please try:\n• 'tomorrow'\n• 'next Monday'\n• Or a date like '2026-10-20'",
+        intent: 'booking_invalid_date'
+      };
+    }
+  }
+  
+  // CRITICAL: Validate date is in future
+  const selectedDateObj = new Date(selectedDate);
+  const todayMidnight = new Date(today.setHours(0, 0, 0, 0));
+  
+  if (selectedDateObj < todayMidnight) {
+    return {
+      text: "That date is in the past. Please choose a future date.",
+      intent: 'booking_past_date'
+    };
+  }
+  
+  data.date = selectedDate; // ✅ Now it's "2026-10-20" format
+  data.step = 'time';
+  
+  // Check availability for this date
+  const availableSlots = await checkAvailableSlots(selectedDate);
+  if (availableSlots.length === 0) {
+    responseText = `I checked our schedule for ${selectedDate} and unfortunately all slots are booked. Would you like to choose another date?`;
+    data.step = 'date'; // Go back to date selection
+  } else {
+    responseText = `Available times for ${selectedDate} (your timezone: ${userTimezone}):\n\n` +
+      availableSlots.map(slot => `• ${slot}`).join('\n') +
+      "\n\nWhich time works best for you?";
+  }
+  break;
       case 'time':
         // Check if the time is available
         const isAvailable = await checkTimeAvailability(data.date!, userInput);
@@ -1574,6 +1613,18 @@ What would you like to do today?`,
 
   const checkAvailableSlots = async (date: string): Promise<string[]> => {
   try {
+    // Get day of week to check if it's a working day
+    const dayOfWeek = new Date(date).getDay();
+    
+    // Check if this day is a working day
+    if (!BUSINESS_HOURS.workingDays.includes(dayOfWeek)) {
+      console.log('Not a working day:', date);
+      return []; // Return empty array for non-working days
+    }
+    
+    // Generate time slots for this specific date (handles special hours)
+    const allSlots = generateTimeSlots(date);
+    
     // Check Supabase for booked slots
     const { data: bookings, error } = await supabase
       .from('consultations')
@@ -1583,16 +1634,16 @@ What would you like to do today?`,
     
     if (error) {
       console.error('Error checking availability:', error);
-      return timeSlots; // Return all slots as fallback
+      return allSlots; // Return all slots as fallback
     }
     
     const bookedTimes = bookings?.map(b => b.booking_time) || [];
     
     // Filter available slots (not booked)
-    return timeSlots.filter(slot => !bookedTimes.includes(slot));
+    return allSlots.filter(slot => !bookedTimes.includes(slot));
   } catch (error) {
     console.error('Error checking available slots:', error);
-    return timeSlots; // Return all slots as fallback
+    return generateTimeSlots(date); // Return all slots for this date as fallback
   }
 };
 

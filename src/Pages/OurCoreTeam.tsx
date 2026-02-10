@@ -6,7 +6,7 @@ import fredaImage from "@/assets/freeda team member.jpeg";
 import preciousImage from "@/assets/prech vera teem.jpeg";
 import ellaImage from "@/assets/ellaImage.jpeg";
 import emmaImage from "@/assets/emmaImage.jpeg";
-import favourImage from "@/assets/favourImage.jpeg";
+import favourImage from "@/assets/favour-image.jpeg";
 // Add this import with your other image imports
 import familyPhoto from "@/assets/verapixels family.jpeg";
 import {
