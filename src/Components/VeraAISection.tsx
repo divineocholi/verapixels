@@ -189,7 +189,7 @@ const VeraAISection = () => {
               <div className="vera-video-info">
                 <div className="vera-info-badge">
                   <Play size={16} />
-                  <span>2:30 Demo Video</span>
+                  <span>1:06 Demo Video</span>
                 </div>
                 <h3>See VERA in Action</h3>
                 <p>Watch how VERA revolutionizes everyday conversations</p>
