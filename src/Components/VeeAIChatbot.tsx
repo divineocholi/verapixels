@@ -1077,199 +1077,221 @@ const VeeAISmartChatbot: React.FC = () => {
   ];
 
 /* --------------------------- WebSocket Connection --------------------------- */
-  useEffect(() => {
-    if (socketRef.current) {
-      console.log('🔄 Socket already exists, reusing...');
-      return;
-    }
+useEffect(() => {
+  // CRITICAL: Prevent duplicate connections
+  if (socketRef.current?.connected) {
+    console.log('🔄 Socket already connected, reusing...');
+    setSocket(socketRef.current);
+    setIsSocketConnected(true);
+    return;
+  }
 
-    if (!sessionId) return;
+  if (!sessionId) return;
+  
+  console.log('🔌 Initializing WebSocket connection...');
+  
+  const socketInstance = io(SOCKET_CONFIG.url, {
+    ...SOCKET_CONFIG.options,
+    query: {
+      clientType: 'chatbot',
+      sessionId: sessionId,
+      timezone: userTimezone
+    }
+  });
+
+  socketRef.current = socketInstance;
+  
+  socketInstance.on('connect', () => {
+    console.log('✅ WebSocket connected successfully');
+    setIsSocketConnected(true);
+    setConnectionStatus('connected');
     
-    console.log('🔌 Initializing WebSocket connection...');
-    
-    const socketInstance = io(SOCKET_CONFIG.url, {
-      ...SOCKET_CONFIG.options,
-      query: {
-        clientType: 'chatbot',
-        sessionId: sessionId,
-        timezone: userTimezone
+    socketInstance.emit('join_conversation', {
+      conversationId: sessionId,
+      userId: `user_${sessionId}`,
+      userInfo: {
+        timezone: userTimezone,
+        isBooking: bookingState.isBooking,
+        name: 'Chat User'
       }
     });
-
-    socketRef.current = socketInstance;
+  });
+  
+  socketInstance.on('disconnect', (reason: string) => {
+    console.log('❌ WebSocket disconnected:', reason);
+    setIsSocketConnected(false);
+    setConnectionStatus('disconnected');
     
-    socketInstance.on('connect', () => {
-      console.log('✅ WebSocket connected successfully');
-      setIsSocketConnected(true);
-      setConnectionStatus('connected');
-      
-      socketInstance.emit('join_conversation', {
-        conversationId: sessionId,
-        userId: `user_${sessionId}`,
-        userInfo: {
-          timezone: userTimezone,
-          isBooking: bookingState.isBooking,
-          name: 'Chat User'
-        }
-      });
-    });
-    
-    socketInstance.on('disconnect', (reason: string) => {
-      console.log('❌ WebSocket disconnected:', reason);
-      setIsSocketConnected(false);
-      setConnectionStatus('disconnected');
-      
-      // CRITICAL: Auto-reconnect on all disconnections
-      console.log('🔄 Attempting to reconnect...');
+    // ONLY auto-reconnect on server-side disconnects, not client-initiated
+    if (reason === 'io server disconnect' || reason === 'transport close') {
+      console.log('🔄 Server disconnected, attempting reconnect...');
       setTimeout(() => {
         if (!socketInstance.connected) {
           socketInstance.connect();
         }
       }, 1000);
-    });
-    
-    socketInstance.on('connect_error', (error: Error) => {
-      console.error('❌ WebSocket connection error:', error.message);
-      setConnectionStatus('error');
-      
-      setTimeout(() => {
-        socketInstance.io.opts.transports = ['polling', 'websocket'];
-        socketInstance.connect();
-      }, 2000);
-    });
-    
-    socketInstance.on('reconnect', (attemptNumber: number) => {
-      console.log(`🔄 WebSocket reconnected after ${attemptNumber} attempts`);
-      setIsSocketConnected(true);
-      setConnectionStatus('connected');
-      
-      // Rejoin conversation after reconnect
-      socketInstance.emit('join_conversation', {
-        conversationId: sessionId,
-        userId: `user_${sessionId}`,
-        userInfo: {
-          timezone: userTimezone,
-          isBooking: bookingState.isBooking,
-          name: 'Chat User'
-        }
-      });
-    });
-    
-   
-    // In your WebSocket connection useEffect in VeeAIChatbot:
-
-socketInstance.on('new_message', (message: SocketMessage) => {
-  console.log('📨 Received message via WebSocket:', {
-    id: message.id,
-    sender: message.sender_type,
-    text: message.message_text.substring(0, 50),
-    conversation: message.conversation_id
+    }
   });
   
-  // Enhanced duplicate check
-  setMessages(prev => {
-    const alreadyExists = prev.some(msg => {
-      const isSameText = msg.text.trim() === message.message_text.trim();
-      const isSameSender = (msg.sender === 'admin' && message.sender_type === 'admin') ||
-                          (msg.sender === 'user' && message.sender_type === 'user') ||
-                          (msg.sender === 'vee' && message.sender_type === 'bot');
-      const isRecent = Math.abs(new Date(msg.timestamp).getTime() - new Date(message.timestamp).getTime()) < 1000;
-      
-      return isSameSender && (isSameText || isRecent);
+  socketInstance.on('connect_error', (error: Error) => {
+    console.error('❌ WebSocket connection error:', error.message);
+    setConnectionStatus('error');
+    
+    setTimeout(() => {
+      socketInstance.io.opts.transports = ['polling', 'websocket'];
+      socketInstance.connect();
+    }, 2000);
+  });
+  
+  socketInstance.on('reconnect', (attemptNumber: number) => {
+    console.log(`🔄 WebSocket reconnected after ${attemptNumber} attempts`);
+    setIsSocketConnected(true);
+    setConnectionStatus('connected');
+    
+    // Rejoin conversation after reconnect
+    socketInstance.emit('join_conversation', {
+      conversationId: sessionId,
+      userId: `user_${sessionId}`,
+      userInfo: {
+        timezone: userTimezone,
+        isBooking: bookingState.isBooking,
+        name: 'Chat User'
+      }
+    });
+  });
+  
+  // ENHANCED: Use Map to track processed message IDs
+  const processedMessages = new Map<string, number>();
+  
+  socketInstance.on('new_message', (message: SocketMessage) => {
+    console.log('📨 Received message via WebSocket:', {
+      id: message.id,
+      sender: message.sender_type,
+      text: message.message_text.substring(0, 50),
+      conversation: message.conversation_id
     });
     
-    if (alreadyExists) {
-      console.log('⚠️ Duplicate WebSocket message detected, skipping');
-      return prev;
+    // CRITICAL: Check if we've processed this message in the last 5 seconds
+    const messageKey = `${message.id}_${message.message_text}`;
+    const lastProcessed = processedMessages.get(messageKey);
+    const now = Date.now();
+    
+    if (lastProcessed && (now - lastProcessed) < 5000) {
+      console.log('⚠️ Duplicate WebSocket message detected (same ID + text), skipping');
+      return;
     }
     
-    const senderMap = {
-      'user': 'user' as Sender,
-      'bot': 'vee' as Sender,
-      'admin': 'admin' as Sender
-    };
+    // Mark as processed
+    processedMessages.set(messageKey, now);
     
-    const newMessage: Message = {
-      id: parseInt(message.id?.replace(/\D/g, '') || Date.now().toString()),
-      sender: senderMap[message.sender_type || 'bot'],
-      text: message.message_text,
-      timestamp: new Date(message.timestamp),
-      intent: message.intent_detected,
-      classification: message.classification,
-      sender_type: message.sender_type
-    };
-    
-    console.log('✅ Adding new message to chat:', {
-      sender: newMessage.sender,
-      text: newMessage.text.substring(0, 30)
-    });
-    
-    return [...prev, newMessage];
-  });
-  
-  // Set admin has joined if admin message received
-  if (message.sender_type === 'admin' && !adminHasJoined) {
-    console.log('👨‍💼 Admin message received, setting adminHasJoined to true');
-    setAdminHasJoined(true);
-  }
-  
-  if (!isOpen) setUnreadCount(prev => prev + 1);
-  
-  updateConversationActivity(sessionId);
-});
-
-    // Add this to your socket event listeners:
-socketInstance.on('admin_joined', (data: any) => {
-  console.log('👨‍💼 Admin joined event received:', data);
-  setAdminHasJoined(true);
-  
-  const adminJoinedMsg: Message = {
-    id: Date.now(),
-    sender: 'admin',
-    text: `${data.adminName || 'An admin'} has joined the conversation.`,
-    timestamp: new Date(),
-    intent: 'admin_joined'
-  };
-  
-  setMessages(prev => [...prev, adminJoinedMsg]);
-});
-
-// Add connection confirmation
-socketInstance.on('connected', (data: any) => {
-  console.log('🔗 Connected to WebSocket server:', data);
-});
-    
-    socketInstance.on('admin_typing', (data: any) => {
-      if (data.conversationId === sessionId) {
-        console.log('⌨️ Admin typing:', data.isTyping);
-        setAdminIsTyping(data.isTyping);
+    // Clean old entries (older than 10 seconds)
+    processedMessages.forEach((timestamp, key) => {
+      if (now - timestamp > 10000) {
+        processedMessages.delete(key);
       }
     });
-
-    socketInstance.on('transfer_initiated', (data: any) => {
-      console.log('🔄 Transfer initiated:', data);
+    
+    setMessages(prev => {
+      const alreadyExists = prev.some(msg => {
+        const isSameText = msg.text.trim() === message.message_text.trim();
+        const isSameSender = (msg.sender === 'admin' && message.sender_type === 'admin') ||
+                            (msg.sender === 'user' && message.sender_type === 'user') ||
+                            (msg.sender === 'vee' && message.sender_type === 'bot');
+        const isRecent = Math.abs(new Date(msg.timestamp).getTime() - new Date(message.timestamp).getTime()) < 1000;
+        
+        return isSameSender && (isSameText || isRecent);
+      });
       
-      const transferMsg: Message = {
-        id: Date.now(),
-        sender: 'vee',
-        text: `Conversation transferred to admin: ${data.reason || 'User requested assistance'}`,
-        timestamp: new Date(),
-        intent: 'transfer_initiated'
+      if (alreadyExists) {
+        console.log('⚠️ Duplicate message in state, skipping');
+        return prev;
+      }
+      
+      const senderMap = {
+        'user': 'user' as Sender,
+        'bot': 'vee' as Sender,
+        'admin': 'admin' as Sender
       };
       
-      setMessages(prev => [...prev, transferMsg]);
+      const newMessage: Message = {
+        id: parseInt(message.id?.replace(/\D/g, '') || Date.now().toString()),
+        sender: senderMap[message.sender_type || 'bot'],
+        text: message.message_text,
+        timestamp: new Date(message.timestamp),
+        intent: message.intent_detected,
+        classification: message.classification,
+        sender_type: message.sender_type
+      };
+      
+      console.log('✅ Adding new message to chat:', {
+        sender: newMessage.sender,
+        text: newMessage.text.substring(0, 30)
+      });
+      
+      return [...prev, newMessage];
     });
     
-    setSocket(socketInstance);
+    if (message.sender_type === 'admin' && !adminHasJoined) {
+      console.log('👨‍💼 Admin message received, setting adminHasJoined to true');
+      setAdminHasJoined(true);
+    }
     
-    return () => {
-      console.log('🧹 Cleaning up WebSocket connection');
-      if (socketInstance && socketInstance.connected) {
-        socketInstance.disconnect();
-        socketRef.current = null;
-      }
+    if (!isOpen) setUnreadCount(prev => prev + 1);
+    
+    updateConversationActivity(sessionId);
+  });
+
+  socketInstance.on('admin_joined', (data: any) => {
+    console.log('👨‍💼 Admin joined event received:', data);
+    setAdminHasJoined(true);
+    
+    const adminJoinedMsg: Message = {
+      id: Date.now(),
+      sender: 'admin',
+      text: `${data.adminName || 'An admin'} has joined the conversation.`,
+      timestamp: new Date(),
+      intent: 'admin_joined'
     };
-  }, [sessionId, userTimezone]);
+    
+    setMessages(prev => [...prev, adminJoinedMsg]);
+  });
+
+  socketInstance.on('connected', (data: any) => {
+    console.log('🔗 Connected to WebSocket server:', data);
+  });
+  
+  socketInstance.on('admin_typing', (data: any) => {
+    if (data.conversationId === sessionId) {
+      console.log('⌨️ Admin typing:', data.isTyping);
+      setAdminIsTyping(data.isTyping);
+    }
+  });
+
+  socketInstance.on('transfer_initiated', (data: any) => {
+    console.log('🔄 Transfer initiated:', data);
+    
+    const transferMsg: Message = {
+      id: Date.now(),
+      sender: 'vee',
+      text: `Conversation transferred to admin: ${data.reason || 'User requested assistance'}`,
+      timestamp: new Date(),
+      intent: 'transfer_initiated'
+    };
+    
+    setMessages(prev => [...prev, transferMsg]);
+  });
+  
+  setSocket(socketInstance);
+  
+  return () => {
+    console.log('🧹 Cleaning up WebSocket connection');
+    // CRITICAL: Only disconnect if we're actually unmounting
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+      socketRef.current = null;
+    }
+  };
+}, [sessionId, userTimezone]); // Removed bookingState from dependencies
 
   /* --------------------------- Initialize Conversation --------------------------- */
   useEffect(() => {
