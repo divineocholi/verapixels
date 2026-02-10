@@ -2192,8 +2192,7 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
   }, []);
 
   const isDark = theme === "dark";
-
-  return (
+return (
     <div className={`vee-chat-root ${isDark ? 'dark-theme' : 'light-theme'}`}>
       <style>{`
         .vee-chat-root {
@@ -2226,9 +2225,9 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         }
 
         .vee-globe-btn.active {
-  background: rgba(255, 255, 255, 0.4);
-  transform: scale(1.1);
-}
+          background: rgba(255, 255, 255, 0.4);
+          transform: scale(1.1);
+        }
         
         .vee-unread-badge {
           position: absolute;
@@ -2263,6 +2262,7 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
           animation: slideUp 0.4s ease;
           z-index: 9999;
           overflow: hidden;
+          position: relative;
         }
         
         .vee-messages-container {
@@ -2284,6 +2284,8 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
           align-items: center;
           justify-content: space-between;
           flex-shrink: 0;
+          position: relative;
+          z-index: 1;
         }
         
         .vee-header-content {
@@ -2506,21 +2508,22 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         .vee-typing-dot:nth-child(2) { animation-delay: 0.2s; }
         .vee-typing-dot:nth-child(3) { animation-delay: 0.4s; }
         
-       .vee-tz-selector {
-  position: absolute;
-  top: 70px;
-  right: 20px;
-  background: ${isDark ? '#2a2a2a' : '#fff'};
-  border: 1px solid ${isDark ? '#333' : '#e0e0e0'};
-  border-radius: 12px;
-  padding: 16px;
-  width: 280px;
-  max-height: 300px;
-  overflow-y: auto;
-  z-index: 10001; /* ← Make sure this is higher than chat window */
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: fadeIn 0.3s ease;
-}
+        .vee-tz-selector {
+          position: absolute;
+          top: 70px;
+          left: 0;
+          right: 0;
+          margin: 0 20px;
+          background: ${isDark ? '#2a2a2a' : '#fff'};
+          border: 1px solid ${isDark ? '#333' : '#e0e0e0'};
+          border-radius: 12px;
+          padding: 16px;
+          max-height: 300px;
+          overflow-y: auto;
+          z-index: 10;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          animation: fadeIn 0.3s ease;
+        }
         
         .vee-tz-option {
           padding: 10px 12px;
@@ -2533,6 +2536,7 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
           transition: all 0.2s ease;
           width: 100%;
           text-align: left;
+          display: block;
         }
         
         .vee-tz-option:hover {
@@ -2586,6 +2590,19 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
           border-radius: 3px;
         }
         
+        .vee-tz-selector::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        .vee-tz-selector::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .vee-tz-selector::-webkit-scrollbar-thumb {
+          background: ${isDark ? '#444' : '#ccc'};
+          border-radius: 3px;
+        }
+        
         @media (max-width: 768px) {
           .vee-chat-window {
             position: fixed;
@@ -2609,9 +2626,7 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
           
           .vee-tz-selector {
             top: 60px;
-            right: 10px;
-            left: 10px;
-            width: auto;
+            margin: 0 10px;
           }
         }
       `}</style>
@@ -2624,134 +2639,37 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
           )}
         </button>
       ) : (
-        <>
-          <div className="vee-chat-window">
-            <div className="vee-chat-header">
-              <div className="vee-header-content">
-                <div className="vee-avatar">V</div>
-                <div className="vee-header-text">
-                  <h3>Vee AI Assistant</h3>
-                  <p>{isSocketConnected ? '🟢 Connected' : '🔴 Connecting...'}</p>
-                </div>
-              </div>
-              <div className="vee-header-actions">
-                <button 
-                  className="vee-theme-btn" 
-                  onClick={toggleTheme}
-                  title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-                >
-                  {isDark ? <IconSun size={16} /> : <IconMoon size={16} />}
-                </button>
-               <button 
-  className={`vee-globe-btn ${showTimezoneSelector ? 'active' : ''}`}
-  onClick={() => setShowTimezoneSelector(!showTimezoneSelector)}
-  title="Change timezone"
->
-  <IconGlobe size={16} />
-</button>
-                <button className="vee-close-btn" onClick={() => setIsOpen(false)}>
-                  <IconX size={18} />
-                </button>
+        <div className="vee-chat-window">
+          <div className="vee-chat-header">
+            <div className="vee-header-content">
+              <div className="vee-avatar">V</div>
+              <div className="vee-header-text">
+                <h3>Vee AI Assistant</h3>
+                <p>{isSocketConnected ? '🟢 Connected' : '🔴 Connecting...'}</p>
               </div>
             </div>
-
-            <div className="vee-messages-container" ref={messagesContainerRef}>
-              {messages.map((msg) => (
-                <div key={msg.id} className={`vee-message ${msg.sender}`}>
-                  <div className="vee-message-avatar">
-                    {msg.sender === "vee" ? "V" : msg.sender === "admin" ? "A" : "U"}
-                  </div>
-                  <div className="vee-message-content">
-                    <div className="vee-message-bubble">{msg.text}</div>
-                    {msg.links && msg.links.length > 0 && (
-                      <div className="vee-message-links">
-                        {msg.links.map((link, idx) => (
-                          <button
-                            key={idx}
-                            className={`vee-message-link ${link.action === 'external' ? 'external' : ''}`}
-                            onClick={() => handleLinkNavigation(link.url, link.action, link.data)}
-                          >
-                            {link.text}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {msg.options && msg.options.length > 0 && (
-                      <div className="vee-message-links">
-                        {msg.options.map((option, idx) => (
-                          <button
-                            key={idx}
-                            className="vee-message-link"
-                            onClick={() => {
-                              setInputValue(option);
-                              setTimeout(() => handleSend(), 100);
-                            }}
-                          >
-                            {option}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              
-              {adminIsTyping && (
-                <div className="vee-typing">
-                  <div className="vee-message-avatar" style={{ background: 'linear-gradient(135deg, #8a2be2, #9370db)' }}>
-                    A
-                  </div>
-                  <div className="vee-typing-dots">
-                    <div className="vee-typing-dot"></div>
-                    <div className="vee-typing-dot"></div>
-                    <div className="vee-typing-dot"></div>
-                  </div>
-                  <span style={{ fontSize: '12px', color: isDark ? '#aaa' : '#666', marginLeft: '8px' }}>
-                    Admin is typing...
-                  </span>
-                </div>
-              )}
-              
-              {isTyping && !adminHasJoined && (
-                <div className="vee-typing">
-                  <div className="vee-message-avatar" style={{ background: 'linear-gradient(135deg, #0066ff, #00ccff)' }}>
-                    V
-                  </div>
-                  <div className="vee-typing-dots">
-                    <div className="vee-typing-dot"></div>
-                    <div className="vee-typing-dot"></div>
-                    <div className="vee-typing-dot"></div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            <div className="vee-input-area">
-              <div className="vee-input-wrapper">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  className="vee-input"
-                  placeholder={adminHasJoined ? "Chat with admin..." : "Type your message..."}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  disabled={isTyping}
-                  autoFocus={isOpen}
-                />
-                <button
-                  className="vee-send-btn"
-                  onClick={handleSend}
-                  disabled={!inputValue.trim() || isTyping}
-                  title="Send message"
-                >
-                  <IconSend />
-                </button>
-              </div>
+            <div className="vee-header-actions">
+              <button 
+                className="vee-theme-btn" 
+                onClick={toggleTheme}
+                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDark ? <IconSun size={16} /> : <IconMoon size={16} />}
+              </button>
+              <button 
+                className={`vee-globe-btn ${showTimezoneSelector ? 'active' : ''}`}
+                onClick={() => setShowTimezoneSelector(!showTimezoneSelector)}
+                title="Change timezone"
+              >
+                <IconGlobe size={16} />
+              </button>
+              <button className="vee-close-btn" onClick={() => setIsOpen(false)}>
+                <IconX size={18} />
+              </button>
             </div>
           </div>
 
+          {/* TIMEZONE SELECTOR - Now inside chat window */}
           {showTimezoneSelector && (
             <div className="vee-tz-selector">
               <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: isDark ? '#fff' : '#000' }}>
@@ -2768,7 +2686,103 @@ const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
               ))}
             </div>
           )}
-        </>
+
+          <div className="vee-messages-container" ref={messagesContainerRef}>
+            {messages.map((msg) => (
+              <div key={msg.id} className={`vee-message ${msg.sender}`}>
+                <div className="vee-message-avatar">
+                  {msg.sender === "vee" ? "V" : msg.sender === "admin" ? "A" : "U"}
+                </div>
+                <div className="vee-message-content">
+                  <div className="vee-message-bubble">{msg.text}</div>
+                  {msg.links && msg.links.length > 0 && (
+                    <div className="vee-message-links">
+                      {msg.links.map((link, idx) => (
+                        <button
+                          key={idx}
+                          className={`vee-message-link ${link.action === 'external' ? 'external' : ''}`}
+                          onClick={() => handleLinkNavigation(link.url, link.action, link.data)}
+                        >
+                          {link.text}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {msg.options && msg.options.length > 0 && (
+                    <div className="vee-message-links">
+                      {msg.options.map((option, idx) => (
+                        <button
+                          key={idx}
+                          className="vee-message-link"
+                          onClick={() => {
+                            setInputValue(option);
+                            setTimeout(() => handleSend(), 100);
+                          }}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+            
+            {adminIsTyping && (
+              <div className="vee-typing">
+                <div className="vee-message-avatar" style={{ background: 'linear-gradient(135deg, #8a2be2, #9370db)' }}>
+                  A
+                </div>
+                <div className="vee-typing-dots">
+                  <div className="vee-typing-dot"></div>
+                  <div className="vee-typing-dot"></div>
+                  <div className="vee-typing-dot"></div>
+                </div>
+                <span style={{ fontSize: '12px', color: isDark ? '#aaa' : '#666', marginLeft: '8px' }}>
+                  Admin is typing...
+                </span>
+              </div>
+            )}
+            
+            {isTyping && !adminHasJoined && (
+              <div className="vee-typing">
+                <div className="vee-message-avatar" style={{ background: 'linear-gradient(135deg, #0066ff, #00ccff)' }}>
+                  V
+                </div>
+                <div className="vee-typing-dots">
+                  <div className="vee-typing-dot"></div>
+                  <div className="vee-typing-dot"></div>
+                  <div className="vee-typing-dot"></div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          <div className="vee-input-area">
+            <div className="vee-input-wrapper">
+              <input
+                ref={inputRef}
+                type="text"
+                className="vee-input"
+                placeholder={adminHasJoined ? "Chat with admin..." : "Type your message..."}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={isTyping}
+                autoFocus={isOpen}
+              />
+              <button
+                className="vee-send-btn"
+                onClick={handleSend}
+                disabled={!inputValue.trim() || isTyping}
+                title="Send message"
+              >
+                <IconSend />
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
