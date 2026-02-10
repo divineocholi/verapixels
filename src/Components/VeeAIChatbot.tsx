@@ -1669,77 +1669,53 @@ What would you like to do today?`,
     }
   };
 
-  const finalizeBooking = async (): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const { name, email, phone, contactMethod, date, time } = bookingState;
-      
-      if (!name || !email || !phone || !contactMethod || !date || !time) {
-        return { success: false, error: 'Missing required information' };
-      }
-      
-      const consultationId = `cons_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const businessTime = convertTimeToTimezone(time, date, userTimezone, BUSINESS_TIMEZONE);
-      
-      // Create booking in Supabase
-      const { data, error } = await supabase
-        .from('consultations')
-        .insert([{
-          consultation_id: consultationId,
-          name: name,
-          email: email,
-          phone: phone,
-          contact_method: contactMethod,
-          booking_date: date,
-          booking_time: time,
-          user_timezone: userTimezone,
-          business_time: businessTime,
-          message: 'Booked via Vee AI Chatbot',
-          status: 'pending',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }])
-        .select();
-      
-      if (error) {
-        console.error('Error creating booking:', error);
-        return { success: false, error: 'Database error' };
-      }
-      
-      // Send confirmation emails using EmailJS
-      const serviceId = 'service_w8wwd8e';
-      const publicKey = 'NUKm-dvMLR7ftwvbF';
-      const adminTemplateId = 'template_503vbvj';
-      const userTemplateId = 'template_6zgl8ml';
-      
-      const baseParams = {
-        from_name: name,
-        from_email: email,
-        user_name: name,
-        user_email: email,
+ // VeeAIChatbot.tsx - UPDATED finalizeBooking function
+const finalizeBooking = async (): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const { name, email, phone, contactMethod, date, time } = bookingState;
+    
+    if (!name || !email || !phone || !contactMethod || !date || !time) {
+      return { success: false, error: 'Missing required information' };
+    }
+    
+    const consultationId = `cons_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const businessTime = convertTimeToTimezone(time, date, userTimezone, BUSINESS_TIMEZONE);
+    
+    // ✅ NEW: Call your backend API instead of EmailJS
+    const response = await fetch('https://verapixels-server.onrender.com/api/consultations/book', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: name,
+        email: email,
         phone: phone,
         contact_method: contactMethod,
-        preferred_date: date,
-        preferred_time: time,
+        booking_date: date,
+        booking_time: time,
         business_time: businessTime,
         user_timezone: userTimezone,
-        business_timezone: BUSINESS_TIMEZONE,
-        consultation_id: consultationId
-      };
-      
-      // Send notification to admin
-      await emailjs.send(serviceId, adminTemplateId, { ...baseParams, reply_to: email }, publicKey);
-      
-      // Send auto-reply to user
-      await emailjs.send(serviceId, userTemplateId, baseParams, publicKey);
-      
-      console.log('✅ Booking finalized:', consultationId);
-      return { success: true };
-      
-    } catch (error) {
-      console.error('Error finalizing booking:', error);
-      return { success: false, error: 'Unexpected error' };
+        message: 'Booked via Vee AI Chatbot',
+        status: 'pending'
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      console.error('❌ Booking failed:', result.error);
+      return { success: false, error: result.error || 'Failed to book consultation' };
     }
-  };
+
+    console.log('✅ Booking successful:', result.consultationId);
+    return { success: true };
+    
+  } catch (error) {
+    console.error('❌ Error finalizing booking:', error);
+    return { success: false, error: 'Unexpected error' };
+  }
+};
 
   const handleLinkNavigation = (url: string, action?: string, data?: any) => {
     console.log('🔗 Link clicked:', { url, action, data });
