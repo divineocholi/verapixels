@@ -1983,44 +1983,24 @@ app.get('/api/newsletter/stats', async (req, res) => {
   }
 });
 
-// ========== VERA AI CHATBOT API ROUTE (GEMINI VERSION) ==========
-
 app.post('/api/vera/chat', async (req, res) => {
   try {
     const { system, messages } = req.body;
 
-    console.log('🤖 VERA chat request received');
-    console.log('📨 Messages count:', messages?.length || 0);
-
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'Messages array is required'
-      });
+      return res.status(400).json({ success: false, error: 'Messages required' });
     }
 
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
     if (!GEMINI_API_KEY) {
-      console.error('❌ GEMINI_API_KEY not found');
-      return res.status(500).json({
-        success: false,
-        error: 'API key not configured'
-      });
+      return res.status(500).json({ success: false, error: 'API key missing' });
     }
 
-    // Build messages for Gemini
     const geminiMessages = [];
     
     if (system) {
-      geminiMessages.push({
-        role: 'user',
-        parts: [{ text: system }]
-      });
-      geminiMessages.push({
-        role: 'model',
-        parts: [{ text: 'I understand and will follow these instructions.' }]
-      });
+      geminiMessages.push({ role: 'user', parts: [{ text: system }] });
+      geminiMessages.push({ role: 'model', parts: [{ text: 'Understood.' }] });
     }
     
     messages.forEach(msg => {
@@ -2030,49 +2010,32 @@ app.post('/api/vera/chat', async (req, res) => {
       });
     });
 
-    // ✅ CORRECT MODEL NAME
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: geminiMessages,
-          generationConfig: {
-            maxOutputTokens: 1000,
-            temperature: 0.7,
-          }
+          generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
         })
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Gemini error:', errorText);
-      return res.status(response.status).json({
-        success: false,
-        error: 'AI service error',
-        details: errorText
-      });
+      return res.status(response.status).json({ success: false, error: 'AI error', details: errorText });
     }
 
     const data = await response.json();
-    console.log('✅ VERA response generated');
 
     res.json({
       success: true,
-      content: [{
-        type: 'text',
-        text: data.candidates[0].content.parts[0].text
-      }]
+      content: [{ type: 'text', text: data.candidates[0].content.parts[0].text }]
     });
 
   } catch (error) {
-    console.error('❌ VERA error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
