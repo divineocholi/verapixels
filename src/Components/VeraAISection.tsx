@@ -218,8 +218,12 @@ Be respectful and helpful.`,
           content: m.content
         }));
 
-      // Call your backend server instead of Anthropic API directly
-      const response = await fetch("http://localhost:5001/api/vera/chat", {
+       // Dynamically detect environment
+const API_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5001' 
+  : 'https://verapixels-server.onrender.com';
+
+const response = await fetch(`${API_URL}/api/vera/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
