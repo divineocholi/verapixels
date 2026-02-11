@@ -1983,6 +1983,111 @@ app.get('/api/newsletter/stats', async (req, res) => {
   }
 });
 
+// ========== VERA AI CHATBOT API ROUTE (GEMINI VERSION) ==========
+
+app.post('/api/vera/chat', async (req, res) => {
+  try {
+    const { system, messages } = req.body;
+
+    console.log('🤖 VERA chat request received');
+    console.log('📨 Messages count:', messages?.length || 0);
+
+    // Validate request
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Messages array is required'
+      });
+    }
+
+    // Get API key from environment
+    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+    if (!GEMINI_API_KEY) {
+      console.error('❌ GEMINI_API_KEY not found in environment variables');
+      return res.status(500).json({
+        success: false,
+        error: 'Server configuration error: API key not configured'
+      });
+    }
+
+    // Convert messages to Gemini format
+    const geminiMessages = messages.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }]
+    }));
+
+    // Call Google Gemini API
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: system || 'You are VERA, a helpful AI assistant.' }]
+          },
+          contents: geminiMessages,
+          generationConfig: {
+            maxOutputTokens: 1000,
+            temperature: 0.7,
+          }
+        })
+      }
+    );
+
+    // Handle API errors
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Gemini API error:', errorText);
+      return res.status(response.status).json({
+        success: false,
+        error: 'AI service error',
+        details: errorText
+      });
+    }
+
+    const data = await response.json();
+    console.log('✅ VERA response generated successfully');
+
+    // Format response to match Claude's structure
+    const formattedResponse = {
+      success: true,
+      content: [{
+        type: 'text',
+        text: data.candidates[0].content.parts[0].text
+      }]
+    };
+
+    res.json(formattedResponse);
+
+  } catch (error) {
+    console.error('❌ VERA chat error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Internal server error'
+    });
+  }
+});
+
+// Health check for VERA API
+app.get('/api/vera/health', (req, res) => {
+  const hasApiKey = !!process.env.GEMINI_API_KEY;
+  
+  res.json({
+    success: true,
+    status: hasApiKey ? 'ready' : 'not_configured',
+    provider: 'Google Gemini',
+    model: 'gemini-1.5-flash',
+    message: hasApiKey 
+      ? 'VERA AI chatbot is ready (Powered by Gemini)' 
+      : 'Gemini API key not configured',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // ========== UTILITY ENDPOINTS ==========
 
 app.get("/connections", (req, res) => {
