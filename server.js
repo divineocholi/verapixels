@@ -1998,42 +1998,35 @@ app.get('/api/newsletter/stats', async (req, res) => {
 });
 
 
-
-
 app.post('/api/vera/chat', async (req, res) => {
   try {
-    // ======== DEBUGGING LOGS ========
-    console.log('='.repeat(60));
-    console.log('🤖 VERA Chat Request Received');
-    console.log('='.repeat(60));
+    console.log('🤖 VERA request received');
     
     const { system, messages } = req.body;
-    
-    console.log('📝 System prompt:', system ? 'Present (' + system.substring(0, 50) + '...)' : 'None');
-    console.log('📝 Message count:', messages?.length || 0);
 
-    // Validate messages
+    // Validate
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      console.log('❌ Invalid messages array');
+      console.log('❌ No messages provided');
       return res.status(400).json({ 
         success: false, 
         error: 'Messages required' 
       });
     }
 
-    // Validate API key
+    // Get API key
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_API_KEY) {
-      console.log('❌ GEMINI_API_KEY not found in environment');
+      console.log('❌ GEMINI_API_KEY not found');
       return res.status(500).json({ 
         success: false, 
-        error: 'API key missing. Check your .env file.' 
+        error: 'API key missing' 
       });
     }
-    
-    console.log('🔑 API Key:', GEMINI_API_KEY.substring(0, 10) + '...' + GEMINI_API_KEY.substring(GEMINI_API_KEY.length - 4));
 
-    // Format messages for Gemini
+    console.log('✅ API key found:', GEMINI_API_KEY.substring(0, 10) + '...');
+    console.log('📝 Message count:', messages.length);
+
+    // Format messages
     const geminiMessages = [];
     
     if (system) {
@@ -2041,138 +2034,63 @@ app.post('/api/vera/chat', async (req, res) => {
       geminiMessages.push({ role: 'model', parts: [{ text: 'Understood.' }] });
     }
     
-    messages.forEach((msg, idx) => {
-      console.log(`💬 Message ${idx + 1}: [${msg.role}] ${msg.content.substring(0, 50)}...`);
+    messages.forEach(msg => {
       geminiMessages.push({
         role: msg.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: msg.content }]
       });
     });
 
-    // ========================================================================
-    // TRY MULTIPLE MODELS (fallback strategy to avoid quota issues)
-    // ========================================================================
+    // Call Gemini API
+    console.log('🌐 Calling Gemini API...');
     
-    const modelsToTry = [
-      'gemini-1.5-flash',           // Most reliable, good free tier
-      'gemini-1.5-flash-8b',        // Smaller, faster, higher token limit
-      'gemini-1.5-pro'              // Backup (slower but works)
-    ];
-
-    let lastError = null;
-
-    for (const model of modelsToTry) {
-      try {
-        console.log(`🔄 Trying model: ${model}...`);
-        
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
-        
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: geminiMessages,
-            generationConfig: { 
-              maxOutputTokens: 1000, 
-              temperature: 0.7 
-            }
-          })
-        });
-
-        console.log(`📊 Response status: ${response.status}`);
-
-        // SUCCESS - Return immediately
-        if (response.ok) {
-          const data = await response.json();
-          const responseText = data.candidates[0].content.parts[0].text;
-          
-          console.log('✅ SUCCESS with model:', model);
-          console.log('✅ Response preview:', responseText.substring(0, 100) + '...');
-          console.log('='.repeat(60));
-          
-          return res.json({
-            success: true,
-            content: [{ 
-              type: 'text', 
-              text: responseText
-            }],
-            model: model,
-            timestamp: new Date().toISOString()
-          });
-        }
-
-        // QUOTA ERROR (429) - Try next model
-        if (response.status === 429) {
-          const errorData = await response.json();
-          console.log(`⚠️ Quota exceeded for ${model}, trying next model...`);
-          lastError = errorData;
-          continue; // Skip to next model
-        }
-
-        // OTHER ERRORS - Try next model
-        const errorText = await response.text();
-        console.log(`❌ Error with ${model}:`, errorText.substring(0, 200));
-        lastError = { error: errorText };
-        continue;
-
-      } catch (fetchError) {
-        console.log(`❌ Fetch error with ${model}:`, fetchError.message);
-        lastError = { error: fetchError.message };
-        continue;
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: geminiMessages,
+          generationConfig: { 
+            maxOutputTokens: 1000, 
+            temperature: 0.7 
+          }
+        })
       }
-    }
+    );
 
-    // ========================================================================
-    // ALL MODELS FAILED - Return user-friendly error
-    // ========================================================================
-    
-    console.log('❌ ALL MODELS FAILED');
-    console.log('Last error:', JSON.stringify(lastError).substring(0, 300));
-    console.log('='.repeat(60));
-    
-    // Check if it's a quota error
-    if (lastError && lastError.error && (
-        JSON.stringify(lastError).includes('429') || 
-        JSON.stringify(lastError).includes('quota') ||
-        JSON.stringify(lastError).includes('RESOURCE_EXHAUSTED')
-    )) {
-      return res.status(429).json({
-        success: false,
-        error: 'quota_exceeded',
-        message: 'Ah! VERA don tire small. We don reach our free quota. Abeg wait 1-2 minutes try again! 🙏',
-        retryAfter: 60,
-        models_tried: modelsToTry
+    console.log('📊 Response status:', response.status);
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.log('❌ Gemini error:', JSON.stringify(data).substring(0, 200));
+      return res.status(response.status).json({ 
+        success: false, 
+        error: 'AI error', 
+        details: data 
       });
     }
 
-    // Generic error
-    return res.status(500).json({
-      success: false,
-      error: 'ai_unavailable',
-      message: 'Sorry o! VERA no dey available right now. Abeg try again in small time.',
-      details: process.env.NODE_ENV === 'development' ? lastError : undefined,
-      models_tried: modelsToTry
+    console.log('✅ Success! Response length:', data.candidates[0].content.parts[0].text.length);
+
+    return res.json({
+      success: true,
+      content: [{ 
+        type: 'text', 
+        text: data.candidates[0].content.parts[0].text 
+      }]
     });
 
   } catch (error) {
-    console.log('='.repeat(60));
-    console.log('💥 FATAL ERROR IN /api/vera/chat');
-    console.log('Error:', error.message);
+    console.log('💥 FATAL ERROR:', error.message);
     console.log('Stack:', error.stack);
-    console.log('='.repeat(60));
-    
     return res.status(500).json({ 
       success: false, 
-      error: 'server_error',
-      message: 'Server wahala! Something don happen. Try again.',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: error.message 
     });
   }
 });
-
-// ============================================================================
-// ALSO ADD THIS HEALTH CHECK ENDPOINT
-// ============================================================================
 
 app.get('/api/vera/health', (req, res) => {
   const hasApiKey = !!process.env.GEMINI_API_KEY;
