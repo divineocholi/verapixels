@@ -193,7 +193,8 @@ Be respectful and helpful.`,
     return prompts[language] || prompts.english;
   };
 
-  const sendMessage = async (customMessage = null, customLang = null) => {
+
+const sendMessage = async (customMessage = null, customLang = null) => {
   const messageToSend = customMessage || inputMessage.trim();
   const langToUse = customLang || selectedLanguage;
   
@@ -218,49 +219,63 @@ Be respectful and helpful.`,
         content: m.content
       }));
 
-    // Dynamically detect environment
     const API_URL = window.location.hostname === 'localhost' 
       ? 'http://localhost:5001' 
       : 'https://verapixels-server.onrender.com';
 
-    // ✅ FIXED: Send correct format for Gemini backend
     const response = await fetch(`${API_URL}/api/vera/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        system: getSystemPrompt(langToUse),  // ✅ Keep this
-        messages: [                           // ✅ Keep this
+        system: getSystemPrompt(langToUse),
+        messages: [
           ...conversationHistory,
           { role: "user", content: messageToSend }
         ]
-        // ❌ REMOVE: model, max_tokens (Gemini backend handles these)
       })
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Server error:', errorText);
-      throw new Error(`Server error: ${response.status}`);
-    }
-
     const data = await response.json();
+
+    // Handle different error types
+    if (!response.ok) {
+      let errorMessage = 'Sorry o! Something don happen. Abeg try again.';
+      
+      if (data.error === 'quota_exceeded') {
+        errorMessage = data.message || 'VERA don tire small. Wait 1 minute try again! 🙏';
+      } else if (data.error === 'Too many requests') {
+        errorMessage = 'You dey send messages too fast! Calm down small, wait 1 minute. 😅';
+      } else {
+        errorMessage = data.message || data.friendlyMessage || 'VERA no dey available now. Try again later.';
+      }
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: errorMessage,
+        timestamp: new Date().toISOString(),
+        error: true
+      }]);
+      
+      return;
+    }
     
-    // ✅ Handle the response format from your Gemini backend
     const assistantMessage = {
       role: 'assistant',
-      content: data.content[0].text,  // This matches your backend's response format
+      content: data.content[0].text,
       timestamp: new Date().toISOString(),
-      language: langToUse
+      language: langToUse,
+      model: data.model // Show which model was used
     };
 
     setMessages(prev => [...prev, assistantMessage]);
+
   } catch (error) {
     console.error('Error:', error);
     setMessages(prev => [...prev, {
       role: 'assistant',
-      content: 'Ah! Sorry o, something don happen. Abeg try again.',
+      content: 'Network wahala! Check your internet connection and try again. 📡',
       timestamp: new Date().toISOString(),
       error: true
     }]);

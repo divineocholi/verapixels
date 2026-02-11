@@ -12,8 +12,8 @@ import { mkdir } from "fs/promises";
 import { existsSync } from "fs";
 import { sendEmail, sendAdminNotification, sendUserConfirmation, sendAdminChatNotification } from './emailService.js';
 import { sendNewsletter, exampleNewsletterData } from './src/Components/newsletterService.js';
+import rateLimit from 'express-rate-limit';
 import { generateNewsletterHTML } from './src/Components/newsletter-template-generator.js';
-// Load environment variables
 dotenv.config();
 
 // ES module fix for __dirname
@@ -79,6 +79,20 @@ const supabaseAdmin = createClient(
     }
   }
 );
+
+
+const veraRateLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute window
+  max: 10, // Limit each IP to 10 requests per minute
+  message: {
+    success: false,
+    error: 'Too many requests',
+    message: 'Abeg calm down small! You don send too many messages. Wait 1 minute try again.',
+    retryAfter: 60
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // ========== MULTER CONFIGURATION FOR CV UPLOADS ==========
 const uploadDir = path.join(__dirname, 'uploads', 'cvs');
@@ -1984,17 +1998,24 @@ app.get('/api/newsletter/stats', async (req, res) => {
 });
 
 
-app.post('/api/vera/chat', async (req, res) => {
+
+app.post('/api/vera/chat', veraRateLimiter, async (req, res) => {
   try {
     const { system, messages } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ success: false, error: 'Messages required' });
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Messages required' 
+      });
     }
 
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_API_KEY) {
-      return res.status(500).json({ success: false, error: 'API key missing' });
+      return res.status(500).json({ 
+        success: false, 
+        error: 'API key missing' 
+      });
     }
 
     const geminiMessages = [];
@@ -2011,33 +2032,109 @@ app.post('/api/vera/chat', async (req, res) => {
       });
     });
 
-    // ✅ CORRECT: Use gemini-2.0-flash (newest, fastest model)
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: geminiMessages,
-          generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
-        })
-      }
-    );
+    // ========================================================================
+    // TRY MULTIPLE MODELS IN ORDER (fallback strategy)
+    // ========================================================================
+    
+    const modelsToTry = [
+      'gemini-2.0-flash-exp',      // Newest experimental (try first)
+      'gemini-1.5-flash',           // Fallback to stable 1.5
+      'gemini-1.5-flash-8b'         // Last resort (smaller, faster)
+    ];
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(response.status).json({ success: false, error: 'AI error', details: errorText });
+    let lastError = null;
+
+    for (const model of modelsToTry) {
+      try {
+        console.log(`🤖 Trying model: ${model}`);
+        
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: geminiMessages,
+              generationConfig: { 
+                maxOutputTokens: 1000, 
+                temperature: 0.7 
+              }
+            })
+          }
+        );
+
+        // If successful, return immediately
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`✅ Success with model: ${model}`);
+          
+          return res.json({
+            success: true,
+            content: [{ 
+              type: 'text', 
+              text: data.candidates[0].content.parts[0].text 
+            }],
+            model: model // Tell frontend which model worked
+          });
+        }
+
+        // If quota exceeded (429), try next model
+        if (response.status === 429) {
+          const errorData = await response.json();
+          console.log(`⚠️ Quota exceeded for ${model}, trying next...`);
+          lastError = errorData;
+          continue; // Try next model
+        }
+
+        // Other errors - try next model
+        const errorText = await response.text();
+        console.error(`❌ Error with ${model}:`, errorText);
+        lastError = { error: errorText };
+        continue;
+
+      } catch (fetchError) {
+        console.error(`❌ Fetch error with ${model}:`, fetchError);
+        lastError = { error: fetchError.message };
+        continue;
+      }
     }
 
-    const data = await response.json();
+    // ========================================================================
+    // ALL MODELS FAILED - Return friendly error
+    // ========================================================================
+    
+    console.error('❌ All models failed');
+    
+    // Check if it's a quota error
+    if (lastError && lastError.error && lastError.error.code === 429) {
+      return res.status(429).json({
+        success: false,
+        error: 'quota_exceeded',
+        message: 'Ah! VERA don tire small. We don reach our free quota for today. Abeg try again in 1 minute or come back tomorrow!',
+        friendlyMessage: 'VERA is taking a short break (quota limit reached). Please wait 1 minute and try again.',
+        retryAfter: 60,
+        details: 'Free tier limit: 15 requests/minute, 1,500/day'
+      });
+    }
 
-    res.json({
-      success: true,
-      content: [{ type: 'text', text: data.candidates[0].content.parts[0].text }]
+    // Generic error
+    return res.status(500).json({
+      success: false,
+      error: 'ai_unavailable',
+      message: 'Sorry o! VERA no dey available right now. Abeg try again later.',
+      friendlyMessage: 'VERA is temporarily unavailable. Please try again in a few moments.',
+      details: lastError
     });
 
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('❌ Server error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'server_error',
+      message: 'Wahala dey! Something don happen for server side. Abeg try again.',
+      friendlyMessage: 'An unexpected error occurred. Please try again.',
+      details: error.message 
+    });
   }
 });
 
