@@ -1983,6 +1983,7 @@ app.get('/api/newsletter/stats', async (req, res) => {
   }
 });
 
+
 app.post('/api/vera/chat', async (req, res) => {
   try {
     const { system, messages } = req.body;
@@ -2010,8 +2011,9 @@ app.post('/api/vera/chat', async (req, res) => {
       });
     });
 
+    // ✅ CORRECT: Use gemini-2.0-flash (newest, fastest model)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2038,6 +2040,7 @@ app.post('/api/vera/chat', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
 
 app.get('/api/vera/health', (req, res) => {
   res.json({
