@@ -2011,25 +2011,40 @@ app.post('/api/vera/chat', async (req, res) => {
       });
     }
 
-    // Convert messages to Gemini format
-    const geminiMessages = messages.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }]
-    }));
+    // ✅ FIXED: Convert messages to Gemini format
+    // For Gemini, we need to prepend system message as first user message if provided
+    const geminiMessages = [];
+    
+    // If system prompt exists, add it as the first message
+    if (system) {
+      geminiMessages.push({
+        role: 'user',
+        parts: [{ text: system }]
+      });
+      geminiMessages.push({
+        role: 'model',
+        parts: [{ text: 'Understood. I will follow these instructions.' }]
+      });
+    }
+    
+    // Add conversation messages
+    messages.forEach(msg => {
+      geminiMessages.push({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: msg.content }]
+      });
+    });
 
-    // Call Google Gemini API
+    // ✅ FIXED: Correct API endpoint and payload for Gemini 2.0 Flash
     const response = await fetch(
-       `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: system || 'You are VERA, a helpful AI assistant.' }]
-          },
-          contents: geminiMessages,
+          contents: geminiMessages,  // ✅ Changed from system_instruction
           generationConfig: {
             maxOutputTokens: 1000,
             temperature: 0.7,
@@ -2052,6 +2067,15 @@ app.post('/api/vera/chat', async (req, res) => {
     const data = await response.json();
     console.log('✅ VERA response generated successfully');
 
+    // ✅ Validate response structure
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      console.error('❌ Unexpected Gemini response structure:', data);
+      return res.status(500).json({
+        success: false,
+        error: 'Invalid response from AI service'
+      });
+    }
+
     // Format response to match Claude's structure
     const formattedResponse = {
       success: true,
@@ -2071,6 +2095,23 @@ app.post('/api/vera/chat', async (req, res) => {
     });
   }
 });
+
+// Health check for VERA API
+app.get('/api/vera/health', (req, res) => {
+  const hasApiKey = !!process.env.GEMINI_API_KEY;
+  
+  res.json({
+    success: true,
+    status: hasApiKey ? 'ready' : 'not_configured',
+    provider: 'Google Gemini',
+    model: 'gemini-2.0-flash-exp',
+    message: hasApiKey 
+      ? 'VERA AI chatbot is ready (Powered by Gemini 2.0)' 
+      : 'Gemini API key not configured',
+    timestamp: new Date().toISOString()
+  });
+});
+
 
 // Health check for VERA API
 app.get('/api/vera/health', (req, res) => {
