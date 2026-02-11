@@ -2266,25 +2266,37 @@ return (
           font-weight: 700;
           border: 2px solid ${isDark ? '#000' : '#fff'};
         }
-        
-        .vee-chat-window {
-          position: fixed;
-          top: 100px;
-          right: 24px;
-          width: 420px;
-          height: 600px;
-          max-height: calc(100vh - 120px);
-          background: ${isDark ? '#1a1a1a' : '#fff'};
-          border: 1px solid ${isDark ? '#333' : '#e0e0e0'};
-          border-radius: 20px;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-          animation: slideUp 0.4s ease;
-          z-index: 9999;
-          overflow: hidden;
-          position: relative;
-        }
+       
+         .vee-chat-window {
+  position: fixed;
+  top: 60%; 
+  right: 24px;
+  transform: translateY(-50%); 
+  width: 420px;
+  height: 80vh; 
+  max-height: 700px; 
+  background: ${isDark ? '#1a1a1a' : '#fff'};
+  border: 1px solid ${isDark ? '#333' : '#e0e0e0'};
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+/* UPDATE: Fix animation to work with transform */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+}
         
         .vee-messages-container {
           flex: 1;
