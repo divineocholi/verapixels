@@ -194,77 +194,80 @@ Be respectful and helpful.`,
   };
 
   const sendMessage = async (customMessage = null, customLang = null) => {
-    const messageToSend = customMessage || inputMessage.trim();
-    const langToUse = customLang || selectedLanguage;
-    
-    if (!messageToSend) return;
+  const messageToSend = customMessage || inputMessage.trim();
+  const langToUse = customLang || selectedLanguage;
+  
+  if (!messageToSend) return;
 
-    const userMessage = {
-      role: 'user',
-      content: messageToSend,
+  const userMessage = {
+    role: 'user',
+    content: messageToSend,
+    timestamp: new Date().toISOString(),
+    language: langToUse
+  };
+
+  setMessages(prev => [...prev, userMessage]);
+  setInputMessage('');
+  setIsLoading(true);
+
+  try {
+    const conversationHistory = messages
+      .filter(m => m.role !== 'timestamp')
+      .map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+
+    // Dynamically detect environment
+    const API_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5001' 
+      : 'https://verapixels-server.onrender.com';
+
+    // ✅ FIXED: Send correct format for Gemini backend
+    const response = await fetch(`${API_URL}/api/vera/chat`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        system: getSystemPrompt(langToUse),  // ✅ Keep this
+        messages: [                           // ✅ Keep this
+          ...conversationHistory,
+          { role: "user", content: messageToSend }
+        ]
+        // ❌ REMOVE: model, max_tokens (Gemini backend handles these)
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Server error:', errorText);
+      throw new Error(`Server error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // ✅ Handle the response format from your Gemini backend
+    const assistantMessage = {
+      role: 'assistant',
+      content: data.content[0].text,  // This matches your backend's response format
       timestamp: new Date().toISOString(),
       language: langToUse
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setIsLoading(true);
-
-    try {
-      const conversationHistory = messages
-        .filter(m => m.role !== 'timestamp')
-        .map(m => ({
-          role: m.role,
-          content: m.content
-        }));
-
-       // Dynamically detect environment
-const API_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:5001' 
-  : 'https://verapixels-server.onrender.com';
-
-const response = await fetch(`${API_URL}/api/vera/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: getSystemPrompt(langToUse),
-          messages: [
-            ...conversationHistory,
-            { role: "user", content: messageToSend }
-          ],
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      const assistantMessage = {
-        role: 'assistant',
-        content: data.content[0].text,
-        timestamp: new Date().toISOString(),
-        language: langToUse
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error:', error);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Ah! Sorry o, something don happen. Abeg try again.',
-        timestamp: new Date().toISOString(),
-        error: true
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    setMessages(prev => [...prev, assistantMessage]);
+  } catch (error) {
+    console.error('Error:', error);
+    setMessages(prev => [...prev, {
+      role: 'assistant',
+      content: 'Ah! Sorry o, something don happen. Abeg try again.',
+      timestamp: new Date().toISOString(),
+      error: true
+    }]);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleQuickPrompt = (prompt) => {
     setSelectedLanguage(prompt.lang);
