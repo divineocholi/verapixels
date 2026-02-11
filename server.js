@@ -2111,37 +2111,43 @@ app.get("/connections", (req, res) => {
   res.json(connections);
 });
 
+// Remove the first /health endpoint completely, keep only this one:
 app.get("/health", (req, res) => {
-  res.json({
+  res.status(200).json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    connections: io.engine.clientsCount,
-    activeConnections: activeConnections.size,
-    blogPosts: blogPosts.length,
-    server: "Chat & Blog Server",
-    version: "3.0.0",
-    environment: process.env.NODE_ENV || 'development',
-    endpoints: {
-      blogs: "/api/blogs",
-      blog: "/api/blogs/:id",
-      categories: "/api/blogs/categories/all",
-      careers: {
-        uploadCV: "/api/careers/upload-cv",
-        submitApplication: "/api/careers/submit-application"
-      },
-      consultations: {
-        book: "/api/consultations/book",
-        sendConfirmation: "/api/consultations/send-confirmation"
-      },
-      health: "/health",
-      connections: "/connections",
-      adminApi: {
-        createInvite: "/api/admin/create-invite",
-        completeRegistration: "/api/admin/complete-registration",
-        login: "/api/admin/login"
-      }
-    }
+    uptime: process.uptime(),
+    service: "verapixels-backend"
   });
+});
+
+// Keep this root handler:
+app.get("/", (req, res) => {
+  // If requesting JSON (health check), respond quickly
+  if (req.accepts('json') && !req.accepts('html')) {
+    return res.status(200).json({ status: "ok" });
+  }
+  // Otherwise serve React app
+  res.sendFile(path.join(buildPath, 'index.html'));
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    service: "verapixels-backend"
+  });
+});
+
+// ADD THIS:
+app.get("/", (req, res) => {
+  // If requesting JSON (health check), respond quickly
+  if (req.accepts('json') && !req.accepts('html')) {
+    return res.status(200).json({ status: "ok" });
+  }
+  // Otherwise serve React app
+  res.sendFile(path.join(buildPath, 'index.html'));
 });
 
 app.get("/test", (req, res) => {
