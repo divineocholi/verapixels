@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Pause, Sparkles, Brain, Zap, Shield, ArrowRight, Code, MessageSquare, Database, Send, Bot, User, Loader, Globe, X, ChevronDown } from 'lucide-react';
+import { Play, Pause, Sparkles, Brain, Zap, Shield, ArrowRight, Code, MessageSquare, Database, Send, Bot, User, Loader, Globe, X, ChevronDown, Volume2, VolumeX } from 'lucide-react';
 import veravideo from "../../public/vera -video.mp4";
 
 const VeraAISection = () => {
@@ -12,6 +12,10 @@ const VeraAISection = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState('pidgin');
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
+  
+  // 🎤 Voice feature state variables
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   
   const videoRef = useRef(null);
   const posterVideoRef = useRef(null);
@@ -32,6 +36,15 @@ const VeraAISection = () => {
     { id: 'arabic', name: 'Arabic', flag: '🇸🇦', sample: 'مرحبا' },
     { id: 'german', name: 'German', flag: '🇩🇪', sample: 'Hallo!' },
   ];
+
+  // 🎤 Voice IDs for different Nigerian languages
+  const voiceIds = {
+    pidgin: 'nigerian_pidgin_voice_id', // Your cloned voice ID
+    yoruba: 'yoruba_voice_id',
+    igbo: 'igbo_voice_id',
+    hausa: 'hausa_voice_id',
+    english: 'nigerian_english_voice_id'
+  };
 
   const quickPrompts = [
     { 
@@ -71,6 +84,57 @@ const VeraAISection = () => {
       category: "tech"
     },
   ];
+
+  // 🎤 Speak message function using ElevenLabs
+  const speakMessage = async (text, language) => {
+    if (!voiceEnabled) return;
+    
+    try {
+      setIsSpeaking(true);
+      
+      // ElevenLabs API - Replace with your actual API key
+      const ELEVENLABS_API_KEY = 'YOUR_ELEVENLABS_API_KEY'; // Get from https://elevenlabs.io
+      
+      const response = await fetch(
+        `https://api.elevenlabs.io/v1/text-to-speech/${voiceIds[language] || voiceIds.pidgin}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'xi-api-key': ELEVENLABS_API_KEY
+          },
+          body: JSON.stringify({
+            text: text,
+            model_id: 'eleven_multilingual_v2',
+            voice_settings: {
+              stability: 0.5,
+              similarity_boost: 0.75
+            }
+          })
+        }
+      );
+      
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        audio.onended = () => {
+          setIsSpeaking(false);
+          URL.revokeObjectURL(audioUrl);
+        };
+        
+        audio.play();
+      } else {
+        console.error('Voice generation failed');
+        setIsSpeaking(false);
+      }
+      
+    } catch (error) {
+      console.error('Voice error:', error);
+      setIsSpeaking(false);
+    }
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -192,7 +256,9 @@ Be respectful and helpful.`,
     };
     return prompts[language] || prompts.english;
   };
-
+   
+  // ========== FRONTEND FIX FOR VeraAISection.jsx ==========
+// Replace the sendMessage function in your VeraAISection.jsx with this:
 
 const sendMessage = async (customMessage = null, customLang = null) => {
   const messageToSend = customMessage || inputMessage.trim();
@@ -223,6 +289,10 @@ const sendMessage = async (customMessage = null, customLang = null) => {
       ? 'http://localhost:5001' 
       : 'https://verapixels-server.onrender.com';
 
+    console.log('📤 Sending request to:', `${API_URL}/api/vera/chat`);
+    console.log('💬 Message:', messageToSend);
+    console.log('🌍 Language:', langToUse);
+
     const response = await fetch(`${API_URL}/api/vera/chat`, {
       method: "POST",
       headers: {
@@ -237,18 +307,28 @@ const sendMessage = async (customMessage = null, customLang = null) => {
       })
     });
 
-    const data = await response.json();
+    console.log('📥 Response status:', response.status);
 
-    // Handle different error types
-    if (!response.ok) {
-      let errorMessage = 'Sorry o! Something don happen. Abeg try again.';
+    const data = await response.json();
+    console.log('📊 Response data:', data);
+
+    // ✅ IMPROVED ERROR HANDLING
+    if (!response.ok || !data.success) {
+      console.error('❌ API Error:', data);
       
-      if (data.error === 'quota_exceeded') {
-        errorMessage = data.message || 'VERA don tire small. Wait 1 minute try again! 🙏';
-      } else if (data.error === 'Too many requests') {
-        errorMessage = 'You dey send messages too fast! Calm down small, wait 1 minute. 😅';
-      } else {
-        errorMessage = data.message || data.friendlyMessage || 'VERA no dey available now. Try again later.';
+      // Use the error message from backend
+      let errorMessage = data.message || data.error || 'Sorry o! Something don happen. Abeg try again.';
+      
+      // Add specific error handling
+      if (response.status === 429) {
+        errorMessage = data.message || 'You dey send messages too fast! Calm down small, wait 1 minute. 😅';
+      } else if (response.status === 401) {
+        errorMessage = 'API key no dey work. Contact admin! 🔑';
+      } else if (response.status === 503) {
+        errorMessage = 'VERA dey wake up now. Wait small try again! ⏳';
+      } else if (data.details) {
+        console.error('Error details:', data.details);
+        errorMessage += '\n\n' + JSON.stringify(data.details, null, 2);
       }
 
       setMessages(prev => [...prev, {
@@ -260,22 +340,45 @@ const sendMessage = async (customMessage = null, customLang = null) => {
       
       return;
     }
+
+    // ✅ VALIDATE RESPONSE STRUCTURE
+    if (!data.content || !data.content[0] || !data.content[0].text) {
+      console.error('❌ Invalid response structure:', data);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'VERA no fit talk now. Response format no correct. Try again! 🤔',
+        timestamp: new Date().toISOString(),
+        error: true
+      }]);
+      return;
+    }
     
     const assistantMessage = {
       role: 'assistant',
       content: data.content[0].text,
       timestamp: new Date().toISOString(),
       language: langToUse,
-      model: data.model // Show which model was used
+      model: data.model
     };
 
+    console.log('✅ AI Response:', assistantMessage.content.substring(0, 100) + '...');
     setMessages(prev => [...prev, assistantMessage]);
+    
+    // 🎤 AUTO-SPEAK THE RESPONSE (if voice is enabled)
+    if (voiceEnabled) {
+      speakMessage(assistantMessage.content, langToUse);
+    }
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('❌ Network Error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack
+    });
+    
     setMessages(prev => [...prev, {
       role: 'assistant',
-      content: 'Network wahala! Check your internet connection and try again. 📡',
+      content: `Network wahala! Check your internet connection and try again. 📡\n\nError: ${error.message}`,
       timestamp: new Date().toISOString(),
       error: true
     }]);
@@ -512,9 +615,20 @@ const sendMessage = async (customMessage = null, customLang = null) => {
                   </p>
                 </div>
               </div>
-              <button className="vera-demo-close" onClick={() => setShowDemo(false)}>
-                <X size={24} />
-              </button>
+              <div className="vera-header-actions">
+                {/* 🎤 Voice toggle button */}
+                <button 
+                  className="vera-voice-toggle"
+                  onClick={() => setVoiceEnabled(!voiceEnabled)}
+                  title={voiceEnabled ? 'Mute VERA' : 'Unmute VERA'}
+                >
+                  {voiceEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                  <span>{voiceEnabled ? 'Voice ON' : 'Voice OFF'}</span>
+                </button>
+                <button className="vera-demo-close" onClick={() => setShowDemo(false)}>
+                  <X size={24} />
+                </button>
+              </div>
             </div>
 
             {/* Language Selector */}
@@ -585,13 +699,14 @@ const sendMessage = async (customMessage = null, customLang = null) => {
                   <p>
                     Try talking to me in <strong>Nigerian Pidgin, Yoruba, Igbo, Hausa</strong>, 
                     or any of <strong>100+ languages</strong>. I fit help you with coding, 
-                    explain things, or just gist with you!
+                    explain things, or just gist with you! 🎤 <strong>Voice is ON by default</strong> - I go speak my responses!
                   </p>
                   <div className="vera-welcome-features">
                     <div className="vera-welcome-feature">💬 Natural conversations</div>
                     <div className="vera-welcome-feature">💻 Code assistance</div>
                     <div className="vera-welcome-feature">🇳🇬 Nigerian culture expert</div>
                     <div className="vera-welcome-feature">🌍 100+ languages</div>
+                    <div className="vera-welcome-feature">🎤 Voice responses</div>
                   </div>
                 </div>
               )}
@@ -651,7 +766,7 @@ const sendMessage = async (customMessage = null, customLang = null) => {
                 </button>
               </div>
               <div className="vera-input-hint">
-                🌟 This demo uses real AI to showcase VERA's capabilities
+                🌟 This demo uses real AI with voice responses • {voiceEnabled ? '🔊 Voice ON' : '🔇 Voice OFF'}
               </div>
             </div>
           </div>
@@ -1237,6 +1352,34 @@ const sendMessage = async (customMessage = null, customLang = null) => {
           width: 1px;
           height: 60px;
           background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* 🎤 Voice toggle button styles */
+        .vera-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .vera-voice-toggle {
+          background: rgba(106, 0, 255, 0.1);
+          border: 1px solid rgba(106, 0, 255, 0.3);
+          color: #fff;
+          padding: 8px 16px;
+          border-radius: 20px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.3s ease;
+        }
+        
+        .vera-voice-toggle:hover {
+          background: rgba(106, 0, 255, 0.2);
+          border-color: rgba(106, 0, 255, 0.5);
+          transform: scale(1.05);
         }
 
         /* DEMO MODAL */
@@ -1870,6 +2013,14 @@ const sendMessage = async (customMessage = null, customLang = null) => {
 
           .vera-language-menu {
             min-width: 240px;
+          }
+
+          .vera-header-actions {
+            gap: 8px;
+          }
+
+          .vera-voice-toggle span {
+            display: none;
           }
         }
       `}</style>

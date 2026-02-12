@@ -1997,76 +1997,152 @@ app.get('/api/newsletter/stats', async (req, res) => {
   }
 });
 
-// ========== VERA AI CHATBOT ENDPOINT ==========
-app.post('/api/vera/chat', async (req, res) => {
+// ========== FIXED VERA AI CHATBOT ENDPOINT (GROQ) ==========
+// Replace the existing /api/vera/chat endpoint in your server.js with this code
+
+app.post('/api/vera/chat', veraRateLimiter, async (req, res) => {
   try {
     const { system, messages } = req.body;
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
+    console.log('🤖 VERA chat request received');
+    console.log('📝 Messages count:', messages?.length || 0);
+    console.log('🔑 API key present:', !!GROQ_API_KEY);
+
+    // Validate input
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ success: false, error: 'Messages required' });
+      console.error('❌ Invalid messages array');
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Messages required',
+        message: 'Abeg send your message properly! 📝'
+      });
     }
 
-    if (!GEMINI_API_KEY) {
-      return res.status(500).json({ success: false, error: 'API key missing' });
+    if (!GROQ_API_KEY) {
+      console.error('❌ Missing GROQ_API_KEY');
+      return res.status(500).json({ 
+        success: false, 
+        error: 'API key missing',
+        message: 'VERA no get API key. Contact admin! 🔑'
+      });
     }
 
-    const geminiMessages = [];
+    // Build conversation with system prompt
+    const groqMessages = [];
     
     if (system) {
-      geminiMessages.push({ role: 'user', parts: [{ text: system }] });
-      geminiMessages.push({ role: 'model', parts: [{ text: 'Understood.' }] });
+      groqMessages.push({ 
+        role: 'system', 
+        content: system 
+      });
     }
     
+    // Add conversation history
     messages.forEach(msg => {
-      geminiMessages.push({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: msg.content }]
+      groqMessages.push({
+        role: msg.role,
+        content: msg.content
       });
     });
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: geminiMessages,
-          generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
-        })
-      }
-    );
+    console.log('📤 Calling Groq API...');
+    console.log('💬 Total messages:', groqMessages.length);
+
+    // Call Groq API
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: groqMessages,
+        max_tokens: 1000,
+        temperature: 0.7,
+        top_p: 0.95
+      })
+    });
+
+    console.log('📥 Groq API response status:', response.status);
 
     const data = await response.json();
 
+    // Handle API errors
     if (!response.ok) {
-      return res.status(response.status).json({ 
+      console.error('❌ Groq API error response:', JSON.stringify(data, null, 2));
+      
+      let errorMessage = 'Sorry o! Something don happen. Abeg try again. 😔';
+      
+      if (response.status === 429) {
+        errorMessage = 'VERA don tire small. Wait 1 minute try again! 🙏';
+      } else if (response.status === 401) {
+        errorMessage = 'API key no dey work. Contact admin! 🔑';
+      } else if (response.status === 503) {
+        errorMessage = 'VERA dey wake up now. Wait small try again! ⏳';
+      } else if (data.error?.message) {
+        errorMessage = `Groq error: ${data.error.message}`;
+      }
+      
+      return res.status(response.ok ? 200 : response.status).json({ 
         success: false, 
-        error: 'AI error', 
-        details: data 
+        error: 'AI error',
+        message: errorMessage,
+        details: data.error || data
       });
     }
 
+    // Validate response structure
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('❌ Invalid Groq response structure:', JSON.stringify(data, null, 2));
+      return res.status(500).json({
+        success: false,
+        error: 'Invalid response',
+        message: 'VERA no fit talk now. Try again! 🤔'
+      });
+    }
+
+    const aiResponse = data.choices[0].message.content;
+    console.log('✅ VERA response generated:', aiResponse.substring(0, 100) + '...');
+
+    // Return successful response
     return res.json({
       success: true,
-      content: [{ type: 'text', text: data.candidates[0].content.parts[0].text }]
+      content: [{ 
+        type: 'text', 
+        text: aiResponse
+      }],
+      model: 'llama-3.3-70b-versatile',
+      usage: data.usage
     });
 
   } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('❌ VERA chat error:', error.message);
+    console.error('Stack trace:', error.stack);
+    
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      message: 'Network wahala! Check your internet connection. 📡',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
+// Health check endpoint (keep this as-is)
 app.get('/api/vera/health', (req, res) => {
-  const hasApiKey = !!process.env.GEMINI_API_KEY;
+  const hasApiKey = !!process.env.GROQ_API_KEY;
   
   res.json({
     success: true,
     status: hasApiKey ? 'ready' : 'not_configured',
-    provider: 'Google Gemini',
-    models: ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro'],
+    provider: 'Groq',
+    model: 'llama-3.3-70b-versatile',
     api_key_present: hasApiKey,
-    api_key_preview: hasApiKey ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'missing',
+    message: hasApiKey 
+      ? 'VERA AI chatbot is ready (Powered by Groq - Super Fast!)' 
+      : 'Groq API key not configured',
     timestamp: new Date().toISOString()
   });
 });
