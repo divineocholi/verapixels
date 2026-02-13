@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet";
+import { useNavigate } from "react-router-dom";
 import founderImage from '@/assets/founder.jpeg';
 import familyPhoto from "@/assets/verapixels family.jpeg";
 import { 
@@ -8,10 +9,6 @@ import {
   FiTarget,
   FiLayers,
   FiTrendingUp,
-  FiGithub,
-  FiLinkedin,
-  FiTwitter,
-  FiInstagram,
   FiArrowRight,
   FiStar,
   FiHeart,
@@ -26,6 +23,7 @@ import {
 } from "react-icons/fi";
 
 const AboutPage = () => {
+  const navigate = useNavigate();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
@@ -164,6 +162,15 @@ const AboutPage = () => {
     };
   }, [isReady]);
 
+  // Navigation handlers
+  const handleStartProject = () => {
+    navigate("/consultationbooking");
+  };
+
+  const handleViewWork = () => {
+    navigate("/allprojects");
+  };
+
   // JSON-LD structured data for SEO
   const jsonLd = {
     "@context": "https://schema.org",
@@ -199,12 +206,7 @@ const AboutPage = () => {
       },
       "description": "Verapixels is a digital innovation company specializing in business naming, logo design, website development, app development, and ongoing support.",
       "url": "https://verapixels.com",
-      "logo": "https://verapixels.com/logo.png",
-      "sameAs": [
-        "https://linkedin.com/company/verapixels",
-        "https://twitter.com/verapixels",
-        "https://instagram.com/verapixels"
-      ]
+      "logo": "https://verapixels.com/logo.png"
     }
   };
 
@@ -480,26 +482,39 @@ const AboutPage = () => {
                   </div>
                 </div>
                 
-                <nav className="breadcrumb" aria-label="Breadcrumb">
-                  <ol itemScope itemType="https://schema.org/BreadcrumbList">
-                    <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                      <a itemProp="item" href="https://verapixels.com">
-                        <span itemProp="name">Home</span>
-                      </a>
-                      <meta itemProp="position" content="1" />
-                    </li>
-                    <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                      <a itemProp="item" href="https://verapixels.com/about">
-                        <span itemProp="name">About</span>
-                      </a>
-                      <meta itemProp="position" content="2" />
-                    </li>
-                    <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                      <span itemProp="name">Founder</span>
-                      <meta itemProp="position" content="3" />
-                    </li>
-                  </ol>
-                </nav>
+                {/* Breadcrumb with hidden links for SEO */}
+               {/* Breadcrumb with hidden links for SEO */}
+<nav 
+  className="breadcrumb" 
+  aria-label="Breadcrumb" 
+  style={{ 
+    opacity: 0, 
+    pointerEvents: 'none', 
+    position: 'absolute', 
+    width: '1px', 
+    height: '1px', 
+    overflow: 'hidden' 
+  }}
+>
+  <ol itemScope itemType="https://schema.org/BreadcrumbList">
+    <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+      <a itemProp="item" href="https://verapixels.com">
+        <span itemProp="name">Home</span>
+      </a>
+      <meta itemProp="position" content="1" />
+    </li>
+    <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+      <a itemProp="item" href="https://verapixels.com/about">
+        <span itemProp="name">About</span>
+      </a>
+      <meta itemProp="position" content="2" />
+    </li>
+    <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+      <span itemProp="name">Founder</span>
+      <meta itemProp="position" content="3" />
+    </li>
+  </ol>
+</nav>
               </div>
             </div>
           </div>
@@ -802,21 +817,18 @@ const AboutPage = () => {
                 Let's bring your vision to life with pixel-perfect precision
               </p>
               <div className="cta-buttons">
-                <button className="btn-primary-large">
+                <button 
+                  className="btn-primary-large"
+                  onClick={handleStartProject}
+                >
                   Start Your Project <FiArrowRight />
                 </button>
-                <button className="btn-secondary-large">
+                <button 
+                  className="btn-secondary-large"
+                  onClick={handleViewWork}
+                >
                   View Our Work
                 </button>
-              </div>
-              <div className="social-section">
-                <span className="social-label">Connect With Us:</span>
-                <div className="social-links">
-                  <a href="https://github.com/verapixels" className="social-link-large"><FiGithub /></a>
-                  <a href="https://linkedin.com/company/verapixels" className="social-link-large"><FiLinkedin /></a>
-                  <a href="https://twitter.com/verapixels" className="social-link-large"><FiTwitter /></a>
-                  <a href="https://instagram.com/verapixels" className="social-link-large"><FiInstagram /></a>
-                </div>
               </div>
             </div>
           </div>
@@ -832,7 +844,7 @@ const AboutPage = () => {
             app development, and ongoing technical support.
           </p>
           <p>
-            As the CEO of Verapixels, Ocholi Divine leads a team of 10+ expert 
+            As the CEO of Verapixels, Ocholi Divine leads a team of  expert 
             professionals dedicated to creating pixel-perfect digital experiences 
             for clients worldwide. Under his leadership, Verapixels has delivered 
             20+ successful projects since its founding in 2025.
@@ -948,6 +960,37 @@ const AboutPage = () => {
             text-align: center;
             padding: 160px 0 100px;
           }
+
+          .breadcrumb {
+  margin-top: 40px;
+  padding: 15px;
+  background: transparent;
+  border: none;
+}
+
+.breadcrumb ol {
+  display: flex;
+  gap: 15px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.breadcrumb li {
+  position: relative;
+}
+
+.breadcrumb li:not(:last-child):after {
+  content: "›";
+  margin-left: 15px;
+  color: transparent;
+}
+
+.breadcrumb a, .breadcrumb span {
+  color: transparent !important;
+  background-color: transparent !important;
+  text-decoration: none;
+}
 
           .hero-badge {
             display: inline-flex;
@@ -1232,8 +1275,8 @@ const AboutPage = () => {
           .breadcrumb {
             margin-top: 40px;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 10px;
+            background: #000;
+            border: none;
           }
 
           .breadcrumb ol {
@@ -1251,18 +1294,13 @@ const AboutPage = () => {
           .breadcrumb li:not(:last-child):after {
             content: "›";
             margin-left: 15px;
-            color: #00bfff;
+            color: #000;
           }
 
-          .breadcrumb a {
-            color: #00bfff;
+          .breadcrumb a, .breadcrumb span {
+            color: #000 !important;
+            background-color: #000 !important;
             text-decoration: none;
-            transition: color 0.3s ease;
-          }
-
-          .breadcrumb a:hover {
-            color: #fff;
-            text-decoration: underline;
           }
 
           .origin-section {
@@ -1578,14 +1616,14 @@ const AboutPage = () => {
           }
 
           .photo-container {
-  position: relative;
-  border-radius: 30px;
-  overflow: hidden;
-  margin-bottom: 50px;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  aspect-ratio: 4/3; /* Use the same as your other page */
-  width: 100%;
-}
+            position: relative;
+            border-radius: 30px;
+            overflow: hidden;
+            margin-bottom: 50px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            aspect-ratio: 4/3;
+            width: 100%;
+          }
 
           .team-photo-section.visible .photo-container {
             animation: zoomIn 1s ease;
@@ -1597,13 +1635,13 @@ const AboutPage = () => {
           }
              
           .team-photo {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-  object-position: center 15%; /* Adjust this value as needed */
-  transition: transform 0.8s ease;
-}
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            object-position: center 15%;
+            transition: transform 0.8s ease;
+          }
 
           .photo-container:hover .team-photo {
             transform: scale(1.05);
@@ -2067,7 +2105,6 @@ const AboutPage = () => {
             gap: 20px;
             justify-content: center;
             flex-wrap: wrap;
-            margin-bottom: 50px;
             position: relative;
             z-index: 1;
           }
@@ -2108,47 +2145,6 @@ const AboutPage = () => {
           .btn-secondary-large:hover {
             background: rgba(0, 191, 255, 0.1);
             transform: translateY(-5px);
-          }
-
-          .social-section {
-            position: relative;
-            z-index: 1;
-          }
-
-          .social-label {
-            display: block;
-            font-size: 1rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 20px;
-            font-weight: 600;
-          }
-
-          .social-links {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-          }
-
-          .social-link-large {
-            width: 55px;
-            height: 55px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            color: #00bfff;
-            font-size: 24px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-          }
-
-          .social-link-large:hover {
-            background: #00bfff;
-            color: #000;
-            transform: translateY(-5px) rotate(10deg);
-            border-color: #00bfff;
           }
 
           .seo-content {
@@ -2225,14 +2221,18 @@ const AboutPage = () => {
             }
 
             .cta-buttons {
-              flex-direction: column;
+              flex-direction: row;
               align-items: center;
+              justify-content: center;
+              gap: 15px;
             }
 
             .btn-primary-large,
             .btn-secondary-large {
-              width: 100%;
-              max-width: 300px;
+              width: auto;
+              min-width: 200px;
+              padding: 16px 32px;
+              font-size: 1rem;
               justify-content: center;
             }
 
@@ -2272,6 +2272,20 @@ const AboutPage = () => {
             .particle {
               filter: blur(100px);
               opacity: 0.1;
+            }
+          }
+
+          @media (max-width: 640px) {
+            .cta-buttons {
+              flex-direction: column;
+              width: 100%;
+            }
+
+            .btn-primary-large,
+            .btn-secondary-large {
+              width: 100%;
+              max-width: 280px;
+              padding: 14px 28px;
             }
           }
 

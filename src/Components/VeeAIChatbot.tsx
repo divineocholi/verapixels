@@ -687,6 +687,7 @@ const generateTimeSlots = (date?: string) => {
 
 
 
+
 /* --------------------------- Improved Answer Matching --------------------------- */
 const findBestAnswer = (input: string): any => {
   if (!input) return null;
@@ -1076,12 +1077,18 @@ const VeeAISmartChatbot: React.FC = () => {
     step: 'none',
     datePage: 0
   });
+
+  // ✅ ADD DRAGGABLE STATE HERE (INSIDE COMPONENT)
+  const [buttonPosition, setButtonPosition] = useState({ bottom: 24, right: 24 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [hideButton, setHideButton] = useState(false); // For VERA demo hiding
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const socketRef = useRef<any>(null);
+  const dragStartPos = useRef({ x: 0, y: 0, startBottom: 24, startRight: 24 });
 
   // Available time zones for selector
   const availableTimezones = [
@@ -1097,6 +1104,80 @@ const VeeAISmartChatbot: React.FC = () => {
     'Asia/Dubai'
   ];
 
+  // ✅ ADD DRAG HANDLERS HERE (INSIDE COMPONENT)
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsDragging(true);
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    dragStartPos.current = {
+      x: clientX,
+      y: clientY,
+      startBottom: buttonPosition.bottom,
+      startRight: buttonPosition.right
+    };
+  };
+
+  const handleDragMove = (e: MouseEvent | TouchEvent) => {
+    if (!isDragging) return;
+    
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    const deltaX = dragStartPos.current.x - clientX;
+    const deltaY = clientY - dragStartPos.current.y;
+    
+    const newRight = Math.max(10, Math.min(window.innerWidth - 74, dragStartPos.current.startRight + deltaX));
+    const newBottom = Math.max(10, Math.min(window.innerHeight - 74, dragStartPos.current.startBottom + deltaY));
+    
+    setButtonPosition({ bottom: newBottom, right: newRight });
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  // ✅ ADD useEffect for drag listeners (INSIDE COMPONENT)
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleDragMove);
+      window.addEventListener('mouseup', handleDragEnd);
+      window.addEventListener('touchmove', handleDragMove);
+      window.addEventListener('touchend', handleDragEnd);
+      
+      return () => {
+        window.removeEventListener('mousemove', handleDragMove);
+        window.removeEventListener('mouseup', handleDragEnd);
+        window.removeEventListener('touchmove', handleDragMove);
+        window.removeEventListener('touchend', handleDragEnd);
+      };
+    }
+  }, [isDragging]);
+
+  // ✅ ADD useEffect for VERA demo hiding (INSIDE COMPONENT)
+  useEffect(() => {
+    const handleVeraOpened = () => {
+      console.log('🎭 VERA demo opened, hiding Vee button');
+      setHideButton(true);
+    };
+    
+    const handleVeraClosed = () => {
+      console.log('🎭 VERA demo closed, showing Vee button');
+      setHideButton(false);
+    };
+    
+    window.addEventListener('vera-demo-opened', handleVeraOpened);
+    window.addEventListener('vera-demo-closed', handleVeraClosed);
+    
+    return () => {
+      window.removeEventListener('vera-demo-opened', handleVeraOpened);
+      window.removeEventListener('vera-demo-closed', handleVeraClosed);
+    };
+  }, []);
+
+  /* --------------------------- WebSocket Connection --------------------------- */
+ 
 /* --------------------------- WebSocket Connection --------------------------- */
 useEffect(() => {
   // CRITICAL: Prevent duplicate connections
@@ -2267,23 +2348,61 @@ return (
           border: 2px solid ${isDark ? '#000' : '#fff'};
         }
        
-         .vee-chat-window {
-  position: fixed;
-  top: 60%; 
-  right: 24px;
-  transform: translateY(-50%); 
-  width: 420px;
-  height: 80vh; 
-  max-height: 700px; 
-  background: ${isDark ? '#1a1a1a' : '#fff'};
-  border: 1px solid ${isDark ? '#333' : '#e0e0e0'};
-  border-radius: 20px;
+  @media (max-width: 768px) {
+  .vee-chat-root {
+    bottom: 0;
+    right: 0;
+    left: 0;
+  }
+.vee-chat-button {
+  position: fixed; /* Keep this */
+  /* Remove bottom: 24px and right: 24px - now controlled by inline style */
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0066ff, #00ccff);
+  border: none;
+  color: #fff;
+  cursor: grab;
   display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.4s ease;
-  z-index: 9999;
-  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 102, 255, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  user-select: none;
+  touch-action: none;
+}
+
+.vee-chat-button:active {
+  cursor: grabbing;
+}
+
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh; /* ✅ Full screen on mobile */
+    max-height: 100vh;
+    border-radius: 0; /* ✅ No rounded corners on mobile */
+    transform: none; /* ✅ Remove transform */
+    margin: 0;
+  }
+  
+  .vee-messages-container {
+    padding: 16px;
+  }
+  
+  .vee-chat-header {
+    padding: 16px;
+    border-radius: 0; /* ✅ Square corners on mobile */
+  }
+  
+  .vee-tz-selector {
+    top: 60px;
+    margin: 0 10px;
+  }
 }
 
 /* UPDATE: Fix animation to work with transform */
@@ -2665,12 +2784,22 @@ return (
       `}</style>
 
       {!isOpen ? (
-        <button className="vee-chat-button" onClick={handleOpenChatbot}>
-          <IconChat size={28} />
-          {unreadCount > 0 && (
-            <div className="vee-unread-badge">{unreadCount}</div>
-          )}
-        </button>
+       <button 
+  className="vee-chat-button" 
+  onClick={handleOpenChatbot}
+  onMouseDown={handleDragStart}
+  onTouchStart={handleDragStart}
+  style={{
+    bottom: `${buttonPosition.bottom}px`,
+    right: `${buttonPosition.right}px`,
+    cursor: isDragging ? 'grabbing' : 'grab'
+  }}
+>
+  <IconChat size={28} />
+  {unreadCount > 0 && (
+    <div className="vee-unread-badge">{unreadCount}</div>
+  )}
+</button>
       ) : (
         <div className="vee-chat-window">
           <div className="vee-chat-header">
